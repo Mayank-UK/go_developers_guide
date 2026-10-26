@@ -103,6 +103,21 @@ import { SQLLabRepositoryImpl } from '../data/demo/sql-lab-repository-impl';
 import { SearchRepositoryImpl } from '../data/demo/db-search-repository-impl';
 import { RaceRepositoryImpl } from '../data/demo/db-race-repository-impl';
 import { AuditRepositoryImpl } from '../data/demo/db-audit-repository-impl';
+import { ORMProbeRepositoryImpl } from '../data/demo/orm-probe-repository-impl';
+import {
+  GetORMProbeDemoUseCase,
+  DB_ORM_PROBE_DEMO_USE_CASE,
+} from '../domain/demo/get-orm-probe-demo-usecase';
+import { MongoConsoleRepositoryImpl } from '../data/demo/mongo-console-repository-impl';
+import {
+  GetMongoConsoleDemoUseCase,
+  MONGO_CONSOLE_DEMO_USE_CASE,
+} from '../domain/demo/get-mongo-console-demo-usecase';
+import { RedisPlaygroundRepositoryImpl } from '../data/demo/redis-playground-repository-impl';
+import {
+  GetRedisPlaygroundDemoUseCase,
+  REDIS_PLAYGROUND_DEMO_USE_CASE,
+} from '../domain/demo/get-redis-playground-demo-usecase';
 import {
   GetUUIDLabDemoUseCase,
   DB_UUID_DEMO_USE_CASE,
@@ -380,6 +395,27 @@ describe('container', () => {
         repository: container.auditRepository,
         repositoryClass: AuditRepositoryImpl,
         token: DB_AUDIT_DEMO_USE_CASE,
+      },
+      {
+        useCase: container.getORMProbeDemoUseCase,
+        klass: GetORMProbeDemoUseCase,
+        repository: container.ormProbeRepository,
+        repositoryClass: ORMProbeRepositoryImpl,
+        token: DB_ORM_PROBE_DEMO_USE_CASE,
+      },
+      {
+        useCase: container.getMongoConsoleDemoUseCase,
+        klass: GetMongoConsoleDemoUseCase,
+        repository: container.mongoConsoleRepository,
+        repositoryClass: MongoConsoleRepositoryImpl,
+        token: MONGO_CONSOLE_DEMO_USE_CASE,
+      },
+      {
+        useCase: container.getRedisPlaygroundDemoUseCase,
+        klass: GetRedisPlaygroundDemoUseCase,
+        repository: container.redisPlaygroundRepository,
+        repositoryClass: RedisPlaygroundRepositoryImpl,
+        token: REDIS_PLAYGROUND_DEMO_USE_CASE,
       },
     ];
     for (const pipeline of cases) {

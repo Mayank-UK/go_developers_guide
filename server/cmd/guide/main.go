@@ -19,7 +19,11 @@ import (
 	"guide/internal/content"
 	"guide/internal/core"
 	"guide/internal/data/db"
+	"guide/internal/data/mongodb"
+	"guide/internal/data/ormprobe"
 	postsdata "guide/internal/data/posts"
+	"guide/internal/data/redis"
+	"guide/internal/domain/demos"
 	"guide/internal/domain/posts"
 	"guide/internal/grpcapi"
 	"guide/internal/presentation"
@@ -130,6 +134,44 @@ func run() error {
 	mux.Handle("GET /api/demo/db/search", presentation.NewDBSearchHandler(sqlDemos, logger))
 	mux.Handle("GET /api/demo/db/race", presentation.NewDBRaceHandler(sqlDemos, logger))
 	mux.Handle("GET /api/demo/db/audit", presentation.NewDBAuditHandler(sqlDemos, logger))
+
+	// The sqlc-gorm topic's probe runs BOTH query stacks against the same
+	// PostgreSQL the server already migrated — same DSN, measured live.
+	mux.Handle(
+		"GET /api/demo/db/orm-probe",
+		presentation.NewDBORMProbeHandler(ormprobe.NewRunner(cfg.DatabaseURL), logger),
+	)
+
+	// MongoDB is an OPTIONAL service (the topic's own discipline): connect
+	// inside the boot window; ANY failure — dial or event-store construction
+	// — degrades the console to the honest unavailable runner instead of
+	// failing the boot.
+	mongoClient, err := mongodb.Connect(bootCtx, cfg.MongoURI)
+	var mongoRunner demos.MongoConsoleRunner
+	if err != nil {
+		logger.Warn("mongo unavailable; console demo degrades", "error", err)
+		mongoRunner = mongodb.NewUnavailableConsoleRunner(err)
+	} else {
+		defer mongoClient.Disconnect(context.Background())
+		store, storeErr := mongodb.NewEventStore(bootCtx, mongoClient, "guide_demos")
+		if storeErr != nil {
+			logger.Warn("mongo event store unavailable; console demo degrades", "error", storeErr)
+			mongoRunner = mongodb.NewUnavailableConsoleRunner(storeErr)
+		} else {
+			mongoRunner = mongodb.NewConsoleRunner(store)
+		}
+	}
+	mux.Handle("GET /api/demo/db/mongo-console", presentation.NewDBMongoConsoleHandler(mongoRunner, logger))
+
+	// Redis is wired LAZY — no boot ping at all: the client dials on first
+	// use, a down Redis never blocks boot, and every failure maps to the
+	// playground's typed 503 at request time.
+	redisClient := redis.NewClient(cfg.RedisAddr)
+	defer redisClient.Close()
+	mux.Handle(
+		"GET /api/demo/redis/playground",
+		presentation.NewRedisPlaygroundHandler(redis.NewPlaygroundRunner(redisClient), logger),
+	)
 
 	// The posts resource — the api-design topic's real API surface, and
 	// the substrate later topics reuse (authorization guards its ids,

@@ -77,6 +77,13 @@ func newAPIServer(registry content.Registry, store *core.ScenarioStore, logger *
 	mux.Handle("GET /api/demo/db/search", NewDBSearchHandler(fakeSQLDemos{}, logger))
 	mux.Handle("GET /api/demo/db/race", NewDBRaceHandler(fakeSQLDemos{}, logger))
 	mux.Handle("GET /api/demo/db/audit", NewDBAuditHandler(fakeSQLDemos{}, logger))
+	// The Phase 6 trio rides the same-package fakes the topics' own handler
+	// tests built (the real runners have their own tests in internal/data):
+	// orm-probe with the fixture observation, the mongo console's canned
+	// self-building fake, and the redis playground's fixture run.
+	mux.Handle("GET /api/demo/db/orm-probe", NewDBORMProbeHandler(fakeORMProbeRunner{observation: ormProbeFixtureObservation()}, logger))
+	mux.Handle("GET /api/demo/db/mongo-console", NewDBMongoConsoleHandler(fakeMongoConsole{}, logger))
+	mux.Handle("GET /api/demo/redis/playground", NewRedisPlaygroundHandler(fakeRedisRunner{run: redisPlaygroundFixtureRun()}, logger))
 	// The GraphQL pair mirrors main.go: the endpoint over its own posts
 	// stack (the handler tests exercise them through dedicated muxes with
 	// seeded stores; here the chain shape is what matters).

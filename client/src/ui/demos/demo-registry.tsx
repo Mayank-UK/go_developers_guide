@@ -64,6 +64,9 @@ const SQLLabDemo = lazy(() => import('./db/sql_lab_demo'));
 const SearchDemo = lazy(() => import('./db/search_demo'));
 const RaceDemo = lazy(() => import('./db/race_demo'));
 const AuditDemo = lazy(() => import('./db/audit_demo'));
+const ORMProbeDemo = lazy(() => import('./db/orm_probe_demo'));
+const MongoConsoleDemo = lazy(() => import('./db/mongo_console_demo'));
+const RedisPlaygroundDemo = lazy(() => import('./redis/playground_demo'));
 
 export const demoRegistry: DemoRegistry = {
   'go:runtime-types': RuntimeTypesDemo,
@@ -91,4 +94,7 @@ export const demoRegistry: DemoRegistry = {
   'db:search': SearchDemo,
   'db:race': RaceDemo,
   'db:audit': AuditDemo,
+  'db:orm-probe': ORMProbeDemo,
+  'db:mongo-console': MongoConsoleDemo,
+  'redis:playground': RedisPlaygroundDemo,
 };

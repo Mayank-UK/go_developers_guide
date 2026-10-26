@@ -358,11 +358,24 @@ func NewProductionRegistry() (Registry, error) {
 	if err != nil {
 		return Registry{}, fmt.Errorf("build databases-sql topic: %w", err)
 	}
+	sqlcGorm, err := sqlcGormTopic()
+	if err != nil {
+		return Registry{}, fmt.Errorf("build sqlc-gorm topic: %w", err)
+	}
+	mongodb, err := mongodbTopic()
+	if err != nil {
+		return Registry{}, fmt.Errorf("build mongodb topic: %w", err)
+	}
+	redis, err := redisTopic()
+	if err != nil {
+		return Registry{}, fmt.Errorf("build redis topic: %w", err)
+	}
 	return NewRegistry(
 		[]Topic{
 			goLanguage, goRuntime, httpWeb, goHTTPFundamentals, interfacesComposition,
 			goroutinesChannels, routing, middleware, requestResponse, validation, apiDesign,
-			apiDocumentation, graphql, webhooks, grpc, sqlSchema, databasesSQL,
+			apiDocumentation, graphql, webhooks, grpc, sqlSchema, databasesSQL, sqlcGorm,
+			mongodb, redis,
 		},
 		groups,
 	)

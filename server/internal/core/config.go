@@ -18,6 +18,8 @@ const (
 	envLogLevel    = "GDG_LOG_LEVEL"
 	envGRPCAddr    = "GRPC_ADDR"
 	envDatabaseURL = "GDG_DATABASE_URL"
+	envMongoURI    = "GDG_MONGO_URI"
+	envRedisAddr   = "GDG_REDIS_ADDR"
 )
 
 // Defaults applied when a variable is unset or empty: dev-safe values, no
@@ -34,6 +36,15 @@ const (
 	// it at boot and fails fast when it is unreachable. DSN SHAPE is the
 	// driver's to validate (at dial time), not config's.
 	defaultDatabaseURL = "postgres://postgres:guide@postgres:5432/guide?sslmode=disable"
+	// defaultMongoURI points at the compose-network mongo service — but
+	// MongoDB is an OPTIONAL service (the mongodb topic's own discipline):
+	// boot-connect degrades to the honest unavailable demo, never a boot
+	// failure, so the URI's validity surfaces there, not here.
+	defaultMongoURI = "mongodb://mongo:27017"
+	// defaultRedisAddr points at the compose-network redis service. Redis
+	// is wired LAZY — no boot ping at all — so the client dials on first
+	// use and every failure maps to the demo's typed 503 at request time.
+	defaultRedisAddr = "redis:6379"
 )
 
 // Config is the validated, typed application configuration, read once at
@@ -56,6 +67,14 @@ type Config struct {
 	// never here: this struct carries configuration, not validation of
 	// another package's syntax.
 	DatabaseURL string
+	// MongoURI is the connection string for the optional MongoDB service
+	// (GDG_MONGO_URI). The server boot-connects with a bounded window and
+	// DEGRADES the mongo demo when it is unreachable — never fails boot.
+	MongoURI string
+	// RedisAddr is the address of the optional Redis service
+	// (GDG_REDIS_ADDR). The client is lazy — no boot ping — so an
+	// unreachable Redis surfaces only as the demo's typed 503.
+	RedisAddr string
 }
 
 // LoadConfig builds a Config from the environment through getenv, which is
@@ -70,6 +89,8 @@ func LoadConfig(getenv func(string) string) (Config, error) {
 		LogLevel:    defaultLogLevel,
 		GRPCAddr:    defaultGRPCAddr,
 		DatabaseURL: defaultDatabaseURL,
+		MongoURI:    defaultMongoURI,
+		RedisAddr:   defaultRedisAddr,
 	}
 
 	if raw := strings.TrimSpace(getenv(envPort)); raw != "" {
@@ -101,6 +122,14 @@ func LoadConfig(getenv func(string) string) (Config, error) {
 
 	if raw := strings.TrimSpace(getenv(envDatabaseURL)); raw != "" {
 		cfg.DatabaseURL = raw
+	}
+
+	if raw := strings.TrimSpace(getenv(envMongoURI)); raw != "" {
+		cfg.MongoURI = raw
+	}
+
+	if raw := strings.TrimSpace(getenv(envRedisAddr)); raw != "" {
+		cfg.RedisAddr = raw
 	}
 
 	return cfg, nil

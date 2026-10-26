@@ -190,6 +190,27 @@ import {
   GetAuditDemoUseCase,
   DB_AUDIT_DEMO_USE_CASE,
 } from '../domain/demo/get-db-audit-demo-usecase';
+import { ORMProbeApi } from '../data/demo/orm-probe-api';
+import { ORMProbeRepositoryImpl } from '../data/demo/orm-probe-repository-impl';
+import type { ORMProbeRepository } from '../domain/demo/orm-probe-repository';
+import {
+  GetORMProbeDemoUseCase,
+  DB_ORM_PROBE_DEMO_USE_CASE,
+} from '../domain/demo/get-orm-probe-demo-usecase';
+import { MongoConsoleApi } from '../data/demo/mongo-console-api';
+import { MongoConsoleRepositoryImpl } from '../data/demo/mongo-console-repository-impl';
+import type { MongoConsoleRepository } from '../domain/demo/mongo-console-repository';
+import {
+  GetMongoConsoleDemoUseCase,
+  MONGO_CONSOLE_DEMO_USE_CASE,
+} from '../domain/demo/get-mongo-console-demo-usecase';
+import { RedisPlaygroundApi } from '../data/demo/redis-playground-api';
+import { RedisPlaygroundRepositoryImpl } from '../data/demo/redis-playground-repository-impl';
+import type { RedisPlaygroundRepository } from '../domain/demo/redis-playground-repository';
+import {
+  GetRedisPlaygroundDemoUseCase,
+  REDIS_PLAYGROUND_DEMO_USE_CASE,
+} from '../domain/demo/get-redis-playground-demo-usecase';
 
 /**
  * Service-locator container — this client's composition root, mirroring the
@@ -336,6 +357,18 @@ export const ContainerTokens = {
   AuditRepository: Symbol('AuditRepository'),
   // Same aliasing story as the headers demo (DB_AUDIT_DEMO_USE_CASE).
   GetAuditDemoUseCase: DB_AUDIT_DEMO_USE_CASE,
+  ORMProbeApi: Symbol('ORMProbeApi'),
+  ORMProbeRepository: Symbol('ORMProbeRepository'),
+  // Same aliasing story as the headers demo (DB_ORM_PROBE_DEMO_USE_CASE).
+  GetORMProbeDemoUseCase: DB_ORM_PROBE_DEMO_USE_CASE,
+  MongoConsoleApi: Symbol('MongoConsoleApi'),
+  MongoConsoleRepository: Symbol('MongoConsoleRepository'),
+  // Same aliasing story as the headers demo (MONGO_CONSOLE_DEMO_USE_CASE).
+  GetMongoConsoleDemoUseCase: MONGO_CONSOLE_DEMO_USE_CASE,
+  RedisPlaygroundApi: Symbol('RedisPlaygroundApi'),
+  RedisPlaygroundRepository: Symbol('RedisPlaygroundRepository'),
+  // Same aliasing story as the headers demo (REDIS_PLAYGROUND_DEMO_USE_CASE).
+  GetRedisPlaygroundDemoUseCase: REDIS_PLAYGROUND_DEMO_USE_CASE,
 } as const;
 
 class Container {
@@ -669,6 +702,36 @@ class Container {
     this.register(
       ContainerTokens.GetAuditDemoUseCase,
       new GetAuditDemoUseCase(this.auditRepository),
+    );
+
+    this.register(ContainerTokens.ORMProbeApi, new ORMProbeApi(config));
+    this.register(
+      ContainerTokens.ORMProbeRepository,
+      new ORMProbeRepositoryImpl(this.ormProbeApi),
+    );
+    this.register(
+      ContainerTokens.GetORMProbeDemoUseCase,
+      new GetORMProbeDemoUseCase(this.ormProbeRepository),
+    );
+
+    this.register(ContainerTokens.MongoConsoleApi, new MongoConsoleApi(config));
+    this.register(
+      ContainerTokens.MongoConsoleRepository,
+      new MongoConsoleRepositoryImpl(this.mongoConsoleApi),
+    );
+    this.register(
+      ContainerTokens.GetMongoConsoleDemoUseCase,
+      new GetMongoConsoleDemoUseCase(this.mongoConsoleRepository),
+    );
+
+    this.register(ContainerTokens.RedisPlaygroundApi, new RedisPlaygroundApi(config));
+    this.register(
+      ContainerTokens.RedisPlaygroundRepository,
+      new RedisPlaygroundRepositoryImpl(this.redisPlaygroundApi),
+    );
+    this.register(
+      ContainerTokens.GetRedisPlaygroundDemoUseCase,
+      new GetRedisPlaygroundDemoUseCase(this.redisPlaygroundRepository),
     );
   }
 
@@ -1063,6 +1126,44 @@ class Container {
 
   get getAuditDemoUseCase(): GetAuditDemoUseCase {
     return this.resolve<GetAuditDemoUseCase>(ContainerTokens.GetAuditDemoUseCase);
+  }
+
+  get ormProbeApi(): ORMProbeApi {
+    return this.resolve<ORMProbeApi>(ContainerTokens.ORMProbeApi);
+  }
+
+  get ormProbeRepository(): ORMProbeRepository {
+    return this.resolve<ORMProbeRepository>(ContainerTokens.ORMProbeRepository);
+  }
+
+  get getORMProbeDemoUseCase(): GetORMProbeDemoUseCase {
+    return this.resolve<GetORMProbeDemoUseCase>(ContainerTokens.GetORMProbeDemoUseCase);
+  }
+
+  get mongoConsoleApi(): MongoConsoleApi {
+    return this.resolve<MongoConsoleApi>(ContainerTokens.MongoConsoleApi);
+  }
+
+  get mongoConsoleRepository(): MongoConsoleRepository {
+    return this.resolve<MongoConsoleRepository>(ContainerTokens.MongoConsoleRepository);
+  }
+
+  get getMongoConsoleDemoUseCase(): GetMongoConsoleDemoUseCase {
+    return this.resolve<GetMongoConsoleDemoUseCase>(ContainerTokens.GetMongoConsoleDemoUseCase);
+  }
+
+  get redisPlaygroundApi(): RedisPlaygroundApi {
+    return this.resolve<RedisPlaygroundApi>(ContainerTokens.RedisPlaygroundApi);
+  }
+
+  get redisPlaygroundRepository(): RedisPlaygroundRepository {
+    return this.resolve<RedisPlaygroundRepository>(ContainerTokens.RedisPlaygroundRepository);
+  }
+
+  get getRedisPlaygroundDemoUseCase(): GetRedisPlaygroundDemoUseCase {
+    return this.resolve<GetRedisPlaygroundDemoUseCase>(
+      ContainerTokens.GetRedisPlaygroundDemoUseCase,
+    );
   }
 
   // ---- wiring helpers ----
