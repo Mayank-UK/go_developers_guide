@@ -8,8 +8,10 @@ server/guide
 node_modules/
 dist/
 # Env files stay out of git — committed non-secret templates (if any arise)
-# get an explicit `!path` negation here, fastapi-family style.
+# get an explicit `!path` negation here, fastapi-family style. The client
+# build-env template is public-by-design (Umami placeholders, empty = off).
 .env*
+!client/.env.example
 # Test coverage (Go profiles + Vitest HTML reports)
 coverage/
 # Topic 26 (files-media): the file store's runtime home — uploaded bytes and

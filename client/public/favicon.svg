@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" fill="none">
+  <title>Go Developers Guide</title>
+  <!-- indigo app-icon tile (the guide's primary) with a white Go "G" glyph -->
+  <rect x="2" y="2" width="60" height="60" rx="14" fill="#4f46e5" />
+  <g stroke="#ffffff" stroke-width="5.5" stroke-linecap="round" fill="none">
+    <path d="M42.3 23.3 A13.5 13.5 0 1 0 42.3 40.7" />
+    <path d="M44 32 H32.5" />
+  </g>
+</svg>
