@@ -1,0 +1,36 @@
+# gqlgen's contract for the guide's GraphQL surface: which schema files are
+# the source of truth, and where the generated executor, the generated
+# models, and the hand-written resolvers live. Every artifact stays inside
+# internal/graph/ — the tree this topic owns — and the resolvers import the
+# posts USE CASES (guide/internal/domain/posts), never storage, so the
+# dependency rule holds graph-side too.
+#
+# Regenerate (from server/, paths resolve against the working directory):
+#
+#   go tool gqlgen generate --config internal/graph/gqlgen.yml
+#
+# The Time scalar below needs no mapping entry: gqlgen's built-in scalar
+# table binds a `scalar Time` declaration to time.Time (RFC 3339 on the
+# wire) automatically.
+
+schema:
+  - internal/graph/schema/posts.graphqls
+
+exec:
+  filename: internal/graph/generated/execution.go
+  package: generated
+
+model:
+  filename: internal/graph/model/models_gen.go
+  package: model
+
+resolver:
+  layout: follow-schema
+  dir: internal/graph/resolver
+  package: resolver
+  filename_template: "{name}.resolvers.go"
+
+# Nothing is autobound: the schema's types are generated into model/, and
+# the resolvers translate between those wire-shaped structs and the domain
+# entity — the same DTO discipline the REST handlers follow.
+autobind: []

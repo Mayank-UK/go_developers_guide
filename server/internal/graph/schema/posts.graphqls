@@ -1,0 +1,84 @@
+# The posts resource as a GraphQL schema — the same wire the REST surface
+# serves, field for field and camelCase key for camelCase key, reached
+# through one endpoint and a query language instead of five routes and five
+# request shapes. The schema is authored FIRST (schema-first): this file is
+# the contract, gqlgen's codegen turns it into a typed executor plus model
+# structs, and the hand-written resolvers fill those structs from the same
+# domain use cases the REST handlers call.
+
+"""
+One post — exactly the field set GET /api/posts serves. tags is never null:
+an empty list means "no tags", because present-but-empty is data.
+"""
+type Post {
+  id: ID!
+  title: String!
+  body: String!
+  tags: [String!]!
+  createdAt: Time!
+  updatedAt: Time!
+}
+
+"""
+The list envelope, mirroring the REST page field-for-field: items never
+null, honest totals, and the neighbor flags a UI paginates with.
+"""
+type PostPage {
+  items: [Post!]!
+  page: Int!
+  limit: Int!
+  totalItems: Int!
+  totalPages: Int!
+  hasNextPage: Boolean!
+  hasPrevPage: Boolean!
+}
+
+"""
+The create/update input: exactly the draft's three fields. updatePost is
+full replacement (PUT semantics) — the input IS the whole next state.
+"""
+input PostInput {
+  title: String!
+  body: String!
+  tags: [String!]!
+}
+
+type Query {
+  """
+  One page of posts. Omitted arguments take the REST defaults (page 1,
+  limit 10, sort newest); sent ones face the same rules: page >= 1, limit
+  1-50, tag exact-match against normalized tags, sort from the closed set
+  newest | oldest | title. A rule violation is a validation_failed error
+  carrying the same issue details the REST 422 serves.
+  """
+  posts(page: Int, limit: Int, tag: String, sort: String): PostPage!
+
+  """
+  One post by id. Nullable on purpose: a miss is DATA about the world, so
+  it answers null for the field plus an errors entry whose extensions.code
+  is not_found — not a status code, because GraphQL owns only one: 200.
+  """
+  post(id: ID!): Post
+}
+
+type Mutation {
+  "Create a post from the input; returns the stored post with its id."
+  createPost(input: PostInput!): Post!
+
+  """
+  Full replacement of one post. Nullable like post(id): a miss answers
+  null plus a not_found errors entry.
+  """
+  updatePost(id: ID!, input: PostInput!): Post
+
+  """
+  Delete one post; returns the id that was removed. Nullable: deleting a
+  vanished post is the strict stance the REST surface teaches — the miss
+  is the truth, reported as a not_found errors entry, not a silent null
+  result.
+  """
+  deletePost(id: ID!): ID
+}
+
+"An RFC 3339 timestamp; gqlgen's built-in scalar table binds it to time.Time."
+scalar Time
