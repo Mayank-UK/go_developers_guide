@@ -70,6 +70,7 @@
 ## Active tasks
 - Phases 0-5 ✅ (2026-10-26): 15 topics / 17 demos / orders 1-15 live; +POST /api/graphql, +GET /api/openapi.yaml, +gRPC listener :8102. Review gate passed; parallel waves + choreographed deps are the standing execution model (see Directives).
 - NEXT — Phase 6 (data): deps-landing task FIRST (pgx v5, goose v3, sqlc, GORM, mongo-driver, go-redis v9, testcontainers-go), then 16 sql-schema full-stack owner → 17 databases-sql (posts in-memory→PG behind the existing port) → 18 sqlc-gorm ∥ 19 mongodb ∥ 20 redis parallel → wiring at close. Testcontainers docker.sock wiring lands this phase. Full breakdown in the Developer section's Development tasks.
+- QUOTA WINDOW 2026-10-26 ~21:10–22:10 (developer limit; resets 22:10): the Phase 6 deps agent was IN FLIGHT at cutoff. RESUME PLAN on wake: if it completed → verify evidence + commit; if it died → INHERIT-RETRY (proven 3.5 pattern): its on-disk artifacts are server/go.mod+go.sum, server/tools/deps.go, possibly the two app_info DependencyCount pins in domain/demos/{app_info,demo_go_http} tests — a retry agent reviews/fixes/extends per the brief in this session's devlog lineage (pgx v5, goose+sqlc as TOOL directives, libraries anchored via build-tagged tools/deps.go, tidy-idempotent, full verifier, report pinned versions). Uncommitted at cutoff: exactly those files. After deps: launch topic 16 sql-schema (goose, full-stack owner). 22:30+ = quiet hours → auto-continue standing.
 
 # Developer defined section:
 
