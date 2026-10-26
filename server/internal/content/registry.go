@@ -294,5 +294,9 @@ func NewProductionRegistry() (Registry, error) {
 	if err != nil {
 		return Registry{}, fmt.Errorf("build go-language topic: %w", err)
 	}
-	return NewRegistry([]Topic{goLanguage}, groups)
+	goRuntime, err := goRuntimeTopic()
+	if err != nil {
+		return Registry{}, fmt.Errorf("build go-runtime topic: %w", err)
+	}
+	return NewRegistry([]Topic{goLanguage, goRuntime}, groups)
 }

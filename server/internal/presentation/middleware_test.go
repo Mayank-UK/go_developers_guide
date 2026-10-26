@@ -30,6 +30,7 @@ func newAPIServer(registry content.Registry, store *core.ScenarioStore, logger *
 	mux.Handle("GET /api/demo/scenario", NewScenarioGetHandler(store))
 	mux.Handle("PATCH /api/demo/scenario", NewScenarioPatchHandler(store, logger))
 	mux.Handle("GET /api/demo/go/runtime-types", NewRuntimeTypesHandler())
+	mux.Handle("GET /api/demo/runtime/concurrency", NewConcurrencyHandler())
 	return Chain(
 		RequestID,
 		RequestLogger(logger),

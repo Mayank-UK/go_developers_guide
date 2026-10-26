@@ -40,7 +40,9 @@ export type DemoRegistry = Readonly<
 >;
 
 const RuntimeTypesDemo = lazy(() => import('./go/runtime_types_demo'));
+const ConcurrencyDemo = lazy(() => import('./runtime/concurrency_demo'));
 
 export const demoRegistry: DemoRegistry = {
   'go:runtime-types': RuntimeTypesDemo,
+  'runtime:concurrency': ConcurrencyDemo,
 };

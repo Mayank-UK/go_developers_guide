@@ -11,6 +11,8 @@ import { GetScenarioUseCase } from '../domain/scenario/get-scenario-usecase';
 import { PatchScenarioUseCase } from '../domain/scenario/patch-scenario-usecase';
 import { RuntimeTypesRepositoryImpl } from '../data/demo/runtime-types-repository-impl';
 import { GetRuntimeTypesDemoUseCase } from '../domain/demo/get-runtime-types-demo-usecase';
+import { ConcurrencyRepositoryImpl } from '../data/demo/concurrency-repository-impl';
+import { GetConcurrencyDemoUseCase } from '../domain/demo/get-concurrency-demo-usecase';
 
 /**
  * The default config wires only fetch-based sources, so initializing the
@@ -43,6 +45,12 @@ describe('container', () => {
   it('wires the runtime-types demo pipeline through the layers: config → api → repository → use case', () => {
     expect(container.getRuntimeTypesDemoUseCase).toBeInstanceOf(GetRuntimeTypesDemoUseCase);
     expect(container.runtimeTypesRepository).toBeInstanceOf(RuntimeTypesRepositoryImpl);
+    expect(container.appConfig.apiBaseUrl).toBe('/api');
+  });
+
+  it('wires the concurrency demo pipeline through the layers: config → api → repository → use case', () => {
+    expect(container.getConcurrencyDemoUseCase).toBeInstanceOf(GetConcurrencyDemoUseCase);
+    expect(container.concurrencyRepository).toBeInstanceOf(ConcurrencyRepositoryImpl);
     expect(container.appConfig.apiBaseUrl).toBe('/api');
   });
 

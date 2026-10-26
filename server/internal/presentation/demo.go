@@ -25,3 +25,19 @@ func NewRuntimeTypesHandler() *RuntimeTypesHandler {
 func (h *RuntimeTypesHandler) ServeHTTP(w http.ResponseWriter, _ *http.Request) {
 	writeJSON(w, http.StatusOK, demos.BuildRuntimeTypesPayload())
 }
+
+// ConcurrencyHandler serves GET /api/demo/runtime/concurrency, the
+// go-runtime topic's inline demo. The builder performs a real goroutine
+// choreography bounded by one reply timeout, so the handler passes the
+// request's context through and otherwise holds nothing.
+type ConcurrencyHandler struct{}
+
+// NewConcurrencyHandler wires the concurrency demo endpoint.
+func NewConcurrencyHandler() *ConcurrencyHandler {
+	return &ConcurrencyHandler{}
+}
+
+// ServeHTTP implements http.Handler for the concurrency demo payload.
+func (h *ConcurrencyHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	writeJSON(w, http.StatusOK, demos.BuildConcurrencyPayload(r.Context()))
+}

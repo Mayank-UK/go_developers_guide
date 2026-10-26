@@ -60,6 +60,7 @@ func run() error {
 	mux.Handle("GET /api/demo/scenario", presentation.NewScenarioGetHandler(scenarioStore))
 	mux.Handle("PATCH /api/demo/scenario", presentation.NewScenarioPatchHandler(scenarioStore, logger))
 	mux.Handle("GET /api/demo/go/runtime-types", presentation.NewRuntimeTypesHandler())
+	mux.Handle("GET /api/demo/runtime/concurrency", presentation.NewConcurrencyHandler())
 
 	// The documented order: request-id outermost (recovery, logging, and
 	// every error envelope share the id), access logging outside recovery

@@ -17,6 +17,10 @@ import { RuntimeTypesApi } from '../data/demo/runtime-types-api';
 import { RuntimeTypesRepositoryImpl } from '../data/demo/runtime-types-repository-impl';
 import type { RuntimeTypesRepository } from '../domain/demo/runtime-types-repository';
 import { GetRuntimeTypesDemoUseCase } from '../domain/demo/get-runtime-types-demo-usecase';
+import { ConcurrencyApi } from '../data/demo/concurrency-api';
+import { ConcurrencyRepositoryImpl } from '../data/demo/concurrency-repository-impl';
+import type { ConcurrencyRepository } from '../domain/demo/concurrency-repository';
+import { GetConcurrencyDemoUseCase } from '../domain/demo/get-concurrency-demo-usecase';
 
 /**
  * Service-locator container — this client's composition root, mirroring the
@@ -58,6 +62,9 @@ export const ContainerTokens = {
   RuntimeTypesApi: Symbol('RuntimeTypesApi'),
   RuntimeTypesRepository: Symbol('RuntimeTypesRepository'),
   GetRuntimeTypesDemoUseCase: Symbol('GetRuntimeTypesDemoUseCase'),
+  ConcurrencyApi: Symbol('ConcurrencyApi'),
+  ConcurrencyRepository: Symbol('ConcurrencyRepository'),
+  GetConcurrencyDemoUseCase: Symbol('GetConcurrencyDemoUseCase'),
 } as const;
 
 class Container {
@@ -114,6 +121,16 @@ class Container {
     this.register(
       ContainerTokens.GetRuntimeTypesDemoUseCase,
       new GetRuntimeTypesDemoUseCase(this.runtimeTypesRepository),
+    );
+
+    this.register(ContainerTokens.ConcurrencyApi, new ConcurrencyApi(config));
+    this.register(
+      ContainerTokens.ConcurrencyRepository,
+      new ConcurrencyRepositoryImpl(this.concurrencyApi),
+    );
+    this.register(
+      ContainerTokens.GetConcurrencyDemoUseCase,
+      new GetConcurrencyDemoUseCase(this.concurrencyRepository),
     );
   }
 
@@ -177,6 +194,18 @@ class Container {
 
   get getRuntimeTypesDemoUseCase(): GetRuntimeTypesDemoUseCase {
     return this.resolve<GetRuntimeTypesDemoUseCase>(ContainerTokens.GetRuntimeTypesDemoUseCase);
+  }
+
+  get concurrencyApi(): ConcurrencyApi {
+    return this.resolve<ConcurrencyApi>(ContainerTokens.ConcurrencyApi);
+  }
+
+  get concurrencyRepository(): ConcurrencyRepository {
+    return this.resolve<ConcurrencyRepository>(ContainerTokens.ConcurrencyRepository);
+  }
+
+  get getConcurrencyDemoUseCase(): GetConcurrencyDemoUseCase {
+    return this.resolve<GetConcurrencyDemoUseCase>(ContainerTokens.GetConcurrencyDemoUseCase);
   }
 
   // ---- wiring helpers ----
