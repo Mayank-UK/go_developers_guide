@@ -402,19 +402,19 @@ func goHTTPFundamentalsTopic() (Topic, error) {
 				"The inner loop is two commands. ``go run ./cmd/guide`` compiles and starts the server — fast enough, routinely under a second for a module this size, that most Go developers restart rather than watch. ``go build ./cmd/guide`` produces the deployable binary when you want it. There is no transpile step, no bundler, no watchers required: edit, save, re-run. Two hygiene tools ride along in every loop: ``gofmt`` formats source canonically (there is exactly one way Go code looks, which ends style debates in code review), and ``go vet`` flags the suspect constructs the compiler will not — printf verb mismatches, unreachable code, shadowed returns."),
 			text("dev-verify",
 				"Verification is the full pipeline: ``go build ./...``, ``go vet ./...``, and ``go test -race ./...`` — the race detector is a first-class part of the standard invocation in this repo, not an occasional deep check. The family rule this guide keeps: every demo endpoint ships with a handler test through the real middleware chain, and every payload claim the prose makes is pinned by a builder test next to the code. The test guarding THIS topic's demo is a real example — it pins the module facts against the live ``ReadBuildInfo``, including the dependency count against the live manifest:"),
-				code("dev-tests-code", "go",
-					"The test behind the demo: prose claims, pinned as executable facts.",
-					"server/internal/domain/demos/app_info_test.go",
-					"func TestAppInfoModuleFactsMatchTheLiveBuildInfo(t *testing.T) {\n"+
-						"    payload := BuildAppInfoPayload(appInfoTestConfig())\n"+
-						"    buildInfo, ok := debug.ReadBuildInfo()\n"+
-						"    if !ok {\n"+
-						"        t.Fatal(\"a go-built test binary always carries build info\")\n"+
-						"    }\n"+
-						"// …\n"+
-						"    if payload.Module.DependencyCount != len(buildInfo.Deps) || payload.Module.DependencyCount != 12 {\n"+
-						"        t.Errorf(\"dependency count = %d, want 12 (the deliberate-direct-requires count, confirmed live)\", payload.Module.DependencyCount)\n"+
-						"    }"),
+			code("dev-tests-code", "go",
+				"The test behind the demo: prose claims, pinned as executable facts.",
+				"server/internal/domain/demos/app_info_test.go",
+				"func TestAppInfoModuleFactsMatchTheLiveBuildInfo(t *testing.T) {\n"+
+					"    payload := BuildAppInfoPayload(appInfoTestConfig())\n"+
+					"    buildInfo, ok := debug.ReadBuildInfo()\n"+
+					"    if !ok {\n"+
+					"        t.Fatal(\"a go-built test binary always carries build info\")\n"+
+					"    }\n"+
+					"// …\n"+
+					"    if payload.Module.DependencyCount != len(buildInfo.Deps) || payload.Module.DependencyCount != 12 {\n"+
+					"        t.Errorf(\"dependency count = %d, want 12 (the deliberate-direct-requires count, confirmed live)\", payload.Module.DependencyCount)\n"+
+					"    }"),
 			text("dev-devcontainer",
 				"This repo's environment is a devcontainer stack: compose keeps the server on :8100 beside PostgreSQL, Redis, and MongoDB; the client's Vite dev server on :5175 proxies ``/api`` to it. Verification runs inside the long-lived containers — no ephemeral churn — with named volumes caching the Go module and build caches so an exec'd ``go test`` is warm. The docker-exec command pair is the project's definition of done, and it is exactly what produced the green output behind this page: the stack you are reading this from is the stack that tested it."),
 			text("dev-air",
