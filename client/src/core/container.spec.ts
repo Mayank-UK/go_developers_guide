@@ -3,9 +3,12 @@ import { container, ContainerTokens } from './container';
 import { createAppConfig } from './config/app-config';
 import { ContentRepositoryImpl } from '../data/content/content-repository-impl';
 import { HealthRepositoryImpl } from '../data/health/health-repository-impl';
+import { ScenarioRepositoryImpl } from '../data/scenario/scenario-repository-impl';
 import { GetTopicDetailUseCase } from '../domain/content/get-topic-detail-usecase';
 import { ListContentUseCase } from '../domain/content/list-content-usecase';
 import { GetHealthUseCase } from '../domain/health/get-health-usecase';
+import { GetScenarioUseCase } from '../domain/scenario/get-scenario-usecase';
+import { PatchScenarioUseCase } from '../domain/scenario/patch-scenario-usecase';
 
 /**
  * The default config wires only fetch-based sources, so initializing the
@@ -27,6 +30,12 @@ describe('container', () => {
     expect(container.listContentUseCase).toBeInstanceOf(ListContentUseCase);
     expect(container.getTopicDetailUseCase).toBeInstanceOf(GetTopicDetailUseCase);
     expect(container.contentRepository).toBeInstanceOf(ContentRepositoryImpl);
+  });
+
+  it('wires the scenario pipeline through the layers: config → api → repository → use cases', () => {
+    expect(container.getScenarioUseCase).toBeInstanceOf(GetScenarioUseCase);
+    expect(container.patchScenarioUseCase).toBeInstanceOf(PatchScenarioUseCase);
+    expect(container.scenarioRepository).toBeInstanceOf(ScenarioRepositoryImpl);
   });
 
   it('getWiring exposes every registered singleton keyed by symbol token', () => {

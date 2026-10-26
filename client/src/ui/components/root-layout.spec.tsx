@@ -48,6 +48,12 @@ const contentIndex = {
   ],
 };
 
+/** The header panel's mount-time GET; stubbed so every render is deterministic. */
+const scenario = {
+  url: '/api/demo/scenario',
+  body: { dataMode: 'fake', injectFailure: 'none' },
+};
+
 const topicDetail = {
   version: 1,
   id: 'go-language',
@@ -64,6 +70,7 @@ describe('root layout header back button', () => {
     stubApiFetch([
       { url: '/api/health', body: { status: 'ok', env: 'dev' } },
       { url: '/api/content', body: contentIndex },
+      scenario,
     ]);
 
     renderAt(RoutePaths.Home);
@@ -75,7 +82,7 @@ describe('root layout header back button', () => {
   });
 
   it('is present on a topic route', async () => {
-    stubApiFetch([{ url: '/api/content/go-language', body: topicDetail }]);
+    stubApiFetch([{ url: '/api/content/go-language', body: topicDetail }, scenario]);
 
     renderAt(topicPath('go-language'));
 
@@ -86,6 +93,8 @@ describe('root layout header back button', () => {
   });
 
   it('is present on the unknown-route fallback (any non-home path shows it)', async () => {
+    stubApiFetch([scenario]);
+
     renderAt('/nowhere/at/all');
 
     expect(
@@ -94,11 +103,27 @@ describe('root layout header back button', () => {
     expect(screen.getByRole('button', { name: 'Go back' })).toBeInTheDocument();
   });
 
+  it('carries the global scenario control next to the theme toggle', async () => {
+    stubApiFetch([
+      { url: '/api/health', body: { status: 'ok', env: 'dev' } },
+      { url: '/api/content', body: contentIndex },
+      scenario,
+    ]);
+
+    renderAt(RoutePaths.Home);
+
+    expect(await screen.findByTestId('scenario-panel')).toBeInTheDocument();
+    expect(screen.getByLabelText('Data mode')).toBeInTheDocument();
+    expect(screen.getByLabelText('Inject failure')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /switch to .+ theme/i })).toBeInTheDocument();
+  });
+
   it('clicking it walks history back to the previous page', async () => {
     stubApiFetch([
       { url: '/api/health', body: { status: 'ok', env: 'dev' } },
       { url: '/api/content', body: contentIndex },
       { url: '/api/content/go-language', body: topicDetail },
+      scenario,
     ]);
 
     renderAt(RoutePaths.Home);

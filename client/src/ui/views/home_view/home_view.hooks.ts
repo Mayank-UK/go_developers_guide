@@ -51,9 +51,11 @@ export function useHealth(
 
 /**
  * The topic map's render statuses. `idle` is the pre-request state (before the
- * load effect first runs); `empty` is a VALID served state — an index with
- * zero topics means the registry is still being authored, not that anything
- * failed.
+ * load effect first runs); `empty` is a VALID served state — an index with no
+ * groups at all means the registry is still being authored, not that anything
+ * failed. Groups with zero topics are NOT empty: they render in `ready` with
+ * their own friendly per-group note (the curriculum skeleton ships before its
+ * topics do).
  */
 export type TopicMapStatus =
   | { state: 'idle' }
@@ -77,8 +79,9 @@ export interface TopicMapState {
  * fakes.
  *
  * A ready index is rendered exactly as served — the authored curriculum is
- * the whole map; an EMPTY served registry is its own distinct landing-soon
- * state.
+ * the whole map, and groups with zero topics render with a friendly per-group
+ * note. Only a served registry with no groups at all is its own distinct
+ * landing-soon state.
  */
 export function useContentIndex(
   listContentUseCase: ListContentUseCase = container.listContentUseCase,
@@ -94,7 +97,7 @@ export function useContentIndex(
       if (cancelled) return;
       if (result.ok) {
         setStatus(
-          result.value.topics.length === 0
+          result.value.groups.length === 0 && result.value.topics.length === 0
             ? { state: 'empty' }
             : { state: 'ready', index: result.value },
         );

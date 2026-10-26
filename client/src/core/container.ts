@@ -8,6 +8,11 @@ import { HealthApi } from '../data/health/health-api';
 import { HealthRepositoryImpl } from '../data/health/health-repository-impl';
 import type { HealthRepository } from '../domain/health/health-repository';
 import { GetHealthUseCase } from '../domain/health/get-health-usecase';
+import { ScenarioApi } from '../data/scenario/scenario-api';
+import { ScenarioRepositoryImpl } from '../data/scenario/scenario-repository-impl';
+import type { ScenarioRepository } from '../domain/scenario/scenario-repository';
+import { GetScenarioUseCase } from '../domain/scenario/get-scenario-usecase';
+import { PatchScenarioUseCase } from '../domain/scenario/patch-scenario-usecase';
 
 /**
  * Service-locator container — this client's composition root, mirroring the
@@ -21,10 +26,12 @@ import { GetHealthUseCase } from '../domain/health/get-health-usecase';
  * adapters; views resolve through the container and never import data/
  * directly; data/ never imports the container.
  *
- * Phase 0 wired the health pipeline. The content pipeline (content API →
- * repository → index/detail use cases) lands with the content engine, and
- * later phases add the per-topic demo pipelines the same way: one import
- * quartet + token pair + register block + getter per demo.
+ * Phase 0 wired the health pipeline; the content engine added the content
+ * pipeline (content API → repository → index/detail use cases); the demo
+ * scenario toggle (scenario API → repository → get/patch use cases, behind
+ * the root header's ScenarioPanel) rides the same shape. Later phases add
+ * the per-topic demo pipelines the same way: one import quartet + token
+ * pair + register block + getter per demo.
  *
  * `initialize` is idempotent — re-running it just re-registers. Call it once
  * at startup (main.tsx) or in a test's beforeAll.
@@ -40,6 +47,10 @@ export const ContainerTokens = {
   ContentRepository: Symbol('ContentRepository'),
   ListContentUseCase: Symbol('ListContentUseCase'),
   GetTopicDetailUseCase: Symbol('GetTopicDetailUseCase'),
+  ScenarioApi: Symbol('ScenarioApi'),
+  ScenarioRepository: Symbol('ScenarioRepository'),
+  GetScenarioUseCase: Symbol('GetScenarioUseCase'),
+  PatchScenarioUseCase: Symbol('PatchScenarioUseCase'),
 } as const;
 
 class Container {
@@ -72,6 +83,20 @@ class Container {
     this.register(
       ContainerTokens.GetTopicDetailUseCase,
       new GetTopicDetailUseCase(this.contentRepository),
+    );
+
+    this.register(ContainerTokens.ScenarioApi, new ScenarioApi(config));
+    this.register(
+      ContainerTokens.ScenarioRepository,
+      new ScenarioRepositoryImpl(this.scenarioApi),
+    );
+    this.register(
+      ContainerTokens.GetScenarioUseCase,
+      new GetScenarioUseCase(this.scenarioRepository),
+    );
+    this.register(
+      ContainerTokens.PatchScenarioUseCase,
+      new PatchScenarioUseCase(this.scenarioRepository),
     );
   }
 
@@ -107,6 +132,22 @@ class Container {
 
   get getTopicDetailUseCase(): GetTopicDetailUseCase {
     return this.resolve<GetTopicDetailUseCase>(ContainerTokens.GetTopicDetailUseCase);
+  }
+
+  get scenarioApi(): ScenarioApi {
+    return this.resolve<ScenarioApi>(ContainerTokens.ScenarioApi);
+  }
+
+  get scenarioRepository(): ScenarioRepository {
+    return this.resolve<ScenarioRepository>(ContainerTokens.ScenarioRepository);
+  }
+
+  get getScenarioUseCase(): GetScenarioUseCase {
+    return this.resolve<GetScenarioUseCase>(ContainerTokens.GetScenarioUseCase);
+  }
+
+  get patchScenarioUseCase(): PatchScenarioUseCase {
+    return this.resolve<PatchScenarioUseCase>(ContainerTokens.PatchScenarioUseCase);
   }
 
   // ---- wiring helpers ----

@@ -1,17 +1,21 @@
 import { Suspense, useEffect } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router';
 import { ThemeToggle } from './theme-toggle';
+import { ScenarioPanel } from './scenario-panel';
 import { RoutePaths } from '../routing/routes';
 import { initAnalytics } from '../analytics/analytics';
 
 /**
  * RootLayout — the single shared app shell: a quiet header (guide name as a
- * home link + theme toggle) and a scrolling content area via <Outlet/>. The
- * home screen is the navigation hub (the served topic map arrives with the
- * content engine), so the header carries no drawer and no extra chrome — the
- * served content carries the page. The one extra control is the back arrow,
- * shown on every route except home (the hub), so any nested page has a one-
- * click way back through history to where the user came from.
+ * home link + the one global demo-scenario control + theme toggle) and a
+ * scrolling content area via <Outlet/>. The home screen is the navigation
+ * hub, so the header carries no drawer and no other chrome — the served
+ * content carries the page. The scenario panel is the header's single extra
+ * control: the app-wide fake/live + failure-injection toggle every demo
+ * reads, degrading to a muted note rather than ever breaking the shell. The
+ * one further control is the back arrow, shown on every route except home
+ * (the hub), so any nested page has a one-click way back through history to
+ * where the user came from.
  *
  * This is also the app's ONE Suspense boundary for route views: the home view
  * is a lazy() chunk (see ui/routing/router.tsx) and resolves behind this
@@ -52,6 +56,7 @@ export function RootLayout() {
           Go Developers Guide
         </Link>
         <div className="flex-1" />
+        <ScenarioPanel />
         <ThemeToggle />
       </header>
 

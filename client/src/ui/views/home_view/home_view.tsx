@@ -9,9 +9,10 @@ import { groupTopics, useContentIndex, useHealth, type HealthChipState } from '.
  * HomeView — the guide's front door: hero with the live health chip and the
  * curriculum index (topic map) rendered from the content API. Like every
  * screen in this app it owns no teaching content of its own; the topic map is
- * exactly what the server serves — the authored curriculum. An EMPTY index is
- * a valid state (the registry fills in as topics land) and renders a friendly
- * landing note, never a crash.
+ * exactly what the server serves — the authored curriculum. Groups with zero
+ * topics are a VALID state (the curriculum skeleton ships before its topics)
+ * and render with a friendly per-group note; a totally empty registry is its
+ * own landing note — never a crash.
  */
 export function HomeView() {
   const health = useHealth();
@@ -43,18 +44,20 @@ export function HomeView() {
           title="Topic map"
           lead="Every topic the guide teaches, grouped like the curriculum. Each card links to its topic page, rendered live from the content API."
         >
-          {groupTopics(map.status.index).map(({ group, topics }) =>
-            topics.length === 0 ? null : (
-              <section key={group.id} aria-label={group.title} className="flex flex-col gap-md">
-                <h3 className="font-display text-title text-on-surface">{group.title}</h3>
+          {groupTopics(map.status.index).map(({ group, topics }) => (
+            <section key={group.id} aria-label={group.title} className="flex flex-col gap-md">
+              <h3 className="font-display text-title text-on-surface">{group.title}</h3>
+              {topics.length === 0 ? (
+                <EmptyGroupNote groupId={group.id} />
+              ) : (
                 <div className="grid grid-cols-1 gap-md sm:grid-cols-2 lg:grid-cols-3">
                   {topics.map((topic) => (
                     <TopicCard key={topic.id} topic={topic} />
                   ))}
                 </div>
-              </section>
-            ),
-          )}
+              )}
+            </section>
+          ))}
         </SectionWrapper>
       )}
     </div>
@@ -151,6 +154,18 @@ function TopicCard({ topic }: { topic: TopicSummary }) {
 }
 
 /* ---- degradation states ---- */
+
+/** A served group whose topics have not been authored yet — the curriculum skeleton, visible not hidden. */
+function EmptyGroupNote({ groupId }: { groupId: string }) {
+  return (
+    <p
+      data-testid={`group-empty-${groupId}`}
+      className="rounded-md border border-dashed border-outline px-md py-sm text-body-sm text-on-surface-variant"
+    >
+      No topics published in this group yet — they land here as the phases ship.
+    </p>
+  );
+}
 
 function TopicMapSkeleton() {
   return (

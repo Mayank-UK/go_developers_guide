@@ -53,6 +53,16 @@ const contentIndex = {
 
 const emptyIndex = { version: 1, groups: [], topics: [] };
 
+/** The server's CURRENT truth before Phase 3: the full curriculum skeleton, zero topics. */
+const skeletonIndex = {
+  version: 1,
+  groups: [
+    { id: 'foundations', title: 'Foundations', order: 1 },
+    { id: 'framework', title: 'Framework', order: 2 },
+  ],
+  topics: [],
+};
+
 function renderHome() {
   return render(
     <MemoryRouter>
@@ -100,7 +110,30 @@ describe('HomeView', () => {
     ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
   });
 
-  it('renders the friendly landing-soon state for an EMPTY registry (zero topics)', async () => {
+  it('renders every served group with a friendly empty note when no topics are authored yet (the current registry truth)', async () => {
+    stubApiFetch([
+      { url: '/api/health', body: healthOk },
+      { url: '/api/content', body: skeletonIndex },
+    ]);
+
+    renderHome();
+
+    // Both group headings render — the skeleton is visible, not hidden.
+    expect(await screen.findByText('Foundations')).toBeInTheDocument();
+    expect(screen.getByText('Framework')).toBeInTheDocument();
+
+    // Each group carries its own friendly empty note.
+    expect(screen.getByTestId('group-empty-foundations')).toHaveTextContent(
+      'No topics published in this group yet',
+    );
+    expect(screen.getByTestId('group-empty-framework')).toBeInTheDocument();
+
+    // No landing-soon panel (groups exist), no error, no crash.
+    expect(screen.queryByTestId('curriculum-landing-soon')).not.toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('renders the friendly landing-soon state for a registry with no groups at all', async () => {
     stubApiFetch([
       { url: '/api/health', body: healthOk },
       { url: '/api/content', body: emptyIndex },
