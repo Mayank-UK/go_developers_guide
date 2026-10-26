@@ -1,0 +1,316 @@
+# The guide's OpenAPI description of the REAL posts API (topic 11's live
+# surface): five operations over two paths, the exact wire shapes the
+# handlers serve, and the recorded error envelope. This file is the
+# CONTRACT's source of truth — the drift test drives the live handlers and
+# validates their JSON against these schemas, so a line here that lies
+# about the wire fails the suite.
+openapi: 3.1.0
+info:
+  title: Go Developers Guide — posts API
+  version: 1.0.0
+  summary: "The teaching posts resource: list, create, read, replace, delete."
+  description: |
+    The reference REST surface this guide teaches against. Every schema
+    below mirrors the handlers' actual JSON, field for field: camelCase
+    keys, collections never null (empty pages render items: []), optional
+    members omitted rather than null, timestamps as RFC 3339 strings, and
+    every failure wearing the same error envelope with a request id.
+servers:
+  - url: http://localhost:8100
+    description: The devcontainer server (docker compose stack)
+paths:
+  /api/posts:
+    get:
+      operationId: listPosts
+      summary: One page of the posts collection
+      description: |
+        Pagination, tag filtering, and sorting via query parameters.
+        Unknown query KEYS are ignored (intermediaries append parameters);
+        unknown VALUES for page, limit, and sort are a 422 that names
+        every broken parameter. A page past the end is a valid 200 whose
+        items are empty and whose totals still tell the truth.
+      parameters:
+        - name: page
+          in: query
+          description: 1-based page number; omit for the first page.
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          description: Page size, 1–50; omit for 10.
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 10
+        - name: tag
+          in: query
+          description: Exact match against the post's write-normalized tags.
+          schema:
+            type: string
+        - name: sort
+          in: query
+          description: Closed sort vocabulary; omit for newest first.
+          schema:
+            type: string
+            enum: [newest, oldest, title]
+            default: newest
+      responses:
+        "200":
+          description: The requested page with honest pagination metadata.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostPage"
+        "422":
+          description: page, limit, or sort outside the rules.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+    post:
+      operationId: createPost
+      summary: Create a post from a full draft body
+      description: |
+        The body is exactly the draft's three fields; unknown fields,
+        trailing documents, and JSON null are refused with a 422 whose
+        details carry the decoder's reason. On success the response bears
+        the stored post and a Location header naming it.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PostDraft"
+      responses:
+        "201":
+          description: The stored post; Location names its URL.
+          headers:
+            Location:
+              description: The created post's URL, /api/posts/{id}.
+              schema:
+                type: string
+              required: true
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Post"
+        "422":
+          description: Body is not one strict JSON object, or a field broke a rule.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+  /api/posts/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: The post's server-assigned id (for example p-1).
+        schema:
+          type: string
+    get:
+      operationId: getPost
+      summary: Read one post by id
+      responses:
+        "200":
+          description: The post.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Post"
+        "404":
+          description: No post with that id exists.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+    put:
+      operationId: replacePost
+      summary: Full replacement — the body is the whole next state
+      description: |
+        PUT semantics, strictly: every field sent is written, every field
+        omitted is gone (omit tags and the post ends with none). The
+        replacement draft obeys the same rules as create; createdAt is
+        preserved and updatedAt moves.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PostDraft"
+      responses:
+        "200":
+          description: The stored post after replacement.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Post"
+        "404":
+          description: No post with that id exists.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "422":
+          description: The replacement draft broke a field rule.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+    delete:
+      operationId: deletePost
+      summary: Remove a post under the strict stance
+      description: |
+        204 with no body on removal; the 404 envelope on a miss — deleting
+        a vanished post reports the world as it is now, not a silent
+        success.
+      responses:
+        "204":
+          description: Removed; no body.
+        "404":
+          description: Already gone; the miss is the truth.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+components:
+  schemas:
+    Post:
+      type: object
+      description: One post on the wire — the response shape of read, create, and replace.
+      required: [id, title, body, tags, createdAt, updatedAt]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          description: Server-assigned identity, for example p-1.
+        title:
+          type: string
+          description: Trimmed, 1–120 characters.
+        body:
+          type: string
+          description: Trimmed, 1–5000 characters.
+        tags:
+          type: array
+          description: Write-normalized labels (trimmed, lowercase); [] when none — never null.
+          items:
+            type: string
+        createdAt:
+          type: string
+          format: date-time
+          description: When the post was stored, RFC 3339 UTC.
+        updatedAt:
+          type: string
+          format: date-time
+          description: When the post last changed (equals createdAt until then).
+    PostDraft:
+      type: object
+      description: The create/replace request body — title and body required, tags optional.
+      required: [title, body]
+      additionalProperties: false
+      properties:
+        title:
+          type: string
+          description: Required after trimming; at most 120 characters.
+          minLength: 1
+          maxLength: 120
+        body:
+          type: string
+          description: Required after trimming; at most 5000 characters.
+          minLength: 1
+          maxLength: 5000
+        tags:
+          type: array
+          description: Normalized on the way in (trimmed, lowercased, blanks dropped).
+          maxItems: 8
+          items:
+            type: string
+            maxLength: 24
+    PostPage:
+      type: object
+      description: The list envelope — one page's items plus the honest pagination metadata.
+      required: [items, page, limit, totalItems, totalPages, hasNextPage, hasPrevPage]
+      additionalProperties: false
+      properties:
+        items:
+          type: array
+          description: This page's posts, sorted; [] for an empty page — never null.
+          items:
+            $ref: "#/components/schemas/Post"
+        page:
+          type: integer
+          description: The 1-based page number this response represents.
+          minimum: 1
+        limit:
+          type: integer
+          description: The page size in effect (the default when the caller omitted it).
+          minimum: 1
+          maximum: 50
+        totalItems:
+          type: integer
+          description: Every post matching the filter — not just this page.
+          minimum: 0
+        totalPages:
+          type: integer
+          description: Ceiling of totalItems / limit; 0 when the collection is empty.
+          minimum: 0
+        hasNextPage:
+          type: boolean
+          description: True when a later page exists.
+        hasPrevPage:
+          type: boolean
+          description: True when an earlier page exists.
+    ErrorEnvelope:
+      type: object
+      description: Every failure on every route wears this one shape.
+      required: [error]
+      additionalProperties: false
+      properties:
+        error:
+          $ref: "#/components/schemas/ErrorBody"
+    ErrorBody:
+      type: object
+      description: "The envelope's payload: taxonomy bucket, human sentence, join key, structured context."
+      required: [code, message, requestId]
+      additionalProperties: false
+      properties:
+        code:
+          type: string
+          description: The closed taxonomy bucket clients branch on.
+          enum: [validation_failed, unauthorized, forbidden, not_found, conflict, rate_limited, service_unavailable, internal]
+        message:
+          type: string
+          description: One human sentence, safe to show any user.
+        requestId:
+          type: string
+          description: Matches the x-request-id response header and the server's warn log.
+        details:
+          description: Structured context — omitted when absent, never null.
+          x-go-type: any
+          oneOf:
+            - type: array
+              description: The collected validation issues (field, rule, got).
+              items:
+                $ref: "#/components/schemas/ValidationIssue"
+            - type: object
+              description: The decoder's refusal reason keyed by body.
+              additionalProperties:
+                type: string
+    ValidationIssue:
+      type: object
+      description: One validation finding, structured for the details array.
+      required: [field, rule, got]
+      additionalProperties: false
+      properties:
+        field:
+          type: string
+          description: Which input field broke the rule.
+        rule:
+          type: string
+          description: The rule in words, including the bound it enforces.
+        got:
+          type: string
+          description: What the server actually received, quoted.

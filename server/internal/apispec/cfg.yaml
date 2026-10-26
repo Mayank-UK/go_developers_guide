@@ -1,0 +1,17 @@
+# oapi-codegen configuration for the guide's OpenAPI-first types.
+# Generates ONLY the schema models from ../../api/openapi.yaml — no server
+# stubs, no client, no embedded spec — so the output stays stdlib-only
+# (time.Time for date-time, plain structs for objects) and no runtime
+# dependency is introduced. The one deliberate extension in the spec is
+# `x-go-type: any` on ErrorBody.details: the wire genuinely varies (an
+# issue array for rule failures, an object for strict-decode refusals), so
+# the spec documents the union with oneOf for every tool that reads it —
+# and codegen maps it to Go's any rather than a union helper type that
+# would drag in github.com/oapi-codegen/runtime. Regenerate after editing
+# the spec:
+#
+#	go generate ./internal/apispec
+package: apispec
+generate:
+  models: true
+output: types.gen.go
