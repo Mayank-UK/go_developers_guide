@@ -20,9 +20,14 @@
         "esbenp.prettier-vscode"
       ]
     }
-  }
-  // postCreateCommand arrives in Phase 0.B with server/go.mod (the module
-  // cache rides the gdg-go named volume, so it is a warm-up, not an
-  // install):
-  //   "postCreateCommand": "bash -c \"cd server && go mod download\""
+  },
+  // Phase 5 (2026-10-26): reproduce the protoc toolchain that lives OUTSIDE
+  // the Go module on a container rebuild — buf is the .proto compiler host,
+  // protoc-gen-go/protoc-gen-go-grpc ride the same module versions the
+  // server pins (protoc-gen-go-grpc is its own nested module: its tag is the
+  // plugin's, not grpc-go's). Pinned, never @latest. The codegen CLIs need
+  // no entry here: oapi-codegen and gqlgen are pinned as `tool` directives
+  // in server/go.mod and run via `go tool` — as do both protoc plugins.
+  // `go mod download` is a warm-up (module cache rides the gdg-go volume).
+  "postCreateCommand": "bash -c 'cd server && go mod download && GOBIN=/usr/local/bin go install github.com/bufbuild/buf/cmd/buf@v1.75.0 && GOBIN=/usr/local/bin go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.36.12 && GOBIN=/usr/local/bin go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.6.2'"
 }
