@@ -57,7 +57,7 @@ describe('DemoHost', () => {
     // Phase 3 fundamentals (runtime-types, concurrency, headers, app-info,
     // matrix, context, race) plus the Phase 4 request-handling set
     // (routing explorer, middleware pipeline, reqres inspector + methods,
-    // validation arena).
+    // validation arena) and the Phase 5 api-design posts workbench.
     expect(Object.keys(demoRegistry)).toEqual([
       'go:runtime-types',
       'runtime:concurrency',
@@ -71,6 +71,7 @@ describe('DemoHost', () => {
       'reqres:inspector',
       'reqres:methods',
       'validation:arena',
+      'api:posts-workbench',
     ]);
   });
 });

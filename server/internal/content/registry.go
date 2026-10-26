@@ -330,10 +330,14 @@ func NewProductionRegistry() (Registry, error) {
 	if err != nil {
 		return Registry{}, fmt.Errorf("build validation topic: %w", err)
 	}
+	apiDesign, err := apiDesignTopic()
+	if err != nil {
+		return Registry{}, fmt.Errorf("build api-design topic: %w", err)
+	}
 	return NewRegistry(
 		[]Topic{
 			goLanguage, goRuntime, httpWeb, goHTTPFundamentals, interfacesComposition,
-			goroutinesChannels, routing, middleware, requestResponse, validation,
+			goroutinesChannels, routing, middleware, requestResponse, validation, apiDesign,
 		},
 		groups,
 	)

@@ -85,6 +85,20 @@ import {
   GetValidationArenaDemoUseCase,
   VALIDATION_ARENA_DEMO_USE_CASE,
 } from '../domain/demo/get-validation-arena-demo-usecase';
+import { PostsApi } from '../data/posts/posts-api';
+import { PostsRepositoryImpl } from '../data/posts/posts-repository-impl';
+import type { PostsRepository } from '../domain/posts/post-repository';
+import { ListPostsUseCase } from '../domain/posts/list-posts-usecase';
+import { CreatePostUseCase } from '../domain/posts/create-post-usecase';
+import { ReplacePostUseCase } from '../domain/posts/replace-post-usecase';
+import { DeletePostUseCase } from '../domain/posts/delete-post-usecase';
+import { PostsWorkbenchApi } from '../data/demo/posts-workbench-api';
+import { PostsWorkbenchRepositoryImpl } from '../data/demo/posts-workbench-repository-impl';
+import type { PostsWorkbenchRepository } from '../domain/demo/posts-workbench-repository';
+import {
+  GetPostsWorkbenchDemoUseCase,
+  POSTS_WORKBENCH_DEMO_USE_CASE,
+} from '../domain/demo/get-posts-workbench-demo-usecase';
 
 /**
  * Service-locator container — this client's composition root, mirroring the
@@ -171,6 +185,16 @@ export const ContainerTokens = {
   ValidationArenaRepository: Symbol('ValidationArenaRepository'),
   // Same aliasing story as the headers demo (VALIDATION_ARENA_DEMO_USE_CASE).
   GetValidationArenaDemoUseCase: VALIDATION_ARENA_DEMO_USE_CASE,
+  PostsApi: Symbol('PostsApi'),
+  PostsRepository: Symbol('PostsRepository'),
+  ListPostsUseCase: Symbol('ListPostsUseCase'),
+  CreatePostsUseCase: Symbol('CreatePostsUseCase'),
+  ReplacePostsUseCase: Symbol('ReplacePostsUseCase'),
+  DeletePostsUseCase: Symbol('DeletePostsUseCase'),
+  PostsWorkbenchApi: Symbol('PostsWorkbenchApi'),
+  PostsWorkbenchRepository: Symbol('PostsWorkbenchRepository'),
+  // Same aliasing story as the headers demo (POSTS_WORKBENCH_DEMO_USE_CASE).
+  GetPostsWorkbenchDemoUseCase: POSTS_WORKBENCH_DEMO_USE_CASE,
 } as const;
 
 class Container {
@@ -337,6 +361,41 @@ class Container {
     this.register(
       ContainerTokens.GetValidationArenaDemoUseCase,
       new GetValidationArenaDemoUseCase(this.validationArenaRepository),
+    );
+
+    // The posts resource pipeline — the first REAL resource slice (the
+    // api-design topic's /api/posts CRUD): one API + repository shared by
+    // four verb use cases, mirroring the server's composition root.
+    this.register(ContainerTokens.PostsApi, new PostsApi(config));
+    this.register(
+      ContainerTokens.PostsRepository,
+      new PostsRepositoryImpl(this.postsApi),
+    );
+    this.register(
+      ContainerTokens.ListPostsUseCase,
+      new ListPostsUseCase(this.postsRepository),
+    );
+    this.register(
+      ContainerTokens.CreatePostsUseCase,
+      new CreatePostUseCase(this.postsRepository),
+    );
+    this.register(
+      ContainerTokens.ReplacePostsUseCase,
+      new ReplacePostUseCase(this.postsRepository),
+    );
+    this.register(
+      ContainerTokens.DeletePostsUseCase,
+      new DeletePostUseCase(this.postsRepository),
+    );
+
+    this.register(ContainerTokens.PostsWorkbenchApi, new PostsWorkbenchApi(config));
+    this.register(
+      ContainerTokens.PostsWorkbenchRepository,
+      new PostsWorkbenchRepositoryImpl(this.postsWorkbenchApi),
+    );
+    this.register(
+      ContainerTokens.GetPostsWorkbenchDemoUseCase,
+      new GetPostsWorkbenchDemoUseCase(this.postsWorkbenchRepository),
     );
   }
 
@@ -536,6 +595,42 @@ class Container {
 
   get getValidationArenaDemoUseCase(): GetValidationArenaDemoUseCase {
     return this.resolve<GetValidationArenaDemoUseCase>(ContainerTokens.GetValidationArenaDemoUseCase);
+  }
+
+  get postsApi(): PostsApi {
+    return this.resolve<PostsApi>(ContainerTokens.PostsApi);
+  }
+
+  get postsRepository(): PostsRepository {
+    return this.resolve<PostsRepository>(ContainerTokens.PostsRepository);
+  }
+
+  get listPostsUseCase(): ListPostsUseCase {
+    return this.resolve<ListPostsUseCase>(ContainerTokens.ListPostsUseCase);
+  }
+
+  get createPostUseCase(): CreatePostUseCase {
+    return this.resolve<CreatePostUseCase>(ContainerTokens.CreatePostsUseCase);
+  }
+
+  get replacePostUseCase(): ReplacePostUseCase {
+    return this.resolve<ReplacePostUseCase>(ContainerTokens.ReplacePostsUseCase);
+  }
+
+  get deletePostUseCase(): DeletePostUseCase {
+    return this.resolve<DeletePostUseCase>(ContainerTokens.DeletePostsUseCase);
+  }
+
+  get postsWorkbenchApi(): PostsWorkbenchApi {
+    return this.resolve<PostsWorkbenchApi>(ContainerTokens.PostsWorkbenchApi);
+  }
+
+  get postsWorkbenchRepository(): PostsWorkbenchRepository {
+    return this.resolve<PostsWorkbenchRepository>(ContainerTokens.PostsWorkbenchRepository);
+  }
+
+  get getPostsWorkbenchDemoUseCase(): GetPostsWorkbenchDemoUseCase {
+    return this.resolve<GetPostsWorkbenchDemoUseCase>(ContainerTokens.GetPostsWorkbenchDemoUseCase);
   }
 
   // ---- wiring helpers ----

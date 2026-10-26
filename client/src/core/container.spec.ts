@@ -57,6 +57,16 @@ import {
   GetValidationArenaDemoUseCase,
   VALIDATION_ARENA_DEMO_USE_CASE,
 } from '../domain/demo/get-validation-arena-demo-usecase';
+import { PostsRepositoryImpl } from '../data/posts/posts-repository-impl';
+import { ListPostsUseCase } from '../domain/posts/list-posts-usecase';
+import { CreatePostUseCase } from '../domain/posts/create-post-usecase';
+import { ReplacePostUseCase } from '../domain/posts/replace-post-usecase';
+import { DeletePostUseCase } from '../domain/posts/delete-post-usecase';
+import { PostsWorkbenchRepositoryImpl } from '../data/demo/posts-workbench-repository-impl';
+import {
+  GetPostsWorkbenchDemoUseCase,
+  POSTS_WORKBENCH_DEMO_USE_CASE,
+} from '../domain/demo/get-posts-workbench-demo-usecase';
 
 /**
  * The default config wires only fetch-based sources, so initializing the
@@ -183,6 +193,29 @@ describe('container', () => {
     expect(container.appConfig.apiBaseUrl).toBe('/api');
     expect(container.resolve(VALIDATION_ARENA_DEMO_USE_CASE)).toBe(
       container.getValidationArenaDemoUseCase,
+    );
+  });
+
+  it('wires the posts resource pipeline: one api + repository behind four verb use cases', () => {
+    expect(container.listPostsUseCase).toBeInstanceOf(ListPostsUseCase);
+    expect(container.createPostUseCase).toBeInstanceOf(CreatePostUseCase);
+    expect(container.replacePostUseCase).toBeInstanceOf(ReplacePostUseCase);
+    expect(container.deletePostUseCase).toBeInstanceOf(DeletePostUseCase);
+    expect(container.postsRepository).toBeInstanceOf(PostsRepositoryImpl);
+    expect(container.appConfig.apiBaseUrl).toBe('/api');
+    // All four verbs share the ONE repository instance — the mirror of the
+    // server's composition root (one postsRepo behind five use cases).
+    const wiring = container.getWiring();
+    expect(wiring.get(ContainerTokens.CreatePostsUseCase)).toBe(container.createPostUseCase);
+    expect(wiring.get(ContainerTokens.ListPostsUseCase)).toBe(container.listPostsUseCase);
+  });
+
+  it('wires the posts-workbench demo pipeline through the layers: config → api → repository → use case', () => {
+    expect(container.getPostsWorkbenchDemoUseCase).toBeInstanceOf(GetPostsWorkbenchDemoUseCase);
+    expect(container.postsWorkbenchRepository).toBeInstanceOf(PostsWorkbenchRepositoryImpl);
+    expect(container.appConfig.apiBaseUrl).toBe('/api');
+    expect(container.resolve(POSTS_WORKBENCH_DEMO_USE_CASE)).toBe(
+      container.getPostsWorkbenchDemoUseCase,
     );
   });
 

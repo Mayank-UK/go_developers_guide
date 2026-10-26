@@ -17,6 +17,8 @@ import (
 
 	"guide/internal/content"
 	"guide/internal/core"
+	postsmemory "guide/internal/data/posts"
+	"guide/internal/domain/posts"
 	"guide/internal/presentation"
 )
 
@@ -71,6 +73,24 @@ func run() error {
 	mux.Handle("GET /api/demo/reqres/inspector", presentation.NewReqresInspectorHandler())
 	mux.Handle("GET /api/demo/reqres/methods", presentation.NewReqresMethodsHandler())
 	mux.Handle("GET /api/demo/validation/arena", presentation.NewValidationArenaHandler())
+	mux.Handle("GET /api/demo/api/posts-workbench", presentation.NewPostsWorkbenchHandler())
+
+	// The posts resource — the api-design topic's real API surface, and
+	// the substrate later topics reuse (authorization guards its ids,
+	// webhooks fire on its writes, the docs topics document its routes).
+	// One repository behind five use cases behind five thin handlers; the
+	// in-memory adapter is the swap seam the databases topic replaces.
+	postsRepo := postsmemory.NewRepository()
+	postsList := posts.NewListPostsUseCase(postsRepo)
+	postsCreate := posts.NewCreatePostUseCase(postsRepo)
+	postsGet := posts.NewGetPostUseCase(postsRepo)
+	postsReplace := posts.NewReplacePostUseCase(postsRepo)
+	postsDelete := posts.NewDeletePostUseCase(postsRepo)
+	mux.Handle("GET /api/posts", presentation.NewPostsListHandler(postsList, logger))
+	mux.Handle("POST /api/posts", presentation.NewPostsCreateHandler(postsCreate, logger))
+	mux.Handle("GET /api/posts/{id}", presentation.NewPostDetailHandler(postsGet, logger))
+	mux.Handle("PUT /api/posts/{id}", presentation.NewPostReplaceHandler(postsReplace, logger))
+	mux.Handle("DELETE /api/posts/{id}", presentation.NewPostDeleteHandler(postsDelete, logger))
 
 	// The documented order: request-id outermost (recovery, logging, and
 	// every error envelope share the id), access logging outside recovery
