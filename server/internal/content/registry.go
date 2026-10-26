@@ -273,10 +273,10 @@ func validateBlock(topic Topic, section Section, block Block, seenBlockIDs map[s
 }
 
 // NewProductionRegistry builds the registry the running server serves: the
-// guide's ten curriculum groups and every registered topic. Phase 1 ships
-// zero topics (the engine comes first); Phase 3 onward adds one module per
-// topic under internal/content/topics/ and lists it here — this function is
-// the single place topic registration happens, so its error fails startup.
+// guide's ten curriculum groups and every registered topic. Phase 3 onward
+// adds one topic_<id>.go file per topic in this package (a builder
+// returning (Topic, error)) and lists it here — this function is the
+// single place topic registration happens, so its error fails startup.
 func NewProductionRegistry() (Registry, error) {
 	groups := []TopicGroup{
 		{ID: "foundations", Title: "Foundations", Order: 1},
@@ -290,6 +290,9 @@ func NewProductionRegistry() (Registry, error) {
 		{ID: "ship", Title: "Ship", Order: 9},
 		{ID: "capstones", Title: "Capstones", Order: 10},
 	}
-	topics := []Topic{}
-	return NewRegistry(topics, groups)
+	goLanguage, err := goLanguageTopic()
+	if err != nil {
+		return Registry{}, fmt.Errorf("build go-language topic: %w", err)
+	}
+	return NewRegistry([]Topic{goLanguage}, groups)
 }
