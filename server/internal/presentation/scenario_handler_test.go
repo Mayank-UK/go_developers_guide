@@ -26,7 +26,7 @@ func TestScenarioGetServesDefaults(t *testing.T) {
 	if rec.Code != http.StatusOK {
 		t.Fatalf("status = %d", rec.Code)
 	}
-	if got, want := strings.TrimSuffix(rec.Body.String(), "\n"), `{"dataMode":"fake","injectFailure":false}`; got != want {
+	if got, want := strings.TrimSuffix(rec.Body.String(), "\n"), `{"dataMode":"fake","injectFailure":"none"}`; got != want {
 		t.Errorf("snapshot = %s, want %s", got, want)
 	}
 }
@@ -38,21 +38,21 @@ func TestScenarioPatchAppliesPartialUpdates(t *testing.T) {
 	if rec.Code != http.StatusOK {
 		t.Fatalf("patch dataMode status = %d body %s", rec.Code, rec.Body.String())
 	}
-	if got, want := strings.TrimSuffix(rec.Body.String(), "\n"), `{"dataMode":"live","injectFailure":false}`; got != want {
+	if got, want := strings.TrimSuffix(rec.Body.String(), "\n"), `{"dataMode":"live","injectFailure":"none"}`; got != want {
 		t.Errorf("patch answer = %s, want %s", got, want)
 	}
 
-	rec = doRequest(server, http.MethodPatch, "/api/demo/scenario", `{"injectFailure":true}`)
+	rec = doRequest(server, http.MethodPatch, "/api/demo/scenario", `{"injectFailure":"latency"}`)
 	if rec.Code != http.StatusOK {
 		t.Fatalf("patch injectFailure status = %d", rec.Code)
 	}
-	if got, want := strings.TrimSuffix(rec.Body.String(), "\n"), `{"dataMode":"live","injectFailure":true}`; got != want {
+	if got, want := strings.TrimSuffix(rec.Body.String(), "\n"), `{"dataMode":"live","injectFailure":"latency"}`; got != want {
 		t.Errorf("partial patch must keep dataMode: %s, want %s", got, want)
 	}
 
 	// The GET reflects the same shared store the PATCH wrote.
 	rec = doRequest(server, http.MethodGet, "/api/demo/scenario", "")
-	if got := rec.Body.String(); got != `{"dataMode":"live","injectFailure":true}`+"\n" {
+	if got := rec.Body.String(); got != `{"dataMode":"live","injectFailure":"latency"}`+"\n" {
 		t.Errorf("GET after PATCH = %s", got)
 	}
 
@@ -79,7 +79,8 @@ func TestScenarioPatchRejectsInvalidBodies(t *testing.T) {
 		`null`,                         // must be an object, not null
 		`{"dataMode":42}`,              // wrong type
 		`{"dataMode":true}`,            // wrong type
-		`{"injectFailure":"yes"}`,      // wrong type
+		`{"injectFailure":true}`,       // wrong type — the enum is a string
+		`{"injectFailure":"bogus"}`,    // unknown enum value
 		`{"dataMode":"bogus"}`,         // unknown enum value
 		`{"dataMode":"live"} {"x":1}`,  // trailing second document
 		`{"dataMode":"live"} trailing`, // trailing garbage
@@ -101,7 +102,7 @@ func TestScenarioPatchRejectsInvalidBodies(t *testing.T) {
 		})
 	}
 
-	if state := store.Snapshot(); state.DataMode != core.DataModeLive || state.InjectFailure {
+	if state := store.Snapshot(); state.DataMode != core.DataModeLive || state.InjectFailure != core.FailureNone {
 		t.Errorf("invalid patches mutated the store: %+v", state)
 	}
 }

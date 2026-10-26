@@ -96,6 +96,22 @@ func buildRegistry(t *testing.T, topics []Topic, groups []TopicGroup) Registry {
 	return registry
 }
 
+func TestSingleBlockSectionsAreLegalAuthoring(t *testing.T) {
+	// The ≥2-blocks-incl-text rule is per TOPIC, not per section — a
+	// narrative one-block section (or a terminal-companion section) next
+	// to a prose-bearing section is exactly the family's authoring shape.
+	_, err := NewRegistry(
+		[]Topic{buildTopic(t, "t1", 1,
+			buildSection(t, "narrative", buildText(t, "x1")),
+			buildSection(t, "terminal", buildCode(t, "c1")),
+		)},
+		[]TopicGroup{buildGroup(t, "foundations", 1)},
+	)
+	if err != nil {
+		t.Fatalf("single-block sections must be valid when the topic carries ≥2 blocks incl text: %v", err)
+	}
+}
+
 func TestEmptyRegistryIsValid(t *testing.T) {
 	registry, err := NewRegistry(nil, nil)
 	if err != nil {
@@ -206,18 +222,31 @@ func TestRegistryValidationRules(t *testing.T) {
 			wantIn: `duplicate section id: "dup"`,
 		},
 		{
-			name: "section with a single block",
+			// Family rule is per TOPIC: a topic whose whole body is one
+			// text block has too little structure to teach.
+			name: "topic with fewer than two blocks",
 			topics: []Topic{buildTopic(t, "t1", 1,
 				buildSection(t, "s1", buildText(t, "x1")))},
 			groups: oneGroup,
-			wantIn: "needs at least 2 blocks",
+			wantIn: "needs at least 2 blocks across its sections",
 		},
 		{
-			name: "section without a text block",
+			// Also per TOPIC: structure without any prose is not teaching.
+			name: "topic without a text block",
 			topics: []Topic{buildTopic(t, "t1", 1,
 				buildSection(t, "s1", buildCode(t, "c1"), buildList(t, "l1")))},
 			groups: oneGroup,
-			wantIn: "section without text block",
+			wantIn: "topic without text block",
+		},
+		{
+			// A section with zero blocks can only arrive via a struct
+			// literal (the constructor rejects it); the registry re-gates.
+			name: "empty section via struct literal",
+			topics: []Topic{buildTopic(t, "t1", 1,
+				buildSection(t, "s1"),
+				Section{ID: "s2", Title: "Empty", Blocks: nil})},
+			groups: oneGroup,
+			wantIn: `empty section: "s2"`,
 		},
 		{
 			name: "duplicate block ids across sections of one topic",

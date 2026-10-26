@@ -150,6 +150,8 @@ func validateTopicContent(topic Topic) error {
 
 	seenSectionIDs := make(map[string]bool, len(topic.Sections))
 	seenBlockIDs := make(map[string]string)
+	totalBlocks := 0
+	hasText := false
 	for _, section := range topic.Sections {
 		if strings.TrimSpace(section.ID) == "" {
 			return fmt.Errorf("section id must not be blank in topic %q", topic.ID)
@@ -159,15 +161,16 @@ func validateTopicContent(topic Topic) error {
 		}
 		seenSectionIDs[section.ID] = true
 
-		// Family authoring rule: a section teaches with prose AND structure —
-		// at least two blocks, one of them text.
-		if len(section.Blocks) < 2 {
+		// A section needs at least one block — but the family authoring rule
+		// (fastapi registry: "TOPIC (≥2 blocks incl. ≥1 text)") is per TOPIC,
+		// not per section: single-block narrative or terminal-companion
+		// sections are legal authoring.
+		if len(section.Blocks) < 1 {
 			return fmt.Errorf(
-				"section too short: %q in topic %q needs at least 2 blocks",
+				"empty section: %q in topic %q needs at least one block",
 				section.ID, topic.ID,
 			)
 		}
-		hasText := false
 		for _, block := range section.Blocks {
 			if block == nil {
 				return fmt.Errorf("nil block in section %q of topic %q", section.ID, topic.ID)
@@ -175,15 +178,17 @@ func validateTopicContent(topic Topic) error {
 			if err := validateBlock(topic, section, block, seenBlockIDs); err != nil {
 				return err
 			}
+			totalBlocks++
 			if _, ok := block.(TextBlock); ok {
 				hasText = true
 			}
 		}
-		if !hasText {
-			return fmt.Errorf(
-				"section without text block: %q in topic %q", section.ID, topic.ID,
-			)
-		}
+	}
+	if totalBlocks < 2 {
+		return fmt.Errorf("topic too short: %q needs at least 2 blocks across its sections", topic.ID)
+	}
+	if !hasText {
+		return fmt.Errorf("topic without text block: %q needs at least one text block", topic.ID)
 	}
 	return nil
 }

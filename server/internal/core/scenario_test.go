@@ -22,8 +22,8 @@ func TestScenarioStoreDefaults(t *testing.T) {
 	if state.DataMode != DataModeFake {
 		t.Errorf("default data mode = %q, want fake", state.DataMode)
 	}
-	if state.InjectFailure {
-		t.Error("default failure injection must be off")
+	if state.InjectFailure != FailureNone {
+		t.Errorf("default failure injection = %q, want none", state.InjectFailure)
 	}
 }
 
@@ -35,16 +35,16 @@ func TestScenarioUpdateAppliesSetFieldsOnly(t *testing.T) {
 	if err != nil {
 		t.Fatalf("update dataMode: %v", err)
 	}
-	if state.DataMode != DataModeLive || state.InjectFailure {
+	if state.DataMode != DataModeLive || state.InjectFailure != FailureNone {
 		t.Errorf("after dataMode patch: %+v", state)
 	}
 
-	on := true
-	state, err = store.Update(ScenarioPatch{InjectFailure: &on})
+	latency := FailureLatency
+	state, err = store.Update(ScenarioPatch{InjectFailure: &latency})
 	if err != nil {
 		t.Fatalf("update injectFailure: %v", err)
 	}
-	if state.DataMode != DataModeLive || !state.InjectFailure {
+	if state.DataMode != DataModeLive || state.InjectFailure != FailureLatency {
 		t.Errorf("partial patch must leave dataMode untouched: %+v", state)
 	}
 
@@ -53,35 +53,54 @@ func TestScenarioUpdateAppliesSetFieldsOnly(t *testing.T) {
 	if err != nil {
 		t.Fatalf("empty patch: %v", err)
 	}
-	if state.DataMode != DataModeLive || !state.InjectFailure {
+	if state.DataMode != DataModeLive || state.InjectFailure != FailureLatency {
 		t.Errorf("empty patch changed state: %+v", state)
 	}
 }
 
-func TestScenarioUpdateRejectsUnknownDataMode(t *testing.T) {
-	store := NewScenarioStore()
-	bogus := DataMode("bogus")
-	_, err := store.Update(ScenarioPatch{DataMode: &bogus})
-	if err == nil {
-		t.Fatal("unknown data mode must be rejected")
+func TestScenarioUpdateRejectsUnknownEnumValues(t *testing.T) {
+	cases := []struct {
+		name  string
+		patch ScenarioPatch
+	}{
+		{
+			name:  "unknown data mode",
+			patch: ScenarioPatch{DataMode: ptr(DataMode("bogus"))},
+		},
+		{
+			name:  "unknown failure injection",
+			patch: ScenarioPatch{InjectFailure: ptr(FailureInjection("bogus"))},
+		},
 	}
-	if !errors.Is(err, ErrValidationFailed) {
-		t.Errorf("error %v must be a ValidationFailed taxonomy error", err)
-	}
-	var appErr *Error
-	if !errors.As(err, &appErr) || appErr.Details == nil {
-		t.Error("rejection must carry details naming the bad value")
-	}
-	// The stored state is untouched by a rejected patch.
-	if state := store.Snapshot(); state.DataMode != DataModeFake || state.InjectFailure {
-		t.Errorf("rejected patch mutated the store: %+v", state)
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			store := NewScenarioStore()
+			_, err := store.Update(tc.patch)
+			if err == nil {
+				t.Fatal("unknown enum value must be rejected")
+			}
+			if !errors.Is(err, ErrValidationFailed) {
+				t.Errorf("error %v must be a ValidationFailed taxonomy error", err)
+			}
+			var appErr *Error
+			if !errors.As(err, &appErr) || appErr.Details == nil {
+				t.Error("rejection must carry details naming the bad value")
+			}
+			// The stored state is untouched by a rejected patch.
+			if state := store.Snapshot(); state != (ScenarioState{DataMode: DataModeFake, InjectFailure: FailureNone}) {
+				t.Errorf("rejected patch mutated the store: %+v", state)
+			}
+		})
 	}
 }
+
+func ptr[T any](v T) *T { return &v }
 
 func TestScenarioStoreIsRaceClean(t *testing.T) {
 	store := NewScenarioStore()
 	var wg sync.WaitGroup
 	live := DataModeLive
+	latency := FailureLatency
 	for i := 0; i < 8; i++ {
 		wg.Add(2)
 		go func() {
@@ -90,19 +109,25 @@ func TestScenarioStoreIsRaceClean(t *testing.T) {
 		}()
 		go func() {
 			defer wg.Done()
-			_, _ = store.Update(ScenarioPatch{DataMode: &live})
+			_, _ = store.Update(ScenarioPatch{DataMode: &live, InjectFailure: &latency})
 		}()
 	}
 	wg.Wait()
-	if state := store.Snapshot(); !state.DataMode.Valid() {
+	state := store.Snapshot()
+	if !state.DataMode.Valid() || !state.InjectFailure.Valid() {
 		t.Errorf("concurrent updates left an invalid state: %+v", state)
 	}
 }
 
 func TestScenarioStateWireShape(t *testing.T) {
-	// Snapshot marshals camelCase: {"dataMode":...,"injectFailure":...}.
-	state := ScenarioState{DataMode: DataModeFake}
-	if got, want := mustMarshal(t, state), `{"dataMode":"fake","injectFailure":false}`; got != want {
+	// Snapshot marshals the fastapi wire verbatim: camelCase keys, enum
+	// string values.
+	state := ScenarioState{DataMode: DataModeFake, InjectFailure: FailureNone}
+	if got, want := mustMarshal(t, state), `{"dataMode":"fake","injectFailure":"none"}`; got != want {
+		t.Errorf("snapshot wire = %s, want %s", got, want)
+	}
+	state = ScenarioState{DataMode: DataModeLive, InjectFailure: FailureLatency}
+	if got, want := mustMarshal(t, state), `{"dataMode":"live","injectFailure":"latency"}`; got != want {
 		t.Errorf("snapshot wire = %s, want %s", got, want)
 	}
 }
