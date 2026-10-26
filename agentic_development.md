@@ -69,7 +69,7 @@
 
 ## Active tasks
 - Phase 0 ✅ + Phase 1 ✅ + Phase 2 ✅ (2026-10-26; commits 3eee136 · 571b919 · 0bd335d · c3f624c · a247ac6 · da69083). Review gate PASSED (developer: continue); parallel subagents sanctioned 2026-10-26 (server/ ∥ client/ only; phases close in order; per-topic authoring sequential).
-- IN FLIGHT — Phase 3 WAVE: 3.5-retry interfaces-and-composition (first agent died on an API-connection error; on-disk artifacts inherited by retry) ∥ 3.6 goroutines-and-channels (new-files-only; master wires registry/main/demo-registry/container/count pins + full verification at wave close). 3.1 ✅ (e1e09f4 + 0293168 + 16ba832) · 3.2 ✅ (bffbdeb — shared files at 2 topics / 2 routes / 2 entries baseline) · 3.3 AUTHORED (761bbb8) · 3.4 AUTHORED (627d8fc; both wiring facts → agents' reports/devlog). Full breakdown in the Developer section's Development tasks.
+- IN FLIGHT — Phase 3 WAVE: 3.5-retry interfaces-and-composition ONLY (first agent died on an API-connection error; on-disk artifacts inherited by retry). 3.1 ✅ (e1e09f4 + 0293168 + 16ba832) · 3.2 ✅ (bffbdeb — shared files at 2 topics / 2 routes / 2 entries baseline) · 3.3 AUTHORED (761bbb8) · 3.4 AUTHORED (627d8fc) · 3.6 AUTHORED (ac8368d; wiring facts for 3.3/3.4/3.6 → agents' reports/devlog). Wave close after 3.5: master wires 4 topics + 5 routes + 5 entries + pins, full verify + smoke → Phase 3 ✅. Full breakdown in the Developer section's Development tasks.
 
 # Developer defined section:
 
