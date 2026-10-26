@@ -19,6 +19,15 @@ services:
     container_name: go_developers_guide_dev
     init: true
     command: sleep infinity
+    environment:
+      # Phase 6 (data): testcontainers-go tests run INSIDE this container
+      # against the HOST Docker daemon (socket mounted below), so the
+      # postgres:17 containers they spawn are SIBLINGS — reachable only
+      # through their published ports. The raw bridge gateway (172.17.0.1)
+      # does not carry published ports on macOS, so Ryuk/postgres
+      # connections would be refused without this Docker Desktop host
+      # alias (same wiring as the springboot guide's Phase 6).
+      - TESTCONTAINERS_HOST_OVERRIDE=host.docker.internal
     volumes:
       # Live source for the whole repo.
       - ./../:/workspaces/go_developers_guide
@@ -30,6 +39,11 @@ services:
       # Named npm cache at the same mount point the fastapi guide uses;
       # shared with client_dev below.
       - gdg-npm:/root/.npm
+      # Phase 6 (data): the Docker socket, so testcontainers-go tests for
+      # the real-PG topics (18 sqlc-gorm et al.) spawn sibling containers
+      # on the host daemon — the devcontainer pattern for "tests against
+      # real infrastructure, no Docker-in-Docker".
+      - /var/run/docker.sock:/var/run/docker.sock
 
   # Client toolchain container: Node 22 + npm >= 11 over client/ at /app
   # (the family verification cwd). No client code exists at Phase 0.A — it
