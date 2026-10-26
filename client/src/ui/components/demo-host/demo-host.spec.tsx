@@ -5,10 +5,9 @@ import { DemoHost } from './demo-host';
 import { demoRegistry } from '../../demos/demo-registry';
 
 /**
- * DemoHost spec — the live registry is EMPTY until Phase 3's first demos land,
- * so the known-demo path is proven with a fixture registry (the same
- * `DemoRegistry` contract the live one grows into), and the unknown path with
- * the live one.
+ * DemoHost spec — the known-demo path is proven with a fixture registry (the
+ * same `DemoRegistry` contract the live one grows through), and the unknown
+ * path with the live one; the count pin below tracks the landed demos.
  */
 
 const fixtureRegistry = {
@@ -54,8 +53,8 @@ describe('DemoHost', () => {
 
   it('the live registry holds exactly the demos that have landed', () => {
     // Grows topic by topic (Phase 3+: one lazy entry per demo block id);
-    // unknown ids still degrade to the friendly card above. Fresh guide:
-    // nothing has landed yet, so the registry is empty.
-    expect(Object.keys(demoRegistry)).toEqual([]);
+    // unknown ids still degrade to the friendly card above. First landed:
+    // the go-language topic's runtime-types demo.
+    expect(Object.keys(demoRegistry)).toEqual(['go:runtime-types']);
   });
 });

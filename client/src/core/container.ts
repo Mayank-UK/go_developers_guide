@@ -13,6 +13,10 @@ import { ScenarioRepositoryImpl } from '../data/scenario/scenario-repository-imp
 import type { ScenarioRepository } from '../domain/scenario/scenario-repository';
 import { GetScenarioUseCase } from '../domain/scenario/get-scenario-usecase';
 import { PatchScenarioUseCase } from '../domain/scenario/patch-scenario-usecase';
+import { RuntimeTypesApi } from '../data/demo/runtime-types-api';
+import { RuntimeTypesRepositoryImpl } from '../data/demo/runtime-types-repository-impl';
+import type { RuntimeTypesRepository } from '../domain/demo/runtime-types-repository';
+import { GetRuntimeTypesDemoUseCase } from '../domain/demo/get-runtime-types-demo-usecase';
 
 /**
  * Service-locator container — this client's composition root, mirroring the
@@ -51,6 +55,9 @@ export const ContainerTokens = {
   ScenarioRepository: Symbol('ScenarioRepository'),
   GetScenarioUseCase: Symbol('GetScenarioUseCase'),
   PatchScenarioUseCase: Symbol('PatchScenarioUseCase'),
+  RuntimeTypesApi: Symbol('RuntimeTypesApi'),
+  RuntimeTypesRepository: Symbol('RuntimeTypesRepository'),
+  GetRuntimeTypesDemoUseCase: Symbol('GetRuntimeTypesDemoUseCase'),
 } as const;
 
 class Container {
@@ -97,6 +104,16 @@ class Container {
     this.register(
       ContainerTokens.PatchScenarioUseCase,
       new PatchScenarioUseCase(this.scenarioRepository),
+    );
+
+    this.register(ContainerTokens.RuntimeTypesApi, new RuntimeTypesApi(config));
+    this.register(
+      ContainerTokens.RuntimeTypesRepository,
+      new RuntimeTypesRepositoryImpl(this.runtimeTypesApi),
+    );
+    this.register(
+      ContainerTokens.GetRuntimeTypesDemoUseCase,
+      new GetRuntimeTypesDemoUseCase(this.runtimeTypesRepository),
     );
   }
 
@@ -148,6 +165,18 @@ class Container {
 
   get patchScenarioUseCase(): PatchScenarioUseCase {
     return this.resolve<PatchScenarioUseCase>(ContainerTokens.PatchScenarioUseCase);
+  }
+
+  get runtimeTypesApi(): RuntimeTypesApi {
+    return this.resolve<RuntimeTypesApi>(ContainerTokens.RuntimeTypesApi);
+  }
+
+  get runtimeTypesRepository(): RuntimeTypesRepository {
+    return this.resolve<RuntimeTypesRepository>(ContainerTokens.RuntimeTypesRepository);
+  }
+
+  get getRuntimeTypesDemoUseCase(): GetRuntimeTypesDemoUseCase {
+    return this.resolve<GetRuntimeTypesDemoUseCase>(ContainerTokens.GetRuntimeTypesDemoUseCase);
   }
 
   // ---- wiring helpers ----

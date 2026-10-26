@@ -9,6 +9,8 @@ import { ListContentUseCase } from '../domain/content/list-content-usecase';
 import { GetHealthUseCase } from '../domain/health/get-health-usecase';
 import { GetScenarioUseCase } from '../domain/scenario/get-scenario-usecase';
 import { PatchScenarioUseCase } from '../domain/scenario/patch-scenario-usecase';
+import { RuntimeTypesRepositoryImpl } from '../data/demo/runtime-types-repository-impl';
+import { GetRuntimeTypesDemoUseCase } from '../domain/demo/get-runtime-types-demo-usecase';
 
 /**
  * The default config wires only fetch-based sources, so initializing the
@@ -36,6 +38,12 @@ describe('container', () => {
     expect(container.getScenarioUseCase).toBeInstanceOf(GetScenarioUseCase);
     expect(container.patchScenarioUseCase).toBeInstanceOf(PatchScenarioUseCase);
     expect(container.scenarioRepository).toBeInstanceOf(ScenarioRepositoryImpl);
+  });
+
+  it('wires the runtime-types demo pipeline through the layers: config → api → repository → use case', () => {
+    expect(container.getRuntimeTypesDemoUseCase).toBeInstanceOf(GetRuntimeTypesDemoUseCase);
+    expect(container.runtimeTypesRepository).toBeInstanceOf(RuntimeTypesRepositoryImpl);
+    expect(container.appConfig.apiBaseUrl).toBe('/api');
   });
 
   it('getWiring exposes every registered singleton keyed by symbol token', () => {

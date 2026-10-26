@@ -1,4 +1,4 @@
-import type { ComponentType, LazyExoticComponent } from 'react';
+import { lazy, type ComponentType, type LazyExoticComponent } from 'react';
 
 /**
  * Demo registry — the client-side half of the content API's demo-block
@@ -8,8 +8,9 @@ import type { ComponentType, LazyExoticComponent } from 'react';
  * unknown id degrades to a "not wired yet" panel instead of crashing the
  * screen (see DemoHost).
  *
- * The registry is EMPTY until the first demos land with their topics — every
- * demo block id served before that renders the friendly not-wired-yet card.
+ * The registry grows one lazy entry per landed demo; every demo block id
+ * served before its client half lands renders the friendly not-wired-yet
+ * card (see DemoHost).
  *
  * ── HOW A DEMO LANDS ────────────────────────────────────────────────────────
  * 1. Server side: a pure payload builder in `internal/domain/demos/` + a thin
@@ -38,4 +39,8 @@ export type DemoRegistry = Readonly<
   Record<string, LazyExoticComponent<DemoComponentType>>
 >;
 
-export const demoRegistry: DemoRegistry = {};
+const RuntimeTypesDemo = lazy(() => import('./go/runtime_types_demo'));
+
+export const demoRegistry: DemoRegistry = {
+  'go:runtime-types': RuntimeTypesDemo,
+};
