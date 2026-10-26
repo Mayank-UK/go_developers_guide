@@ -51,7 +51,7 @@
 - Stack decisions — Go latest stable + stdlib net/http backbone (ServeMux 1.22+ patterns; chi/gin/echo by comparison only, not used) · PostgreSQL-ONLY via pgx v5 (real-PG tests via
   testcontainers-go) · sqlc AND GORM both in topic 18 (sqlc = typed queries, GORM = ORM comparison) · slog stdlib (zap/zerolog by comparison) · stdlib testing + httptest + testcontainers-go, NO
   testify (YAGNI, revisit if earned) · root module `guide`. Canon additions: interfaces-and-composition, goroutines-and-channels, sqlc-gorm; Reactivity N/A (concurrency lives in 02+06).
-- Directives — (1) SEQUENTIAL by default; AMENDED 2026-10-26 by developer (full limits available): PARALLEL subagents allowed, but ONLY for provably independent subtrees (disjoint files, no shared state — e.g. server/ ∥ client/); phases still complete in order; Phase 3+ per-topic authoring stays strictly sequential (quality/detail over speed). (2) Whole setup on Docker. (3) REVIEW GATE: STOP for developer review after Phase 0 + 1;
+- Directives — (1) SEQUENTIAL by default; AMENDED 2026-10-26 by developer (full limits available): PARALLEL subagents allowed, but ONLY for provably independent subtrees (disjoint files, no shared state — e.g. server/ ∥ client/); phases still complete in order; per-topic authoring sequential by default — AMENDED AGAIN 2026-10-26 (developer, quota available): parallel per-topic WAVES sanctioned; wave agents author NEW files ONLY (topic module + demo builders + per-topic handler file demo_<id>.go + client slice), MASTER owns all shared-file wiring at wave close (registry.go topics list, main.go routes, presentation/demo.go, demo-registry.tsx, container.ts, count pins) + full verification both sides; quality bar unchanged. (2) Whole setup on Docker. (3) REVIEW GATE: STOP for developer review after Phase 0 + 1;
   later phases per approval cadence. (4) QUALITY BAR: 10/10 to a 15+yr engineer — no shortcuts, no dead code, no "good enough for now". (5) STACK STAYS UP: compose runs CONTINUOUSLY in active dev
   — NO compose down at task end; teardown only on explicit request / long pauses. (6) Verification = PROTOCOL v2, above. (7) agentic_development.md is MASTER-OWNED — subagents never edit it; they
   report facts, master bookkeeps. (8) PER-TOPIC sequential authoring from Phase 3, exemplar first; template = the GO per-topic pattern (Conventions above; mirrored at 3.1 close 2026-10-26).
@@ -69,7 +69,7 @@
 
 ## Active tasks
 - Phase 0 ✅ + Phase 1 ✅ + Phase 2 ✅ (2026-10-26; commits 3eee136 · 571b919 · 0bd335d · c3f624c · a247ac6 · da69083). Review gate PASSED (developer: continue); parallel subagents sanctioned 2026-10-26 (server/ ∥ client/ only; phases close in order; per-topic authoring sequential).
-- IN FLIGHT: Phase 3.2 go-runtime (full-stack, ONE agent per topic, mirrors the fixed pattern). 3.1 go-language ✅ COMPLETE 2026-10-26 (server e1e09f4 + client 0293168; client 23 specs/147 tests + proxy smoke green). Full breakdown in the Developer section's Development tasks.
+- IN FLIGHT — Phase 3 WAVE: 3.3 http-web ∥ 3.4 go-http-fundamentals ∥ 3.5-retry interfaces-and-composition (first agent died on an API-connection error; on-disk artifacts inherited by retry) ∥ 3.6 goroutines-and-channels (new-files-only; master wires registry/main/demo-registry/container/count pins + full verification at wave close). 3.1 ✅ (e1e09f4 + 0293168 + 16ba832) · 3.2 ✅ (bffbdeb — shared files now at 2 topics / 2 demo routes / 2 lazy entries baseline). Full breakdown in the Developer section's Development tasks.
 
 # Developer defined section:
 
@@ -94,7 +94,7 @@
         - ✅ 0.C Client skeleton (2026-10-26, 0bd335d; skeleton only — per-topic demo layers land Phase 3+; detail → devlog 2026-10-26)
     - Phase 1 — Content engine ✅ 2026-10-26 (c3f624c + fix a247ac6 + master diff-review pass — one doc-comment fix; wire contract recorded in Current state below; detail → devlog 2026-10-26). REVIEW GATE REACHED — Phase 2 starts in a NEW CHAT.
     - Phase 2 — Client shell ✅ 2026-10-26 (da69083): shell cloned at 0.C held; added shared scenario slice (domain/data/ui) to the wire contract + ScenarioPanel in root-layout header + home zero-topic degradation; client 19 specs/112 tests + live smoke green (detail → devlog 2026-10-26)
-    - Phase 3 — Fundamentals ⏳ (SIX sequential per-topic delegations, exemplar first): 3.1 go-language — EXEMPLAR ✅ 2026-10-26 (server e1e09f4 + client 0293168; pattern FIXED in Conventions; detail → devlog) · 3.2 go-runtime 🚧 · 3.3 http-web · 3.4 go-http-fundamentals · 3.5 interfaces-and-composition · 3.6 goroutines-and-channels
+    - Phase 3 — Fundamentals ⏳ (exemplar + parallel wave): 3.1 go-language — EXEMPLAR ✅ 2026-10-26 (e1e09f4 + 0293168; pattern FIXED in Conventions) · 3.2 go-runtime ✅ 2026-10-26 (bffbdeb) · 3.3 http-web 🚧 · 3.4 go-http-fundamentals 🚧 · 3.5 interfaces-and-composition 🚧 (retry) · 3.6 goroutines-and-channels 🚧
     - Phase 4 — Request handling ⏳: 07 routing · 08 middleware · 09 request-response · 10 validation
     - Phase 5 — APIs ⏳: 11 api-design (posts substrate) · 12 api-documentation (oapi-codegen spec-first) · 13 graphql (gqlgen) · 14 webhooks · 15 grpc (grpc-go)
     - Phase 6 — Data ⏳: 16 sql-schema (goose) · 17 databases-sql (pgx) · 18 sqlc-gorm (testcontainers-go) · 19 mongodb · 20 redis — testcontainers wiring (docker.sock + host override) lands here
