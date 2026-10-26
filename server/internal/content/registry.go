@@ -334,18 +334,27 @@ func NewProductionRegistry() (Registry, error) {
 	if err != nil {
 		return Registry{}, fmt.Errorf("build api-design topic: %w", err)
 	}
-	// Orders 12 (api-documentation) and 13 (graphql) are the reserved
-	// curriculum slots inside the apis group; their builders join this list
-	// when those topics land.
+	apiDocumentation, err := apiDocumentationTopic()
+	if err != nil {
+		return Registry{}, fmt.Errorf("build api-documentation topic: %w", err)
+	}
+	graphql, err := graphqlTopic()
+	if err != nil {
+		return Registry{}, fmt.Errorf("build graphql topic: %w", err)
+	}
 	webhooks, err := webhooksTopic()
 	if err != nil {
 		return Registry{}, fmt.Errorf("build webhooks topic: %w", err)
+	}
+	grpc, err := grpcTopic()
+	if err != nil {
+		return Registry{}, fmt.Errorf("build grpc topic: %w", err)
 	}
 	return NewRegistry(
 		[]Topic{
 			goLanguage, goRuntime, httpWeb, goHTTPFundamentals, interfacesComposition,
 			goroutinesChannels, routing, middleware, requestResponse, validation, apiDesign,
-			webhooks,
+			apiDocumentation, graphql, webhooks, grpc,
 		},
 		groups,
 	)

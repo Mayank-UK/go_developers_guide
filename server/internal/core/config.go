@@ -16,6 +16,7 @@ const (
 	envPort     = "GDG_PORT"
 	envEnv      = "GDG_ENV"
 	envLogLevel = "GDG_LOG_LEVEL"
+	envGRPCAddr = "GRPC_ADDR"
 )
 
 // Defaults applied when a variable is unset or empty: dev-safe values, no
@@ -24,6 +25,7 @@ const (
 	defaultPort     = 8100
 	defaultEnv      = "dev"
 	defaultLogLevel = slog.LevelInfo
+	defaultGRPCAddr = ":8102"
 )
 
 // Config is the validated, typed application configuration, read once at
@@ -36,6 +38,10 @@ type Config struct {
 	// LogLevel gates the slog JSON logger (GDG_LOG_LEVEL: debug, info,
 	// warn, or error).
 	LogLevel slog.Level
+	// GRPCAddr is the TCP address the gRPC listener binds (GRPC_ADDR, a
+	// host:port listen address; the guide's reserved port is :8102). An
+	// unusable address fails at the net.Listen call at boot, never here.
+	GRPCAddr string
 }
 
 // LoadConfig builds a Config from the environment through getenv, which is
@@ -48,6 +54,7 @@ func LoadConfig(getenv func(string) string) (Config, error) {
 		Port:     defaultPort,
 		Env:      defaultEnv,
 		LogLevel: defaultLogLevel,
+		GRPCAddr: defaultGRPCAddr,
 	}
 
 	if raw := strings.TrimSpace(getenv(envPort)); raw != "" {
@@ -71,6 +78,10 @@ func LoadConfig(getenv func(string) string) (Config, error) {
 			return Config{}, fmt.Errorf("%s %q: must be one of debug, info, warn, error", envLogLevel, raw)
 		}
 		cfg.LogLevel = level
+	}
+
+	if raw := strings.TrimSpace(getenv(envGRPCAddr)); raw != "" {
+		cfg.GRPCAddr = raw
 	}
 
 	return cfg, nil

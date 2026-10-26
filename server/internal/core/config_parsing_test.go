@@ -18,37 +18,42 @@ func TestLoadConfig(t *testing.T) {
 		{
 			name: "defaults when unset",
 			env:  nil,
-			want: Config{Port: 8100, Env: "dev", LogLevel: slog.LevelInfo},
+			want: Config{Port: 8100, Env: "dev", LogLevel: slog.LevelInfo, GRPCAddr: ":8102"},
 		},
 		{
 			name: "defaults when set to empty strings",
-			env:  map[string]string{"GDG_PORT": "", "GDG_ENV": "", "GDG_LOG_LEVEL": "  "},
-			want: Config{Port: 8100, Env: "dev", LogLevel: slog.LevelInfo},
+			env:  map[string]string{"GDG_PORT": "", "GDG_ENV": "", "GDG_LOG_LEVEL": "  ", "GRPC_ADDR": "  "},
+			want: Config{Port: 8100, Env: "dev", LogLevel: slog.LevelInfo, GRPCAddr: ":8102"},
 		},
 		{
 			name: "explicit valid values",
 			env:  map[string]string{"GDG_PORT": "9001", "GDG_ENV": "prod", "GDG_LOG_LEVEL": "debug"},
-			want: Config{Port: 9001, Env: "prod", LogLevel: slog.LevelDebug},
+			want: Config{Port: 9001, Env: "prod", LogLevel: slog.LevelDebug, GRPCAddr: ":8102"},
+		},
+		{
+			name: "grpc address override is trimmed and honored",
+			env:  map[string]string{"GRPC_ADDR": " :9002 "},
+			want: Config{Port: 8100, Env: "dev", LogLevel: slog.LevelInfo, GRPCAddr: ":9002"},
 		},
 		{
 			name: "log level is case-insensitive",
 			env:  map[string]string{"GDG_LOG_LEVEL": "WARN"},
-			want: Config{Port: 8100, Env: "dev", LogLevel: slog.LevelWarn},
+			want: Config{Port: 8100, Env: "dev", LogLevel: slog.LevelWarn, GRPCAddr: ":8102"},
 		},
 		{
 			name: "surrounding whitespace is trimmed",
 			env:  map[string]string{"GDG_PORT": " 9001 ", "GDG_ENV": " prod "},
-			want: Config{Port: 9001, Env: "prod", LogLevel: slog.LevelInfo},
+			want: Config{Port: 9001, Env: "prod", LogLevel: slog.LevelInfo, GRPCAddr: ":8102"},
 		},
 		{
 			name: "boundary port 1",
 			env:  map[string]string{"GDG_PORT": "1"},
-			want: Config{Port: 1, Env: "dev", LogLevel: slog.LevelInfo},
+			want: Config{Port: 1, Env: "dev", LogLevel: slog.LevelInfo, GRPCAddr: ":8102"},
 		},
 		{
 			name: "boundary port 65535",
 			env:  map[string]string{"GDG_PORT": "65535"},
-			want: Config{Port: 65535, Env: "dev", LogLevel: slog.LevelInfo},
+			want: Config{Port: 65535, Env: "dev", LogLevel: slog.LevelInfo, GRPCAddr: ":8102"},
 		},
 		{
 			name:    "port not a number",

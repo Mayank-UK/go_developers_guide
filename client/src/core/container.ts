@@ -106,6 +106,34 @@ import {
   GetWebhookSimulatorDemoUseCase,
   WEBHOOK_SIMULATOR_DEMO_USE_CASE,
 } from '../domain/demo/get-webhook-simulator-demo-usecase';
+import { DocsLinkApi } from '../data/demo/docs-link-api';
+import { DocsLinkRepositoryImpl } from '../data/demo/docs-link-repository-impl';
+import type { DocsLinkRepository } from '../domain/demo/docs-link-repository';
+import {
+  GetDocsLinkDemoUseCase,
+  API_DOCS_LINK_DEMO_USE_CASE,
+} from '../domain/demo/get-docs-link-demo-usecase';
+import { GraphQLPlaygroundApi } from '../data/demo/graphql-playground-api';
+import { GraphQLPlaygroundRepositoryImpl } from '../data/demo/graphql-playground-repository-impl';
+import type {
+  GraphQLPlaygroundRepository,
+  GraphQLQueryRepository,
+} from '../domain/demo/graphql-playground-repository';
+import {
+  GetGraphQLPlaygroundDemoUseCase,
+  API_GRAPHQL_PLAYGROUND_DEMO_USE_CASE,
+} from '../domain/demo/get-graphql-playground-demo-usecase';
+import {
+  ExecuteGraphQLDemoQueryUseCase,
+  API_GRAPHQL_DEMO_QUERY_USE_CASE,
+} from '../domain/demo/execute-graphql-demo-query-usecase';
+import { GRPCConsoleApi } from '../data/demo/grpc-console-api';
+import { GRPCConsoleRepositoryImpl } from '../data/demo/grpc-console-repository-impl';
+import type { GRPCConsoleRepository } from '../domain/demo/grpc-console-repository';
+import {
+  GetGRPCConsoleDemoUseCase,
+  API_GRPC_CONSOLE_DEMO_USE_CASE,
+} from '../domain/demo/get-grpc-console-demo-usecase';
 
 /**
  * Service-locator container — this client's composition root, mirroring the
@@ -206,6 +234,20 @@ export const ContainerTokens = {
   WebhookSimulatorRepository: Symbol('WebhookSimulatorRepository'),
   // Same aliasing story as the headers demo (WEBHOOK_SIMULATOR_DEMO_USE_CASE).
   GetWebhookSimulatorDemoUseCase: WEBHOOK_SIMULATOR_DEMO_USE_CASE,
+  DocsLinkApi: Symbol('DocsLinkApi'),
+  DocsLinkRepository: Symbol('DocsLinkRepository'),
+  // Same aliasing story as the headers demo (API_DOCS_LINK_DEMO_USE_CASE).
+  GetDocsLinkDemoUseCase: API_DOCS_LINK_DEMO_USE_CASE,
+  GraphQLPlaygroundApi: Symbol('GraphQLPlaygroundApi'),
+  GraphQLPlaygroundRepository: Symbol('GraphQLPlaygroundRepository'),
+  // Two aliased use cases share the ONE playground repository below — the
+  // payload load and the RUN button ride the same pipeline.
+  GetGraphQLPlaygroundDemoUseCase: API_GRAPHQL_PLAYGROUND_DEMO_USE_CASE,
+  ExecuteGraphQLDemoQueryUseCase: API_GRAPHQL_DEMO_QUERY_USE_CASE,
+  GRPCConsoleApi: Symbol('GRPCConsoleApi'),
+  GRPCConsoleRepository: Symbol('GRPCConsoleRepository'),
+  // Same aliasing story as the headers demo (API_GRPC_CONSOLE_DEMO_USE_CASE).
+  GetGRPCConsoleDemoUseCase: API_GRPC_CONSOLE_DEMO_USE_CASE,
 } as const;
 
 class Container {
@@ -417,6 +459,42 @@ class Container {
     this.register(
       ContainerTokens.GetWebhookSimulatorDemoUseCase,
       new GetWebhookSimulatorDemoUseCase(this.webhookSimulatorRepository),
+    );
+
+    this.register(ContainerTokens.DocsLinkApi, new DocsLinkApi(config));
+    this.register(
+      ContainerTokens.DocsLinkRepository,
+      new DocsLinkRepositoryImpl(this.docsLinkApi),
+    );
+    this.register(
+      ContainerTokens.GetDocsLinkDemoUseCase,
+      new GetDocsLinkDemoUseCase(this.docsLinkRepository),
+    );
+
+    // The graphql playground: ONE api + ONE repository, TWO use cases over
+    // that shared repository (payload + RUN button).
+    this.register(ContainerTokens.GraphQLPlaygroundApi, new GraphQLPlaygroundApi(config));
+    this.register(
+      ContainerTokens.GraphQLPlaygroundRepository,
+      new GraphQLPlaygroundRepositoryImpl(this.graphqlPlaygroundApi),
+    );
+    this.register(
+      ContainerTokens.GetGraphQLPlaygroundDemoUseCase,
+      new GetGraphQLPlaygroundDemoUseCase(this.graphqlPlaygroundRepository),
+    );
+    this.register(
+      ContainerTokens.ExecuteGraphQLDemoQueryUseCase,
+      new ExecuteGraphQLDemoQueryUseCase(this.graphqlPlaygroundRepository),
+    );
+
+    this.register(ContainerTokens.GRPCConsoleApi, new GRPCConsoleApi(config));
+    this.register(
+      ContainerTokens.GRPCConsoleRepository,
+      new GRPCConsoleRepositoryImpl(this.grpcConsoleApi),
+    );
+    this.register(
+      ContainerTokens.GetGRPCConsoleDemoUseCase,
+      new GetGRPCConsoleDemoUseCase(this.grpcConsoleRepository),
     );
   }
 
@@ -666,6 +744,55 @@ class Container {
     return this.resolve<GetWebhookSimulatorDemoUseCase>(
       ContainerTokens.GetWebhookSimulatorDemoUseCase,
     );
+  }
+
+  get docsLinkApi(): DocsLinkApi {
+    return this.resolve<DocsLinkApi>(ContainerTokens.DocsLinkApi);
+  }
+
+  get docsLinkRepository(): DocsLinkRepository {
+    return this.resolve<DocsLinkRepository>(ContainerTokens.DocsLinkRepository);
+  }
+
+  get getDocsLinkDemoUseCase(): GetDocsLinkDemoUseCase {
+    return this.resolve<GetDocsLinkDemoUseCase>(ContainerTokens.GetDocsLinkDemoUseCase);
+  }
+
+  get graphqlPlaygroundApi(): GraphQLPlaygroundApi {
+    return this.resolve<GraphQLPlaygroundApi>(ContainerTokens.GraphQLPlaygroundApi);
+  }
+
+  // The intersection of the demo's TWO ports: the one registered repository
+  // (the impl adapts to both) serves the payload use case and the RUN use
+  // case alike — one transport, one server.
+  get graphqlPlaygroundRepository(): GraphQLPlaygroundRepository & GraphQLQueryRepository {
+    return this.resolve<GraphQLPlaygroundRepository & GraphQLQueryRepository>(
+      ContainerTokens.GraphQLPlaygroundRepository,
+    );
+  }
+
+  get getGraphQLPlaygroundDemoUseCase(): GetGraphQLPlaygroundDemoUseCase {
+    return this.resolve<GetGraphQLPlaygroundDemoUseCase>(
+      ContainerTokens.GetGraphQLPlaygroundDemoUseCase,
+    );
+  }
+
+  get executeGraphQLDemoQueryUseCase(): ExecuteGraphQLDemoQueryUseCase {
+    return this.resolve<ExecuteGraphQLDemoQueryUseCase>(
+      ContainerTokens.ExecuteGraphQLDemoQueryUseCase,
+    );
+  }
+
+  get grpcConsoleApi(): GRPCConsoleApi {
+    return this.resolve<GRPCConsoleApi>(ContainerTokens.GRPCConsoleApi);
+  }
+
+  get grpcConsoleRepository(): GRPCConsoleRepository {
+    return this.resolve<GRPCConsoleRepository>(ContainerTokens.GRPCConsoleRepository);
+  }
+
+  get getGRPCConsoleDemoUseCase(): GetGRPCConsoleDemoUseCase {
+    return this.resolve<GetGRPCConsoleDemoUseCase>(ContainerTokens.GetGRPCConsoleDemoUseCase);
   }
 
   // ---- wiring helpers ----

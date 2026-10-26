@@ -72,6 +72,25 @@ import {
   GetWebhookSimulatorDemoUseCase,
   WEBHOOK_SIMULATOR_DEMO_USE_CASE,
 } from '../domain/demo/get-webhook-simulator-demo-usecase';
+import { DocsLinkRepositoryImpl } from '../data/demo/docs-link-repository-impl';
+import {
+  GetDocsLinkDemoUseCase,
+  API_DOCS_LINK_DEMO_USE_CASE,
+} from '../domain/demo/get-docs-link-demo-usecase';
+import { GraphQLPlaygroundRepositoryImpl } from '../data/demo/graphql-playground-repository-impl';
+import {
+  GetGraphQLPlaygroundDemoUseCase,
+  API_GRAPHQL_PLAYGROUND_DEMO_USE_CASE,
+} from '../domain/demo/get-graphql-playground-demo-usecase';
+import {
+  ExecuteGraphQLDemoQueryUseCase,
+  API_GRAPHQL_DEMO_QUERY_USE_CASE,
+} from '../domain/demo/execute-graphql-demo-query-usecase';
+import { GRPCConsoleRepositoryImpl } from '../data/demo/grpc-console-repository-impl';
+import {
+  GetGRPCConsoleDemoUseCase,
+  API_GRPC_CONSOLE_DEMO_USE_CASE,
+} from '../domain/demo/get-grpc-console-demo-usecase';
 
 /**
  * The default config wires only fetch-based sources, so initializing the
@@ -230,6 +249,35 @@ describe('container', () => {
     expect(container.appConfig.apiBaseUrl).toBe('/api');
     expect(container.resolve(WEBHOOK_SIMULATOR_DEMO_USE_CASE)).toBe(
       container.getWebhookSimulatorDemoUseCase,
+    );
+  });
+
+  it('wires the docs-link demo pipeline through the layers: config → api → repository → use case', () => {
+    expect(container.getDocsLinkDemoUseCase).toBeInstanceOf(GetDocsLinkDemoUseCase);
+    expect(container.docsLinkRepository).toBeInstanceOf(DocsLinkRepositoryImpl);
+    expect(container.appConfig.apiBaseUrl).toBe('/api');
+    expect(container.resolve(API_DOCS_LINK_DEMO_USE_CASE)).toBe(container.getDocsLinkDemoUseCase);
+  });
+
+  it('wires the graphql playground: one api + one repository shared by its TWO use cases', () => {
+    expect(container.getGraphQLPlaygroundDemoUseCase).toBeInstanceOf(GetGraphQLPlaygroundDemoUseCase);
+    expect(container.executeGraphQLDemoQueryUseCase).toBeInstanceOf(ExecuteGraphQLDemoQueryUseCase);
+    expect(container.graphqlPlaygroundRepository).toBeInstanceOf(GraphQLPlaygroundRepositoryImpl);
+    expect(container.appConfig.apiBaseUrl).toBe('/api');
+    expect(container.resolve(API_GRAPHQL_PLAYGROUND_DEMO_USE_CASE)).toBe(
+      container.getGraphQLPlaygroundDemoUseCase,
+    );
+    expect(container.resolve(API_GRAPHQL_DEMO_QUERY_USE_CASE)).toBe(
+      container.executeGraphQLDemoQueryUseCase,
+    );
+  });
+
+  it('wires the grpc-console demo pipeline through the layers: config → api → repository → use case', () => {
+    expect(container.getGRPCConsoleDemoUseCase).toBeInstanceOf(GetGRPCConsoleDemoUseCase);
+    expect(container.grpcConsoleRepository).toBeInstanceOf(GRPCConsoleRepositoryImpl);
+    expect(container.appConfig.apiBaseUrl).toBe('/api');
+    expect(container.resolve(API_GRPC_CONSOLE_DEMO_USE_CASE)).toBe(
+      container.getGRPCConsoleDemoUseCase,
     );
   });
 

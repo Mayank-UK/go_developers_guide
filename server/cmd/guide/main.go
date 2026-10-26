@@ -9,6 +9,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -19,6 +20,7 @@ import (
 	"guide/internal/core"
 	postsmemory "guide/internal/data/posts"
 	"guide/internal/domain/posts"
+	"guide/internal/grpcapi"
 	"guide/internal/presentation"
 )
 
@@ -75,6 +77,9 @@ func run() error {
 	mux.Handle("GET /api/demo/validation/arena", presentation.NewValidationArenaHandler())
 	mux.Handle("GET /api/demo/api/posts-workbench", presentation.NewPostsWorkbenchHandler())
 	mux.Handle("GET /api/demo/api/webhook-simulator", presentation.NewWebhookSimulatorHandler())
+	mux.Handle("GET /api/demo/api/docs-link", presentation.NewAPIDocsLinkHandler(logger))
+	mux.Handle("GET /api/openapi.yaml", presentation.NewOpenAPISpecHandler())
+	mux.Handle("GET /api/demo/api/grpc-console", presentation.NewGRPCConsoleHandler())
 
 	// The posts resource — the api-design topic's real API surface, and
 	// the substrate later topics reuse (authorization guards its ids,
@@ -92,6 +97,30 @@ func run() error {
 	mux.Handle("GET /api/posts/{id}", presentation.NewPostDetailHandler(postsGet, logger))
 	mux.Handle("PUT /api/posts/{id}", presentation.NewPostReplaceHandler(postsReplace, logger))
 	mux.Handle("DELETE /api/posts/{id}", presentation.NewPostDeleteHandler(postsDelete, logger))
+
+	// GraphQL rides the SAME posts use-case instances as the REST routes —
+	// one domain, two surfaces. The playground's scratch store stays
+	// separate (a func, because the closure must construct the interface,
+	// not return it covariantly).
+	mux.Handle(
+		"GET /api/demo/api/graphql-playground",
+		presentation.NewGraphQLPlaygroundHandler(func() posts.PostsRepository {
+			return postsmemory.NewRepository()
+		}),
+	)
+	mux.Handle(
+		"POST /api/graphql",
+		presentation.NewGraphQLHandler(postsList, postsGet, postsCreate, postsReplace, postsDelete, logger),
+	)
+
+	// The gRPC surface — the grpc topic's real server: the posts use cases
+	// (minus delete, the proto's four methods) over HTTP/2 on a second
+	// listener. A bind failure here fails startup like an HTTP one would.
+	grpcListener, err := net.Listen("tcp", cfg.GRPCAddr)
+	if err != nil {
+		return fmt.Errorf("grpc listen %s: %w", cfg.GRPCAddr, err)
+	}
+	grpcServer := grpcapi.NewGRPCServer(postsList, postsGet, postsCreate, postsReplace)
 
 	// The documented order: request-id outermost (recovery, logging, and
 	// every error envelope share the id), access logging outside recovery
@@ -125,6 +154,14 @@ func run() error {
 		logger.Info("server listening", "addr", srv.Addr, "env", cfg.Env)
 		serveErr <- srv.ListenAndServe()
 	}()
+	// Serve returns nil after GracefulStop, so only genuine failures land
+	// on serveErr — the signal path's stop is not an error.
+	go func() {
+		logger.Info("grpc server listening", "addr", grpcListener.Addr().String())
+		if err := grpcServer.Serve(grpcListener); err != nil {
+			serveErr <- fmt.Errorf("grpc serve: %w", err)
+		}
+	}()
 
 	select {
 	case err := <-serveErr:
@@ -139,6 +176,10 @@ func run() error {
 	stop()
 
 	logger.Info("shutting down")
+	// Both surfaces drain in-flight work: gRPC first (its RPCs are short),
+	// then HTTP inside its bounded timeout.
+	grpcServer.GracefulStop()
+	logger.Info("grpc server stopped")
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
 	defer cancel()
 	if err := srv.Shutdown(shutdownCtx); err != nil {

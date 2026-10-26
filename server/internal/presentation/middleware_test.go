@@ -9,6 +9,8 @@ import (
 
 	"guide/internal/content"
 	"guide/internal/core"
+	postsmemory "guide/internal/data/posts"
+	"guide/internal/domain/posts"
 )
 
 // newTestLogger captures log records as text for substring assertions.
@@ -46,6 +48,22 @@ func newAPIServer(registry content.Registry, store *core.ScenarioStore, logger *
 	mux.Handle("GET /api/demo/reqres/methods", NewReqresMethodsHandler())
 	mux.Handle("GET /api/demo/validation/arena", NewValidationArenaHandler())
 	mux.Handle("GET /api/demo/api/webhook-simulator", NewWebhookSimulatorHandler())
+	mux.Handle("GET /api/demo/api/docs-link", NewAPIDocsLinkHandler(logger))
+	mux.Handle("GET /api/openapi.yaml", NewOpenAPISpecHandler())
+	mux.Handle("GET /api/demo/api/grpc-console", NewGRPCConsoleHandler())
+	// The GraphQL pair mirrors main.go: the endpoint over its own posts
+	// stack (the handler tests exercise them through dedicated muxes with
+	// seeded stores; here the chain shape is what matters).
+	postsRepo := postsmemory.NewRepository()
+	postsList := posts.NewListPostsUseCase(postsRepo)
+	postsCreate := posts.NewCreatePostUseCase(postsRepo)
+	postsGet := posts.NewGetPostUseCase(postsRepo)
+	postsReplace := posts.NewReplacePostUseCase(postsRepo)
+	postsDelete := posts.NewDeletePostUseCase(postsRepo)
+	mux.Handle("GET /api/demo/api/graphql-playground", NewGraphQLPlaygroundHandler(func() posts.PostsRepository {
+		return postsmemory.NewRepository()
+	}))
+	mux.Handle("POST /api/graphql", NewGraphQLHandler(postsList, postsGet, postsCreate, postsReplace, postsDelete, logger))
 	return Chain(
 		RequestID,
 		RequestLogger(logger),

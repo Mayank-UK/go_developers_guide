@@ -57,8 +57,8 @@ describe('DemoHost', () => {
     // Phase 3 fundamentals (runtime-types, concurrency, headers, app-info,
     // matrix, context, race), the Phase 4 request-handling set (routing
     // explorer, middleware pipeline, reqres inspector + methods, validation
-    // arena), the Phase 5 api-design posts workbench, and the webhooks
-    // topic's webhook simulator (api-documentation + graphql land later).
+    // arena), and the full Phase 5 apis set (posts workbench, webhook
+    // simulator, docs link, graphql playground, grpc console).
     expect(Object.keys(demoRegistry)).toEqual([
       'go:runtime-types',
       'runtime:concurrency',
@@ -74,6 +74,9 @@ describe('DemoHost', () => {
       'validation:arena',
       'api:posts-workbench',
       'api:webhook-simulator',
+      'api:docs-link',
+      'api:graphql-playground',
+      'api:grpc-console',
     ]);
   });
 });
