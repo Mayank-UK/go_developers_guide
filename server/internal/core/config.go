@@ -1,0 +1,77 @@
+// Package core holds the cross-cutting server plumbing: typed environment
+// configuration and structured logging. The error taxonomy, request-id
+// middleware, and ScenarioStore arrive in Phase 1.
+package core
+
+import (
+	"fmt"
+	"log/slog"
+	"strconv"
+	"strings"
+)
+
+// Environment variable names — the family pattern of a per-guide prefix
+// (here GDG_, matching the fastapi guide's FDG_).
+const (
+	envPort     = "GDG_PORT"
+	envEnv      = "GDG_ENV"
+	envLogLevel = "GDG_LOG_LEVEL"
+)
+
+// Defaults applied when a variable is unset or empty: dev-safe values, no
+// secrets, so the stack boots anywhere with zero configuration.
+const (
+	defaultPort     = 8100
+	defaultEnv      = "dev"
+	defaultLogLevel = slog.LevelInfo
+)
+
+// Config is the validated, typed application configuration, read once at
+// boot and immutable by convention afterwards.
+type Config struct {
+	// Port is the TCP port the HTTP server listens on (GDG_PORT, 1-65535).
+	Port int
+	// Env names the deployment environment, e.g. "dev" or "prod" (GDG_ENV).
+	Env string
+	// LogLevel gates the slog JSON logger (GDG_LOG_LEVEL: debug, info,
+	// warn, or error).
+	LogLevel slog.Level
+}
+
+// LoadConfig builds a Config from the environment through getenv, which is
+// parameterized so tests inject values instead of mutating the process
+// environment. Unset or empty variables fall back to dev-safe defaults;
+// malformed values return a descriptive error naming the offending
+// variable — configuration problems fail at boot, never panic.
+func LoadConfig(getenv func(string) string) (Config, error) {
+	cfg := Config{
+		Port:     defaultPort,
+		Env:      defaultEnv,
+		LogLevel: defaultLogLevel,
+	}
+
+	if raw := strings.TrimSpace(getenv(envPort)); raw != "" {
+		port, err := strconv.Atoi(raw)
+		if err != nil {
+			return Config{}, fmt.Errorf("%s %q: not a valid port number", envPort, raw)
+		}
+		if port < 1 || port > 65535 {
+			return Config{}, fmt.Errorf("%s %q: port must be between 1 and 65535", envPort, raw)
+		}
+		cfg.Port = port
+	}
+
+	if raw := strings.TrimSpace(getenv(envEnv)); raw != "" {
+		cfg.Env = raw
+	}
+
+	if raw := strings.TrimSpace(getenv(envLogLevel)); raw != "" {
+		var level slog.Level
+		if err := level.UnmarshalText([]byte(raw)); err != nil {
+			return Config{}, fmt.Errorf("%s %q: must be one of debug, info, warn, error", envLogLevel, raw)
+		}
+		cfg.LogLevel = level
+	}
+
+	return cfg, nil
+}
