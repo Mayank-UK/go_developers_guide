@@ -5,7 +5,7 @@
   teaching as a typed content API; client (React 19 + Vite + TS + Tailwind v4, react_developers_guide architecture) is a presentation-only shell that never teaches React. Siblings: ../express
   (canon origin), ../springboot, ../fastapi (NEWEST reference — when unsure, look THERE first, then spring, then express).
 - Repo — `server/` + `client/` + `e2e/` (host-run Playwright, Phase 12) + `deploy/k8s/` (Phase 10) + `.docker/` + `.devcontainer/`; NO `.github/` (no hosted CI/Dependabot — family stance; local
-  verification is the only gate). Ports (co-run with the family stacks): server 8100, client dev 5175, client prod 8101, PG 5433, redis 6380, mongo 27018.
+  verification is the only gate). Ports (co-run with the family stacks): server 8100, client dev 5175, client prod 8101, PG 5433, redis 6380, mongo 27018, grpc 8102 (GRPC_ADDR, Phase 5).
 - Layers — `server/cmd/guide/main.go` = composition root (constructor injection, no DI framework) · `internal/core/` (env config, error taxonomy + envelope, slog JSON + request-id middleware,
   Result-equivalent where it earns its keep, ScenarioStore) · `internal/content/` (typed topic registry → sections → blocks, startup validation) · `internal/domain/<area>/` (entities, ports =
   interfaces, use cases; `patterns/` = event store + saga) · `internal/data/<area>/` (repo impls: pgx/redis/mongo/files/messaging) · `internal/presentation/` (handlers, middleware, websocket).
@@ -68,8 +68,8 @@
   - 34 testing · 35 debugging · 36 environments | Ship: 37 deployment · 38 performance · 39 reliability · 40 scaling | Capstones: 41 best-practices · 42 third-party · 43 advanced-architecture
 
 ## Active tasks
-- Phase 0 ✅ + Phase 1 ✅ + Phase 2 ✅ (2026-10-26; commits 3eee136 · 571b919 · 0bd335d · c3f624c · a247ac6 · da69083). Review gate PASSED (developer: continue); parallel subagents sanctioned 2026-10-26 (server/ ∥ client/ only; phases close in order; per-topic authoring sequential).
-- IN FLIGHT — Phase 3 CLOSE: wiring agent integrating 3.3/3.4/3.6 into shared files NOW; 3.5 increment (order-5 registration + iface:matrix route/entry + pins to 6 topics/7 entries) queued to the SAME agent on its completion. ALL SIX topics authored+committed: 3.1 ✅ (e1e09f4 + 0293168 + 16ba832) · 3.2 ✅ (bffbdeb) · 3.3 (761bbb8) · 3.4 (627d8fc) · 3.5 (6647a21) · 3.6 (ac8368d); wiring facts for 3.3–3.6 → agents' reports/devlog. Full breakdown in the Developer section's Development tasks.
+- Phases 0-5 ✅ (2026-10-26): 15 topics / 17 demos / orders 1-15 live; +POST /api/graphql, +GET /api/openapi.yaml, +gRPC listener :8102. Review gate passed; parallel waves + choreographed deps are the standing execution model (see Directives).
+- NEXT — Phase 6 (data): deps-landing task FIRST (pgx v5, goose v3, sqlc, GORM, mongo-driver, go-redis v9, testcontainers-go), then 16 sql-schema full-stack owner → 17 databases-sql (posts in-memory→PG behind the existing port) → 18 sqlc-gorm ∥ 19 mongodb ∥ 20 redis parallel → wiring at close. Testcontainers docker.sock wiring lands this phase. Full breakdown in the Developer section's Development tasks.
 
 # Developer defined section:
 
@@ -96,7 +96,7 @@
     - Phase 2 — Client shell ✅ 2026-10-26 (da69083): shell cloned at 0.C held; added shared scenario slice (domain/data/ui) to the wire contract + ScenarioPanel in root-layout header + home zero-topic degradation; client 19 specs/112 tests + live smoke green (detail → devlog 2026-10-26)
     - Phase 3 — Fundamentals ✅ 2026-10-26 (exemplar + parallel wave; ~19.2k prose words across 6 topics, 7 demos): 3.1 go-language (e1e09f4 + 0293168) · 3.2 go-runtime (bffbdeb) · 3.3 http-web (761bbb8) · 3.4 go-http-fundamentals (627d8fc) · 3.5 interfaces-and-composition (6647a21) · 3.6 goroutines-and-channels (ac8368d) · wiring 2a97f47 + 6c364ab; detail → devlog 2026-10-26
     - Phase 4 — Request handling ✅ 2026-10-26 (parallel wave; 12,261 prose words, 5 demos): 07 routing (87f99ae) · 08 middleware (f0b35f0) · 09 request-response (b1985d1) · 10 validation (72c1007) · wiring 8473422; detail → devlog 2026-10-26
-    - Phase 5 — APIs ⏳ (choreographed wave): STEP 1 ✅ (11 acb7acd posts substrate LIVE; 14 authored 27733ac) · STEP 2 ✅ (webhooks wired c55b8f3 → 12 topics orders [1..11,14]; deps bbbc5d8) · STEP 3: 12 api-documentation 🚧 ∥ 13 graphql 🚧 ∥ 15 grpc AUTHORED (ae130b3; grpc listener shape + GRPC_ADDR :8102 for main.go in its report) — CLOSE DEBT: uncommitted go.mod/go.sum churn (a sibling's tidy promoted gqlgen/gqlparser/yaml.v3/grpc/protobuf to DIRECT requires) lands at close + stale app_info DependencyCount pins (0→6 directs) updated then; wiring: orders 12/13/15, POST /api/graphql, GET /api/openapi.yaml, 3 demo routes/entries, grpc listener
+    - Phase 5 — APIs ✅ 2026-10-26 (choreographed codegen wave; 15 topics orders 1-15, 17 demos; +POST /api/graphql, +GET /api/openapi.yaml, +gRPC listener :8102): 11 acb7acd · 12 a02ab0d · 13 1899b4b · 14 27733ac+c55b8f3 · 15 ae130b3 · deps bbbc5d8+514c2bc · wiring 9d4a333 · close 68d8f98; detail → devlog 2026-10-26
     - Phase 6 — Data ⏳: 16 sql-schema (goose) · 17 databases-sql (pgx) · 18 sqlc-gorm (testcontainers-go) · 19 mongodb · 20 redis — testcontainers wiring (docker.sock + host override) lands here
     - Phase 7 — Cache/msg + auth ⏳: 21 caching · 22 messaging · 23 authentication · 24 authorization · 25 security
     - Phase 8 — Files/i18n/realtime/jobs ⏳: 26 files-media · 27 internationalization · 28 realtime (SSE + WebSockets) · 29 background-jobs (asynq)
