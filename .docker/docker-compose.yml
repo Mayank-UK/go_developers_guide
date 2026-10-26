@@ -1,0 +1,136 @@
+# Dev stack: dev (devcontainer toolchain) + client_dev + data services.
+# Explicit compose project name: without it compose derives "docker" from
+# this file's .docker/ parent dir, which shows as a bare "docker" group in
+# Docker Desktop. It also keeps VS Code's stack and any manual compose
+# invocation in one project.
+name: go_developers_guide
+
+services:
+  # The container VS Code attaches to (see .devcontainer/devcontainer.json):
+  # Go 1.27 + Node 22 toolchain for tests, git, and builds. It runs no app
+  # of its own — the server half is exercised in here (docker exec …
+  # cd /workspaces/go_developers_guide/server && go build/test, Protocol v2)
+  # and the client half lives in client_dev below.
+  dev:
+    build:
+      context: ./../
+      dockerfile: ./.docker/Dockerfile.dev
+    image: gdg_dev_toolchain
+    container_name: go_developers_guide_dev
+    init: true
+    command: sleep infinity
+    volumes:
+      # Live source for the whole repo.
+      - ./../:/workspaces/go_developers_guide
+      # Named Go caches: module cache + build cache ride volumes so every
+      # docker-exec verification run stays warm (never the image, never the
+      # bind-mounted workspace).
+      - gdg-go:/go/pkg/mod
+      - gdg-gocache:/root/.cache/go-build
+      # Named npm cache at the same mount point the fastapi guide uses;
+      # shared with client_dev below.
+      - gdg-npm:/root/.npm
+
+  # Client toolchain container: Node 22 + npm >= 11 over client/ at /app
+  # (the family verification cwd). No client code exists at Phase 0.A — it
+  # idles (sleep infinity) so `docker exec` works; the Vite dev server and
+  # its 5175 listener arrive with client/ in Phase 0.C. The port is
+  # published now so the co-run slot stays claimed.
+  client_dev:
+    build:
+      context: ./../
+      dockerfile: ./.docker/client/Dockerfile
+    image: gdg_client_dev
+    container_name: go_developers_guide_client_dev
+    command: sleep infinity
+    working_dir: /app
+    ports:
+      - 5175:5175
+    volumes:
+      # Anonymous node_modules volume: the container install never leaks onto
+      # the host, and the host's (intentionally empty) dir never shadows it.
+      - ./../client:/app
+      - /app/node_modules
+      # Named npm cache (shared with the dev toolchain container).
+      - gdg-npm:/root/.npm
+
+  # PostgreSQL 17 — the guide's only SQL engine (one dialect, tests against
+  # the real thing). postgres/guide/guide: dev-grade credentials in the same
+  # shape the family guides use; the prod compose refuses this password.
+  postgres:
+    image: postgres:17
+    container_name: go_developers_guide_postgres_dev
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=guide
+      - POSTGRES_DB=guide
+    ports:
+      # Published on the family co-run slot so a host-run psql (and later
+      # testcontainers wiring) can reach it at 127.0.0.1:5433.
+      - 5433:5432
+    volumes:
+      - gdg-pg-data:/var/lib/postgresql/data
+    healthcheck:
+      # pg_isready ships in the postgres image itself.
+      test: ["CMD-SHELL", "pg_isready -U postgres -d guide"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # Redis — caching/session/pub-sub topics; the app degrades gracefully if
+  # it is down, so demos report "off" rather than failing the stack.
+  redis:
+    image: redis:7-alpine
+    container_name: go_developers_guide_redis_dev
+    restart: unless-stopped
+    ports:
+      - 6380:6379
+    volumes:
+      - gdg-redis-data:/data
+    healthcheck:
+      # redis-cli ships in the redis image itself (alpine included).
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+  # MongoDB — the MongoDB topic's engine, same optional-service deal as
+  # redis.
+  mongo:
+    image: mongo:8
+    container_name: go_developers_guide_mongo_dev
+    restart: unless-stopped
+    ports:
+      - 27018:27017
+    volumes:
+      - gdg-mongo-data:/data/db
+    healthcheck:
+      # mongosh ships in the mongo:8 image itself.
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand({ ping: 1 }).ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+volumes:
+  gdg-pg-data:
+  gdg-redis-data:
+  gdg-mongo-data:
+  # External: pre-created caches so docker-exec verification runs and any
+  # stack-down fallback run share one warm module/build/npm cache. Without
+  # `external: true` compose prefixes these with the project name and
+  # creates EMPTY twins, silently forcing full dependency re-downloads. On a
+  # fresh machine before any run, pre-create them once:
+  #   docker volume create gdg-go gdg-gocache gdg-npm
+  gdg-go:
+    name: gdg-go
+    external: true
+  gdg-gocache:
+    name: gdg-gocache
+    external: true
+  gdg-npm:
+    name: gdg-npm
+    external: true

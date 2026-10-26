@@ -1,0 +1,15 @@
+# Build contexts are the repo root (.docker/*/Dockerfile*, Dockerfile.dev).
+# These never belong in an image; keeping them out also keeps context upload
+# small. Nothing the Dockerfiles COPY is excluded here.
+**/node_modules
+**/dist
+**/coverage
+**/.env*
+**/*.md
+**/*.test
+**/*.out
+server/data
+server/guide
+.git
+**/.DS_Store
+.zcode/

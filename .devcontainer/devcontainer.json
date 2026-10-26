@@ -1,0 +1,28 @@
+// VS Code devcontainer — the standard dev path for this repo. The full dev
+// stack (this `dev` tooling container + client_dev + postgres + redis +
+// mongo) is defined once in ../.docker/docker-compose.yml; VS Code attaches
+// to the `dev` service and starts the whole stack with it. Server code is
+// built/tested inside this container (docker exec … go build/test, Protocol
+// v2); the client_dev container carries the client half at /app.
+{
+  "name": "go_developers_guide",
+  "dockerComposeFile": "../.docker/docker-compose.yml",
+  "service": "dev",
+  "runServices": ["dev", "client_dev", "postgres", "redis", "mongo"],
+  "workspaceFolder": "/workspaces/go_developers_guide",
+  "shutdownAction": "stopCompose",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        // Go: language server (gopls bundled), debugger (dlv), test runner.
+        "golang.go",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode"
+      ]
+    }
+  }
+  // postCreateCommand arrives in Phase 0.B with server/go.mod (the module
+  // cache rides the gdg-go named volume, so it is a warm-up, not an
+  // install):
+  //   "postCreateCommand": "bash -c \"cd server && go mod download\""
+}

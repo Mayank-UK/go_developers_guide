@@ -1,0 +1,31 @@
+# Go: compiled test binaries + coverage profiles (binaries are built
+# in-container; nothing Go-native is ever committed)
+*.test
+*.out
+# Stray `go build ./cmd/guide` output from the server module root
+server/guide
+# JS installs & build output
+node_modules/
+dist/
+# Env files stay out of git — committed non-secret templates (if any arise)
+# get an explicit `!path` negation here, fastapi-family style.
+.env*
+# Test coverage (Go profiles + Vitest HTML reports)
+coverage/
+# Topic 26 (files-media): the file store's runtime home — uploaded bytes and
+# metadata sidecars are runtime data, never source (server/data/).
+server/data/
+*.log
+# OS
+.DS_Store
+# IDE dirs
+.idea/
+*.iml
+.vscode/
+# In-container flock targets for verification runs (runtime artifacts)
+.verify.lock
+# Playwright e2e artifacts (host-run suite in e2e/ — reports + browser cache)
+e2e/test-results/
+e2e/playwright-report/
+e2e/.playwright/
+.zcode/

@@ -1,0 +1,29 @@
+# Dev toolchain container: Go 1.27 + the Node 22 toolchain layered on top —
+# one container that can build and test both halves of the repo. The base is
+# the official golang image on Debian bookworm (glibc 2.36) — it already
+# carries git, bash, curl, and friends via its buildpack-deps scm layer —
+# and the node layer is built on the same bookworm, so the copied binaries
+# link cleanly. COPY merges directories, so Go's own /usr/local/go survives
+# the overlay.
+FROM golang:1.27.3-bookworm
+
+# bin/{node,npm,npx,corepack} + lib/node_modules from the official image —
+# the same layering trick the fastapi guide uses for its uv+Node dev
+# container.
+COPY --from=node:22-bookworm /usr/local/ /usr/local/
+
+# npm >= 11 is MANDATORY (family trap): Node 22 ships npm 10.9.9, which
+# crashes in @npmcli/arborist on client lockfile regeneration.
+RUN npm install -g npm@11
+
+# The family verification command runs under `bash -lc`, and a login shell
+# resets PATH via /etc/profile to the Debian default — losing the golang
+# image's ENV PATH (/usr/local/go/bin + /go/bin). Put go/gofmt on the
+# default PATH via symlinks and restore the GOPATH bin for login shells.
+RUN ln -s /usr/local/go/bin/go /usr/local/bin/go \
+    && ln -s /usr/local/go/bin/gofmt /usr/local/bin/gofmt \
+    && printf 'export PATH="$PATH":/usr/local/go/bin:/go/bin\n' > /etc/profile.d/go-toolchain.sh
+
+# Go caches are deliberately NOT baked in — they ride the named volumes
+# gdg-go:/go/pkg/mod and gdg-gocache:/root/.cache/go-build via compose.
+WORKDIR /workspaces/go_developers_guide

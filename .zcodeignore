@@ -1,0 +1,9 @@
+# Keep ZCode's file search/reads away from generated bulk — source lives in
+# server/, client/, and the root docs.
+node_modules/
+dist/
+coverage/
+server/data/
+e2e/test-results/
+e2e/playwright-report/
+.git/
