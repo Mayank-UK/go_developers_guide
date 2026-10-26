@@ -350,11 +350,15 @@ func NewProductionRegistry() (Registry, error) {
 	if err != nil {
 		return Registry{}, fmt.Errorf("build grpc topic: %w", err)
 	}
+	sqlSchema, err := sqlSchemaTopic()
+	if err != nil {
+		return Registry{}, fmt.Errorf("build sql-schema topic: %w", err)
+	}
 	return NewRegistry(
 		[]Topic{
 			goLanguage, goRuntime, httpWeb, goHTTPFundamentals, interfacesComposition,
 			goroutinesChannels, routing, middleware, requestResponse, validation, apiDesign,
-			apiDocumentation, graphql, webhooks, grpc,
+			apiDocumentation, graphql, webhooks, grpc, sqlSchema,
 		},
 		groups,
 	)

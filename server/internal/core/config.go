@@ -13,10 +13,11 @@ import (
 // Environment variable names — the family pattern of a per-guide prefix
 // (here GDG_, matching the fastapi guide's FDG_).
 const (
-	envPort     = "GDG_PORT"
-	envEnv      = "GDG_ENV"
-	envLogLevel = "GDG_LOG_LEVEL"
-	envGRPCAddr = "GRPC_ADDR"
+	envPort        = "GDG_PORT"
+	envEnv         = "GDG_ENV"
+	envLogLevel    = "GDG_LOG_LEVEL"
+	envGRPCAddr    = "GRPC_ADDR"
+	envDatabaseURL = "GDG_DATABASE_URL"
 )
 
 // Defaults applied when a variable is unset or empty: dev-safe values, no
@@ -26,6 +27,13 @@ const (
 	defaultEnv      = "dev"
 	defaultLogLevel = slog.LevelInfo
 	defaultGRPCAddr = ":8102"
+	// defaultDatabaseURL points at the dev stack's PostgreSQL by its
+	// compose-network service name (host port 5433 maps to 5432 inside
+	// the network) with the compose-declared credentials. PostgreSQL is
+	// part of the stack — not an optional service — so the server migrates
+	// it at boot and fails fast when it is unreachable. DSN SHAPE is the
+	// driver's to validate (at dial time), not config's.
+	defaultDatabaseURL = "postgres://postgres:guide@postgres:5432/guide?sslmode=disable"
 )
 
 // Config is the validated, typed application configuration, read once at
@@ -42,6 +50,12 @@ type Config struct {
 	// host:port listen address; the guide's reserved port is :8102). An
 	// unusable address fails at the net.Listen call at boot, never here.
 	GRPCAddr string
+	// DatabaseURL is the PostgreSQL DSN the server migrates and queries
+	// (GDG_DATABASE_URL, a URL-shaped connection string). Unparseable or
+	// unreachable values are a BOOT failure — caught when the pool dials,
+	// never here: this struct carries configuration, not validation of
+	// another package's syntax.
+	DatabaseURL string
 }
 
 // LoadConfig builds a Config from the environment through getenv, which is
@@ -51,10 +65,11 @@ type Config struct {
 // variable — configuration problems fail at boot, never panic.
 func LoadConfig(getenv func(string) string) (Config, error) {
 	cfg := Config{
-		Port:     defaultPort,
-		Env:      defaultEnv,
-		LogLevel: defaultLogLevel,
-		GRPCAddr: defaultGRPCAddr,
+		Port:        defaultPort,
+		Env:         defaultEnv,
+		LogLevel:    defaultLogLevel,
+		GRPCAddr:    defaultGRPCAddr,
+		DatabaseURL: defaultDatabaseURL,
 	}
 
 	if raw := strings.TrimSpace(getenv(envPort)); raw != "" {
@@ -82,6 +97,10 @@ func LoadConfig(getenv func(string) string) (Config, error) {
 
 	if raw := strings.TrimSpace(getenv(envGRPCAddr)); raw != "" {
 		cfg.GRPCAddr = raw
+	}
+
+	if raw := strings.TrimSpace(getenv(envDatabaseURL)); raw != "" {
+		cfg.DatabaseURL = raw
 	}
 
 	return cfg, nil

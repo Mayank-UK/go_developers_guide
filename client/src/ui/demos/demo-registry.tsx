@@ -56,6 +56,8 @@ const WebhookSimulatorDemo = lazy(() => import('./api/webhook_simulator_demo'));
 const DocsLinkDemo = lazy(() => import('./api/docs_link_demo'));
 const GraphQLPlaygroundDemo = lazy(() => import('./api/graphql_playground_demo'));
 const GRPCConsoleDemo = lazy(() => import('./api/grpc_console_demo'));
+const SchemaExplorerDemo = lazy(() => import('./db/schema_explorer_demo'));
+const UUIDLabDemo = lazy(() => import('./db/uuid_demo'));
 
 export const demoRegistry: DemoRegistry = {
   'go:runtime-types': RuntimeTypesDemo,
@@ -75,4 +77,6 @@ export const demoRegistry: DemoRegistry = {
   'api:docs-link': DocsLinkDemo,
   'api:graphql-playground': GraphQLPlaygroundDemo,
   'api:grpc-console': GRPCConsoleDemo,
+  'db:schema-explorer': SchemaExplorerDemo,
+  'db:uuid': UUIDLabDemo,
 };

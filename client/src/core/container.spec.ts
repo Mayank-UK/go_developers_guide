@@ -91,6 +91,16 @@ import {
   GetGRPCConsoleDemoUseCase,
   API_GRPC_CONSOLE_DEMO_USE_CASE,
 } from '../domain/demo/get-grpc-console-demo-usecase';
+import { SchemaExplorerRepositoryImpl } from '../data/demo/schema-explorer-repository-impl';
+import {
+  GetSchemaExplorerDemoUseCase,
+  SCHEMA_EXPLORER_DEMO_USE_CASE,
+} from '../domain/demo/get-schema-explorer-demo-usecase';
+import { UUIDLabRepositoryImpl } from '../data/demo/uuid-lab-repository-impl';
+import {
+  GetUUIDLabDemoUseCase,
+  DB_UUID_DEMO_USE_CASE,
+} from '../domain/demo/get-uuid-lab-demo-usecase';
 
 /**
  * The default config wires only fetch-based sources, so initializing the
@@ -279,6 +289,22 @@ describe('container', () => {
     expect(container.resolve(API_GRPC_CONSOLE_DEMO_USE_CASE)).toBe(
       container.getGRPCConsoleDemoUseCase,
     );
+  });
+
+  it('wires the schema-explorer demo pipeline through the layers: config → api → repository → use case', () => {
+    expect(container.getSchemaExplorerDemoUseCase).toBeInstanceOf(GetSchemaExplorerDemoUseCase);
+    expect(container.schemaExplorerRepository).toBeInstanceOf(SchemaExplorerRepositoryImpl);
+    expect(container.appConfig.apiBaseUrl).toBe('/api');
+    expect(container.resolve(SCHEMA_EXPLORER_DEMO_USE_CASE)).toBe(
+      container.getSchemaExplorerDemoUseCase,
+    );
+  });
+
+  it('wires the uuid-lab demo pipeline through the layers: config → api → repository → use case', () => {
+    expect(container.getUUIDLabDemoUseCase).toBeInstanceOf(GetUUIDLabDemoUseCase);
+    expect(container.uuidLabRepository).toBeInstanceOf(UUIDLabRepositoryImpl);
+    expect(container.appConfig.apiBaseUrl).toBe('/api');
+    expect(container.resolve(DB_UUID_DEMO_USE_CASE)).toBe(container.getUUIDLabDemoUseCase);
   });
 
   it('getWiring exposes every registered singleton keyed by symbol token', () => {

@@ -75,9 +75,9 @@ func goHTTPFundamentalsTopic() (Topic, error) {
 				"The env contract: names, dev-safe defaults, and a getenv function parameter (tests inject values; the process never mutates).",
 				"server/internal/core/config.go",
 				"const (\n"+
-					"    envPort     = \"GDG_PORT\"\n"+
-					"    envEnv      = \"GDG_ENV\"\n"+
-					"    envLogLevel = \"GDG_LOG_LEVEL\"\n"+
+					"    envPort        = \"GDG_PORT\"\n"+
+					"    envEnv         = \"GDG_ENV\"\n"+
+					"    envLogLevel    = \"GDG_LOG_LEVEL\"\n"+
 					")\n"+
 					"// …\n"+
 					"const (\n"+
@@ -88,9 +88,10 @@ func goHTTPFundamentalsTopic() (Topic, error) {
 					"// …\n"+
 					"func LoadConfig(getenv func(string) string) (Config, error) {\n"+
 					"    cfg := Config{\n"+
-					"        Port:     defaultPort,\n"+
-					"        Env:      defaultEnv,\n"+
-					"        LogLevel: defaultLogLevel,\n"+
+					"        Port:        defaultPort,\n"+
+					"        Env:         defaultEnv,\n"+
+					"        LogLevel:    defaultLogLevel,\n"+
+					"        GRPCAddr:    defaultGRPCAddr,\n"+
 					"    }"),
 			text("setup-config-values",
 				"Three things in that snippet repay attention. Unset or empty variables fall back to dev-safe defaults, so the stack boots anywhere with zero configuration. Malformed values — a port that is not a number, a log level outside debug/info/warn/error — return a descriptive error naming the offending variable, and the composition root wraps it and exits non-zero: configuration problems fail at boot, never panic, never surface mid-request. And ``getenv`` is a function parameter rather than a direct ``os.Getenv`` call, which is what makes the loader testable without mutating process state — the same dependency-injection instinct the handlers use, applied to the environment itself. The resulting ``Config`` is read once and then immutable by convention; it is a small value struct, so handing it around copies are cheap and nothing mutates it."),

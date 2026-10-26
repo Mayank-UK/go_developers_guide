@@ -154,9 +154,9 @@ func goLanguageTopic() (Topic, error) {
 				"Two const groups from the config: names and dev-safe defaults.",
 				"server/internal/core/config.go",
 				"const (\n"+
-					"    envPort     = \"GDG_PORT\"\n"+
-					"    envEnv      = \"GDG_ENV\"\n"+
-					"    envLogLevel = \"GDG_LOG_LEVEL\"\n"+
+					"    envPort        = \"GDG_PORT\"\n"+
+					"    envEnv         = \"GDG_ENV\"\n"+
+					"    envLogLevel    = \"GDG_LOG_LEVEL\"\n"+
 					")\n"+
 					"// …\n"+
 					"const (\n"+

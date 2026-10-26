@@ -1,6 +1,7 @@
 package presentation
 
 import (
+	"context"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
@@ -10,12 +11,25 @@ import (
 	"guide/internal/content"
 	"guide/internal/core"
 	postsmemory "guide/internal/data/posts"
+	"guide/internal/domain/demos"
 	"guide/internal/domain/posts"
 )
 
 // newTestLogger captures log records as text for substring assertions.
 func newTestLogger(buf *strings.Builder) *slog.Logger {
 	return slog.New(slog.NewTextHandler(buf, nil))
+}
+
+// harnessIntrospector feeds the middleware-test harness's schema-explorer
+// route a one-table snapshot: the chain's shape is under test here, not
+// the introspector (which the data layer tests against real PostgreSQL).
+type harnessIntrospector struct{}
+
+func (harnessIntrospector) Introspect(context.Context) (demos.SchemaSnapshot, error) {
+	return demos.SchemaSnapshot{
+		Tables:  []string{"posts"},
+		Columns: []demos.ColumnRow{{Table: "posts", Name: "id", Type: "uuid"}},
+	}, nil
 }
 
 // newAPIServer composes the exact chain main.go wires, over a mux serving
@@ -51,6 +65,11 @@ func newAPIServer(registry content.Registry, store *core.ScenarioStore, logger *
 	mux.Handle("GET /api/demo/api/docs-link", NewAPIDocsLinkHandler(logger))
 	mux.Handle("GET /api/openapi.yaml", NewOpenAPISpecHandler())
 	mux.Handle("GET /api/demo/api/grpc-console", NewGRPCConsoleHandler())
+	// The db demos ride a FAKE introspector here (the real one needs the
+	// live PostgreSQL; its own package tests exercise that against a
+	// throwaway database) — enough to exercise the full chain shape.
+	mux.Handle("GET /api/demo/db/schema-explorer", NewDBSchemaExplorerHandler(harnessIntrospector{}, logger))
+	mux.Handle("GET /api/demo/db/uuid", NewDBUUIDHandler(logger))
 	// The GraphQL pair mirrors main.go: the endpoint over its own posts
 	// stack (the handler tests exercise them through dedicated muxes with
 	// seeded stores; here the chain shape is what matters).

@@ -134,6 +134,20 @@ import {
   GetGRPCConsoleDemoUseCase,
   API_GRPC_CONSOLE_DEMO_USE_CASE,
 } from '../domain/demo/get-grpc-console-demo-usecase';
+import { SchemaExplorerApi } from '../data/demo/schema-explorer-api';
+import { SchemaExplorerRepositoryImpl } from '../data/demo/schema-explorer-repository-impl';
+import type { SchemaExplorerRepository } from '../domain/demo/schema-explorer-repository';
+import {
+  GetSchemaExplorerDemoUseCase,
+  SCHEMA_EXPLORER_DEMO_USE_CASE,
+} from '../domain/demo/get-schema-explorer-demo-usecase';
+import { UUIDLabApi } from '../data/demo/uuid-lab-api';
+import { UUIDLabRepositoryImpl } from '../data/demo/uuid-lab-repository-impl';
+import type { UUIDLabRepository } from '../domain/demo/uuid-lab-repository';
+import {
+  GetUUIDLabDemoUseCase,
+  DB_UUID_DEMO_USE_CASE,
+} from '../domain/demo/get-uuid-lab-demo-usecase';
 
 /**
  * Service-locator container — this client's composition root, mirroring the
@@ -248,6 +262,14 @@ export const ContainerTokens = {
   GRPCConsoleRepository: Symbol('GRPCConsoleRepository'),
   // Same aliasing story as the headers demo (API_GRPC_CONSOLE_DEMO_USE_CASE).
   GetGRPCConsoleDemoUseCase: API_GRPC_CONSOLE_DEMO_USE_CASE,
+  SchemaExplorerApi: Symbol('SchemaExplorerApi'),
+  SchemaExplorerRepository: Symbol('SchemaExplorerRepository'),
+  // Same aliasing story as the headers demo (SCHEMA_EXPLORER_DEMO_USE_CASE).
+  GetSchemaExplorerDemoUseCase: SCHEMA_EXPLORER_DEMO_USE_CASE,
+  UUIDLabApi: Symbol('UUIDLabApi'),
+  UUIDLabRepository: Symbol('UUIDLabRepository'),
+  // Same aliasing story as the headers demo (DB_UUID_DEMO_USE_CASE).
+  GetUUIDLabDemoUseCase: DB_UUID_DEMO_USE_CASE,
 } as const;
 
 class Container {
@@ -495,6 +517,29 @@ class Container {
     this.register(
       ContainerTokens.GetGRPCConsoleDemoUseCase,
       new GetGRPCConsoleDemoUseCase(this.grpcConsoleRepository),
+    );
+
+    // The sql-schema topic's db demos: the live-schema introspection
+    // pipeline and the UUIDv7 lab, over the same config → api →
+    // repository → use case shape.
+    this.register(ContainerTokens.SchemaExplorerApi, new SchemaExplorerApi(config));
+    this.register(
+      ContainerTokens.SchemaExplorerRepository,
+      new SchemaExplorerRepositoryImpl(this.schemaExplorerApi),
+    );
+    this.register(
+      ContainerTokens.GetSchemaExplorerDemoUseCase,
+      new GetSchemaExplorerDemoUseCase(this.schemaExplorerRepository),
+    );
+
+    this.register(ContainerTokens.UUIDLabApi, new UUIDLabApi(config));
+    this.register(
+      ContainerTokens.UUIDLabRepository,
+      new UUIDLabRepositoryImpl(this.uuidLabApi),
+    );
+    this.register(
+      ContainerTokens.GetUUIDLabDemoUseCase,
+      new GetUUIDLabDemoUseCase(this.uuidLabRepository),
     );
   }
 
@@ -793,6 +838,30 @@ class Container {
 
   get getGRPCConsoleDemoUseCase(): GetGRPCConsoleDemoUseCase {
     return this.resolve<GetGRPCConsoleDemoUseCase>(ContainerTokens.GetGRPCConsoleDemoUseCase);
+  }
+
+  get schemaExplorerApi(): SchemaExplorerApi {
+    return this.resolve<SchemaExplorerApi>(ContainerTokens.SchemaExplorerApi);
+  }
+
+  get schemaExplorerRepository(): SchemaExplorerRepository {
+    return this.resolve<SchemaExplorerRepository>(ContainerTokens.SchemaExplorerRepository);
+  }
+
+  get getSchemaExplorerDemoUseCase(): GetSchemaExplorerDemoUseCase {
+    return this.resolve<GetSchemaExplorerDemoUseCase>(ContainerTokens.GetSchemaExplorerDemoUseCase);
+  }
+
+  get uuidLabApi(): UUIDLabApi {
+    return this.resolve<UUIDLabApi>(ContainerTokens.UUIDLabApi);
+  }
+
+  get uuidLabRepository(): UUIDLabRepository {
+    return this.resolve<UUIDLabRepository>(ContainerTokens.UUIDLabRepository);
+  }
+
+  get getUUIDLabDemoUseCase(): GetUUIDLabDemoUseCase {
+    return this.resolve<GetUUIDLabDemoUseCase>(ContainerTokens.GetUUIDLabDemoUseCase);
   }
 
   // ---- wiring helpers ----

@@ -57,8 +57,9 @@ describe('DemoHost', () => {
     // Phase 3 fundamentals (runtime-types, concurrency, headers, app-info,
     // matrix, context, race), the Phase 4 request-handling set (routing
     // explorer, middleware pipeline, reqres inspector + methods, validation
-    // arena), and the full Phase 5 apis set (posts workbench, webhook
-    // simulator, docs link, graphql playground, grpc console).
+    // arena), the full Phase 5 apis set (posts workbench, webhook
+    // simulator, docs link, graphql playground, grpc console), and the
+    // first Phase 6 data demo pair (schema explorer, uuid lab).
     expect(Object.keys(demoRegistry)).toEqual([
       'go:runtime-types',
       'runtime:concurrency',
@@ -77,6 +78,8 @@ describe('DemoHost', () => {
       'api:docs-link',
       'api:graphql-playground',
       'api:grpc-console',
+      'db:schema-explorer',
+      'db:uuid',
     ]);
   });
 });

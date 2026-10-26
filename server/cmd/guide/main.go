@@ -18,6 +18,7 @@ import (
 
 	"guide/internal/content"
 	"guide/internal/core"
+	"guide/internal/data/db"
 	postsmemory "guide/internal/data/posts"
 	"guide/internal/domain/posts"
 	"guide/internal/grpcapi"
@@ -42,11 +43,35 @@ func main() {
 // error for main to exit non-zero — panics are reserved for programmer
 // bugs, which this code has none of.
 func run() error {
+	// Boot-scoped context: dials and migrations get a bounded window so a
+	// wedged database fails the boot deterministically instead of hanging
+	// it. Once serving starts, request lifetimes belong to the signal
+	// context below.
+	bootCtx, bootCancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer bootCancel()
+
 	cfg, err := core.LoadConfig(os.Getenv)
 	if err != nil {
 		return fmt.Errorf("load config: %w", err)
 	}
 	logger := core.NewLogger(cfg)
+
+	// PostgreSQL is part of the stack, not an optional service: dial it,
+	// run the embedded goose migrations to the latest version, fail the
+	// boot if either step fails. The pool then serves the whole process —
+	// the introspection demo now, the posts repository from topic 17 on.
+	pool, err := db.NewPool(bootCtx, cfg.DatabaseURL)
+	if err != nil {
+		logger.Error("database unreachable", "error", err)
+		return fmt.Errorf("database: %w", err)
+	}
+	defer pool.Close()
+	applied, err := db.Migrate(bootCtx, pool)
+	if err != nil {
+		logger.Error("database migrations failed", "error", err)
+		return fmt.Errorf("migrate: %w", err)
+	}
+	logger.Info("database migrations applied", "applied", applied)
 
 	// The content registry validates every registered topic at startup and
 	// fails the process here — broken content never reaches a request.
@@ -80,6 +105,8 @@ func run() error {
 	mux.Handle("GET /api/demo/api/docs-link", presentation.NewAPIDocsLinkHandler(logger))
 	mux.Handle("GET /api/openapi.yaml", presentation.NewOpenAPISpecHandler())
 	mux.Handle("GET /api/demo/api/grpc-console", presentation.NewGRPCConsoleHandler())
+	mux.Handle("GET /api/demo/db/schema-explorer", presentation.NewDBSchemaExplorerHandler(db.NewIntrospector(pool), logger))
+	mux.Handle("GET /api/demo/db/uuid", presentation.NewDBUUIDHandler(logger))
 
 	// The posts resource — the api-design topic's real API surface, and
 	// the substrate later topics reuse (authorization guards its ids,
