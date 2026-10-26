@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"guide/internal/core"
-	postsmemory "guide/internal/data/posts"
+	postsdata "guide/internal/data/posts"
 	"guide/internal/domain/posts"
 )
 
@@ -21,11 +21,11 @@ import (
 // repository: the playground payload route plus the real POST /api/graphql
 // endpoint sharing the store with a scratch payload world.
 func newGraphQLDemoServer(logger *slog.Logger) http.Handler {
-	repo := postsmemory.NewRepository()
+	repo := postsdata.NewInMemoryRepository()
 	mux := http.NewServeMux()
 	mux.Handle("GET /api/demo/api/graphql-playground",
 		NewGraphQLPlaygroundHandler(func() posts.PostsRepository {
-			return postsmemory.NewRepository()
+			return postsdata.NewInMemoryRepository()
 		}))
 	mux.Handle("POST /api/graphql", NewGraphQLHandler(
 		posts.NewListPostsUseCase(repo),

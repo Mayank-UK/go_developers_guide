@@ -58,6 +58,12 @@ const GraphQLPlaygroundDemo = lazy(() => import('./api/graphql_playground_demo')
 const GRPCConsoleDemo = lazy(() => import('./api/grpc_console_demo'));
 const SchemaExplorerDemo = lazy(() => import('./db/schema_explorer_demo'));
 const UUIDLabDemo = lazy(() => import('./db/uuid_demo'));
+const SQLSafetyDemo = lazy(() => import('./db/sql_safety_demo'));
+const MigrationsDemo = lazy(() => import('./db/migrations_demo'));
+const SQLLabDemo = lazy(() => import('./db/sql_lab_demo'));
+const SearchDemo = lazy(() => import('./db/search_demo'));
+const RaceDemo = lazy(() => import('./db/race_demo'));
+const AuditDemo = lazy(() => import('./db/audit_demo'));
 
 export const demoRegistry: DemoRegistry = {
   'go:runtime-types': RuntimeTypesDemo,
@@ -79,4 +85,10 @@ export const demoRegistry: DemoRegistry = {
   'api:grpc-console': GRPCConsoleDemo,
   'db:schema-explorer': SchemaExplorerDemo,
   'db:uuid': UUIDLabDemo,
+  'db:sql-safety': SQLSafetyDemo,
+  'db:migrations': MigrationsDemo,
+  'db:sql-lab': SQLLabDemo,
+  'db:search': SearchDemo,
+  'db:race': RaceDemo,
+  'db:audit': AuditDemo,
 };

@@ -413,8 +413,8 @@ func goHTTPFundamentalsTopic() (Topic, error) {
 					"        t.Fatal(\"a go-built test binary always carries build info\")\n"+
 					"    }\n"+
 					"// …\n"+
-					"    if payload.Module.DependencyCount != len(buildInfo.Deps) || payload.Module.DependencyCount != 12 {\n"+
-					"        t.Errorf(\"dependency count = %d, want 12 (the deliberate-direct-requires count, confirmed live)\", payload.Module.DependencyCount)\n"+
+					"    if payload.Module.DependencyCount != len(buildInfo.Deps) || payload.Module.DependencyCount != 16 {\n"+
+					"        t.Errorf(\"dependency count = %d, want 16 (the deliberate direct-requires count, confirmed live)\", payload.Module.DependencyCount)\n"+
 					"    }"),
 			text("dev-devcontainer",
 				"This repo's environment is a devcontainer stack: compose keeps the server on :8100 beside PostgreSQL, Redis, and MongoDB; the client's Vite dev server on :5175 proxies ``/api`` to it. Verification runs inside the long-lived containers — no ephemeral churn — with named volumes caching the Go module and build caches so an exec'd ``go test`` is warm. The docker-exec command pair is the project's definition of done, and it is exactly what produced the green output behind this page: the stack you are reading this from is the stack that tested it."),

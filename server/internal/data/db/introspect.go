@@ -131,7 +131,11 @@ func (i *Introspector) Introspect(ctx context.Context) (demos.SchemaSnapshot, er
 		       idx.indisunique AS is_unique,
 		       idx.indisprimary AS is_primary,
 		       pg_get_indexdef(i.oid) AS definition,
-		       (SELECT string_agg(a.attname, ', ' ORDER BY k.ord)
+		       -- COALESCE: an EXPRESSION index (e.g. the FTS gin over
+		       -- to_tsvector(...)) has no plain column positions to name,
+		       -- so the aggregate comes back NULL — an index with no
+		       -- column list, not a broken scan.
+		       (SELECT COALESCE(string_agg(a.attname, ', ' ORDER BY k.ord), '')
 		          FROM unnest(idx.indkey::int2[]) WITH ORDINALITY AS k(attnum, ord)
 		          JOIN pg_attribute a ON a.attrelid = t.oid AND a.attnum = k.attnum
 		       ) AS columns

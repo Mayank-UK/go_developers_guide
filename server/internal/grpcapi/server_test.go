@@ -14,7 +14,7 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/grpc/test/bufconn"
 
-	postsmemory "guide/internal/data/posts"
+	postsdata "guide/internal/data/posts"
 	"guide/internal/domain/posts"
 	pb "guide/internal/grpcapi/pb"
 )
@@ -32,7 +32,7 @@ import (
 func servePosts(t *testing.T) (pb.PostsServiceClient, func()) {
 	t.Helper()
 
-	repository := postsmemory.NewRepository()
+	repository := postsdata.NewInMemoryRepository()
 	server := NewGRPCServer(
 		posts.NewListPostsUseCase(repository),
 		posts.NewGetPostUseCase(repository),
@@ -329,7 +329,7 @@ func TestBidiStreamAcksPerItemAndSurvivesRejects(t *testing.T) {
 }
 
 func TestNewGRPCServerRegistersAllFourMethods(t *testing.T) {
-	repository := postsmemory.NewRepository()
+	repository := postsdata.NewInMemoryRepository()
 	server := NewGRPCServer(
 		posts.NewListPostsUseCase(repository),
 		posts.NewGetPostUseCase(repository),

@@ -354,11 +354,15 @@ func NewProductionRegistry() (Registry, error) {
 	if err != nil {
 		return Registry{}, fmt.Errorf("build sql-schema topic: %w", err)
 	}
+	databasesSQL, err := databasesSQLTopic()
+	if err != nil {
+		return Registry{}, fmt.Errorf("build databases-sql topic: %w", err)
+	}
 	return NewRegistry(
 		[]Topic{
 			goLanguage, goRuntime, httpWeb, goHTTPFundamentals, interfacesComposition,
 			goroutinesChannels, routing, middleware, requestResponse, validation, apiDesign,
-			apiDocumentation, graphql, webhooks, grpc, sqlSchema,
+			apiDocumentation, graphql, webhooks, grpc, sqlSchema, databasesSQL,
 		},
 		groups,
 	)

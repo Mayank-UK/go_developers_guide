@@ -10,7 +10,7 @@ import (
 
 	"guide/internal/content"
 	"guide/internal/core"
-	postsmemory "guide/internal/data/posts"
+	postsdata "guide/internal/data/posts"
 	"guide/internal/domain/demos"
 	"guide/internal/domain/posts"
 )
@@ -70,17 +70,24 @@ func newAPIServer(registry content.Registry, store *core.ScenarioStore, logger *
 	// throwaway database) — enough to exercise the full chain shape.
 	mux.Handle("GET /api/demo/db/schema-explorer", NewDBSchemaExplorerHandler(harnessIntrospector{}, logger))
 	mux.Handle("GET /api/demo/db/uuid", NewDBUUIDHandler(logger))
+	// The topic 17 demo sextet rides fake runners for the same reason.
+	mux.Handle("GET /api/demo/db/sql-safety", NewDBSQLSafetyHandler(fakeSQLDemos{}, logger))
+	mux.Handle("GET /api/demo/db/migrations", NewDBMigrationsHandler(fakeSQLDemos{}, logger))
+	mux.Handle("GET /api/demo/db/sql-lab", NewDBSQLLabHandler(fakeSQLDemos{}, logger))
+	mux.Handle("GET /api/demo/db/search", NewDBSearchHandler(fakeSQLDemos{}, logger))
+	mux.Handle("GET /api/demo/db/race", NewDBRaceHandler(fakeSQLDemos{}, logger))
+	mux.Handle("GET /api/demo/db/audit", NewDBAuditHandler(fakeSQLDemos{}, logger))
 	// The GraphQL pair mirrors main.go: the endpoint over its own posts
 	// stack (the handler tests exercise them through dedicated muxes with
 	// seeded stores; here the chain shape is what matters).
-	postsRepo := postsmemory.NewRepository()
+	postsRepo := postsdata.NewInMemoryRepository()
 	postsList := posts.NewListPostsUseCase(postsRepo)
 	postsCreate := posts.NewCreatePostUseCase(postsRepo)
 	postsGet := posts.NewGetPostUseCase(postsRepo)
 	postsReplace := posts.NewReplacePostUseCase(postsRepo)
 	postsDelete := posts.NewDeletePostUseCase(postsRepo)
 	mux.Handle("GET /api/demo/api/graphql-playground", NewGraphQLPlaygroundHandler(func() posts.PostsRepository {
-		return postsmemory.NewRepository()
+		return postsdata.NewInMemoryRepository()
 	}))
 	mux.Handle("POST /api/graphql", NewGraphQLHandler(postsList, postsGet, postsCreate, postsReplace, postsDelete, logger))
 	return Chain(

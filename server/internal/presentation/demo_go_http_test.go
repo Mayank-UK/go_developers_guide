@@ -73,7 +73,7 @@ func TestAppInfoDemoServesThePayload(t *testing.T) {
 	}
 	// 12 = the deliberate-direct-requires count since the Phase 5 deps
 	// landed (grpc-go, gqlgen, pgx, …) — derived live, pinned here.
-	if decoded.Module.Path != "guide" || decoded.Module.DependencyCount != 12 {
+	if decoded.Module.Path != "guide" || decoded.Module.DependencyCount != 16 {
 		t.Errorf("module drifted: %+v", decoded.Module)
 	}
 	if decoded.Module.Version == "" || !strings.HasPrefix(decoded.Module.GoVersion, "go1.") {

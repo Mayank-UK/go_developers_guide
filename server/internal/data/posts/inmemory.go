@@ -1,11 +1,12 @@
-// Package postsmemory is the in-memory PostsRepository adapter: a
-// mutex-guarded map seeded with deterministic guide posts. It is the SWAP
-// SEAM the databases topic replaces — a PostgreSQL adapter will implement
-// the same posts.PostsRepository port and be wired at the composition root
-// instead, and neither the domain nor the handlers will learn which store
-// answered. Until then it is the honest stand-in: real pagination, real
-// filtering, real typed misses, safe for concurrent use (-race clean).
-package postsmemory
+// Package postsdata holds the posts storage adapters behind the one
+// posts.PostsRepository port: the in-memory repository (the fake — the
+// honest stand-in this guide served from Phase 1 on), the pgx v5
+// PostgreSQL repository over topic 16's schema (the live store), and the
+// switching facade that consults the scenario store's data mode per call.
+// Neither the domain nor the handlers learn which adapter answered: the
+// port is the contract, and the shared behavior table in this package's
+// tests keeps both adapters honest against it.
+package postsdata
 
 import (
 	"context"
@@ -91,9 +92,9 @@ type Repository struct {
 	now    func() time.Time
 }
 
-// NewRepository builds the seeded repository on the production clock
-// (UTC now for every write it stamps).
-func NewRepository() *Repository {
+// NewInMemoryRepository builds the seeded fake repository on the production
+// clock (UTC now for every write it stamps).
+func NewInMemoryRepository() *Repository {
 	return newRepository(func() time.Time { return time.Now().UTC() })
 }
 
@@ -108,7 +109,7 @@ func newRepository(now func() time.Time) *Repository {
 			ID:        id,
 			Title:     draft.Title,
 			Body:      draft.Body,
-			Tags:      append([]string(nil), draft.Tags...),
+			Tags:      uniqueTags(draft.Tags),
 			CreatedAt: created,
 			UpdatedAt: created,
 		}
@@ -180,7 +181,7 @@ func (r *Repository) Create(_ context.Context, draft posts.Draft) (posts.Post, e
 		ID:        fmt.Sprintf("p-%d", r.nextID),
 		Title:     draft.Title,
 		Body:      draft.Body,
-		Tags:      append([]string(nil), draft.Tags...),
+		Tags:      uniqueTags(draft.Tags),
 		CreatedAt: now,
 		UpdatedAt: now,
 	}
@@ -203,7 +204,7 @@ func (r *Repository) Replace(_ context.Context, id string, draft posts.Draft) (p
 		ID:        existing.ID,
 		Title:     draft.Title,
 		Body:      draft.Body,
-		Tags:      append([]string(nil), draft.Tags...),
+		Tags:      uniqueTags(draft.Tags),
 		CreatedAt: existing.CreatedAt,
 		UpdatedAt: r.now(),
 	}
@@ -273,4 +274,24 @@ func sortSlice(slice []posts.Post, less func(a, b posts.Post) int) {
 func copyPost(post posts.Post) posts.Post {
 	post.Tags = append([]string(nil), post.Tags...)
 	return post
+}
+
+// uniqueTags collapses a draft's normalized tags to the sorted SET the
+// stores keep. The domain's NormalizeDraft deliberately does not dedup
+// (its own tests pin duplicate preservation), but storage treats tags as
+// a set: the PostgreSQL post_tags composite primary key physically
+// refuses a repeated tag, and the in-memory adapter mirrors that invariant
+// so both stores answer identically behind the shared behavior table.
+func uniqueTags(tags []string) []string {
+	seen := make(map[string]bool, len(tags))
+	unique := make([]string, 0, len(tags))
+	for _, tag := range tags {
+		if seen[tag] {
+			continue
+		}
+		seen[tag] = true
+		unique = append(unique, tag)
+	}
+	sort.Strings(unique)
+	return unique
 }

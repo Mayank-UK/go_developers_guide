@@ -1,4 +1,4 @@
-package postsmemory
+package postsdata
 
 import (
 	"context"
@@ -18,7 +18,7 @@ import (
 // parallel hammering.
 
 func TestSeedListsNewestFirstDeterministically(t *testing.T) {
-	repo := NewRepository()
+	repo := NewInMemoryRepository()
 	page, err := repo.List(context.Background(), posts.ListQuery{Page: 1, Limit: 50, Sort: posts.SortNewest})
 	if err != nil {
 		t.Fatalf("list: %v", err)
@@ -43,7 +43,7 @@ func TestSeedListsNewestFirstDeterministically(t *testing.T) {
 }
 
 func TestListPaginatesWithPartialLastPage(t *testing.T) {
-	repo := NewRepository()
+	repo := NewInMemoryRepository()
 	query := posts.ListQuery{Page: 2, Limit: 4, Sort: posts.SortOldest}
 
 	page, err := repo.List(context.Background(), query)
@@ -65,7 +65,7 @@ func TestListPaginatesWithPartialLastPage(t *testing.T) {
 }
 
 func TestListPastTheEndIsAnHonestEmptyPage(t *testing.T) {
-	repo := NewRepository()
+	repo := NewInMemoryRepository()
 	page, err := repo.List(context.Background(), posts.ListQuery{Page: 9, Limit: 4, Sort: posts.SortNewest})
 	if err != nil {
 		t.Fatalf("list: %v", err)
@@ -82,7 +82,7 @@ func TestListPastTheEndIsAnHonestEmptyPage(t *testing.T) {
 }
 
 func TestListFiltersByExactTag(t *testing.T) {
-	repo := NewRepository()
+	repo := NewInMemoryRepository()
 	page, err := repo.List(context.Background(), posts.ListQuery{Page: 1, Limit: 10, Tag: "api", Sort: posts.SortNewest})
 	if err != nil {
 		t.Fatalf("list: %v", err)
@@ -110,7 +110,7 @@ func hasTag(post posts.Post, tag string) bool {
 }
 
 func TestListSortsByTitleCaseInsensitively(t *testing.T) {
-	repo := NewRepository()
+	repo := NewInMemoryRepository()
 	page, err := repo.List(context.Background(), posts.ListQuery{Page: 1, Limit: 10, Sort: posts.SortTitle})
 	if err != nil {
 		t.Fatalf("list: %v", err)
@@ -175,7 +175,7 @@ func TestReplacePreservesCreatedAtAndMovesUpdatedAt(t *testing.T) {
 }
 
 func TestMissesAreTypedNotFound(t *testing.T) {
-	repo := NewRepository()
+	repo := NewInMemoryRepository()
 	if _, err := repo.GetByID(context.Background(), "p-999"); !errors.Is(err, core.ErrNotFound) {
 		t.Errorf("get miss = %v, want the typed NotFound sentinel match", err)
 	}
@@ -188,7 +188,7 @@ func TestMissesAreTypedNotFound(t *testing.T) {
 }
 
 func TestDeleteRemovesThePostForReal(t *testing.T) {
-	repo := NewRepository()
+	repo := NewInMemoryRepository()
 	if err := repo.Delete(context.Background(), "p-2"); err != nil {
 		t.Fatalf("delete: %v", err)
 	}
@@ -205,7 +205,7 @@ func TestDeleteRemovesThePostForReal(t *testing.T) {
 }
 
 func TestReturnedPostsShareNoStateWithTheStore(t *testing.T) {
-	repo := NewRepository()
+	repo := NewInMemoryRepository()
 	post, err := repo.GetByID(context.Background(), "p-1")
 	if err != nil {
 		t.Fatalf("get: %v", err)
@@ -221,7 +221,7 @@ func TestReturnedPostsShareNoStateWithTheStore(t *testing.T) {
 }
 
 func TestConcurrentAccessIsRaceClean(t *testing.T) {
-	repo := NewRepository()
+	repo := NewInMemoryRepository()
 	var wg sync.WaitGroup
 	for worker := 0; worker < 8; worker++ {
 		wg.Add(1)

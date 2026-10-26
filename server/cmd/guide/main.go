@@ -19,7 +19,7 @@ import (
 	"guide/internal/content"
 	"guide/internal/core"
 	"guide/internal/data/db"
-	postsmemory "guide/internal/data/posts"
+	postsdata "guide/internal/data/posts"
 	"guide/internal/domain/posts"
 	"guide/internal/grpcapi"
 	"guide/internal/presentation"
@@ -73,6 +73,18 @@ func run() error {
 	}
 	logger.Info("database migrations applied", "applied", applied)
 
+	// The seed is data, not structure — deliberately NOT a migration: it
+	// must be re-runnable on every boot, and ON CONFLICT DO NOTHING makes
+	// it one (a fresh database inserts the six guide posts, every later
+	// boot inserts nothing). The topic 17 repository reads this seed in
+	// live mode; the in-memory fake serves the same collection from code.
+	seeded, err := postsdata.Seed(bootCtx, pool)
+	if err != nil {
+		logger.Error("posts seed failed", "error", err)
+		return fmt.Errorf("seed: %w", err)
+	}
+	logger.Info("posts seed applied", "inserted", seeded)
+
 	// The content registry validates every registered topic at startup and
 	// fails the process here — broken content never reaches a request.
 	registry, err := content.NewProductionRegistry()
@@ -107,13 +119,32 @@ func run() error {
 	mux.Handle("GET /api/demo/api/grpc-console", presentation.NewGRPCConsoleHandler())
 	mux.Handle("GET /api/demo/db/schema-explorer", presentation.NewDBSchemaExplorerHandler(db.NewIntrospector(pool), logger))
 	mux.Handle("GET /api/demo/db/uuid", presentation.NewDBUUIDHandler(logger))
+	// The databases topic's six demos all run against the live pool
+	// through one runner: safety, transactions, SQL-by-hand, search,
+	// isolation, and the in-transaction audit — each degrading to the
+	// typed 503 when the database is unreachable.
+	sqlDemos := db.NewSQLDemoRunner(pool)
+	mux.Handle("GET /api/demo/db/sql-safety", presentation.NewDBSQLSafetyHandler(sqlDemos, logger))
+	mux.Handle("GET /api/demo/db/migrations", presentation.NewDBMigrationsHandler(sqlDemos, logger))
+	mux.Handle("GET /api/demo/db/sql-lab", presentation.NewDBSQLLabHandler(sqlDemos, logger))
+	mux.Handle("GET /api/demo/db/search", presentation.NewDBSearchHandler(sqlDemos, logger))
+	mux.Handle("GET /api/demo/db/race", presentation.NewDBRaceHandler(sqlDemos, logger))
+	mux.Handle("GET /api/demo/db/audit", presentation.NewDBAuditHandler(sqlDemos, logger))
 
 	// The posts resource — the api-design topic's real API surface, and
 	// the substrate later topics reuse (authorization guards its ids,
 	// webhooks fire on its writes, the docs topics document its routes).
-	// One repository behind five use cases behind five thin handlers; the
-	// in-memory adapter is the swap seam the databases topic replaces.
-	postsRepo := postsmemory.NewRepository()
+	// One repository behind five use cases behind five thin handlers — and
+	// since the databases topic that one repository is the SWITCHING
+	// FACADE: fake mode answers from the seeded in-memory adapter, live
+	// mode from the pgx adapter over the migrated + seeded PostgreSQL, and
+	// PATCH /api/demo/scenario {"dataMode":…} flips every surface at once
+	// — REST, GraphQL, and gRPC share these five use-case instances.
+	postsRepo := postsdata.NewSwitchingRepository(
+		scenarioStore,
+		postsdata.NewInMemoryRepository(),
+		postsdata.NewPostgresRepository(pool),
+	)
 	postsList := posts.NewListPostsUseCase(postsRepo)
 	postsCreate := posts.NewCreatePostUseCase(postsRepo)
 	postsGet := posts.NewGetPostUseCase(postsRepo)
@@ -126,13 +157,13 @@ func run() error {
 	mux.Handle("DELETE /api/posts/{id}", presentation.NewPostDeleteHandler(postsDelete, logger))
 
 	// GraphQL rides the SAME posts use-case instances as the REST routes —
-	// one domain, two surfaces. The playground's scratch store stays
-	// separate (a func, because the closure must construct the interface,
-	// not return it covariantly).
+	// one domain, two surfaces, one data-mode switch. The playground's
+	// scratch store stays separate and fake by design (a func, because the
+	// closure must construct the interface, not return it covariantly).
 	mux.Handle(
 		"GET /api/demo/api/graphql-playground",
 		presentation.NewGraphQLPlaygroundHandler(func() posts.PostsRepository {
-			return postsmemory.NewRepository()
+			return postsdata.NewInMemoryRepository()
 		}),
 	)
 	mux.Handle(

@@ -97,10 +97,40 @@ import {
   SCHEMA_EXPLORER_DEMO_USE_CASE,
 } from '../domain/demo/get-schema-explorer-demo-usecase';
 import { UUIDLabRepositoryImpl } from '../data/demo/uuid-lab-repository-impl';
+import { SQLSafetyRepositoryImpl } from '../data/demo/sql-safety-repository-impl';
+import { MigrationsRepositoryImpl } from '../data/demo/db-migrations-repository-impl';
+import { SQLLabRepositoryImpl } from '../data/demo/sql-lab-repository-impl';
+import { SearchRepositoryImpl } from '../data/demo/db-search-repository-impl';
+import { RaceRepositoryImpl } from '../data/demo/db-race-repository-impl';
+import { AuditRepositoryImpl } from '../data/demo/db-audit-repository-impl';
 import {
   GetUUIDLabDemoUseCase,
   DB_UUID_DEMO_USE_CASE,
 } from '../domain/demo/get-uuid-lab-demo-usecase';
+import {
+  GetSQLSafetyDemoUseCase,
+  DB_SQL_SAFETY_DEMO_USE_CASE,
+} from '../domain/demo/get-sql-safety-demo-usecase';
+import {
+  GetMigrationsDemoUseCase,
+  DB_MIGRATIONS_DEMO_USE_CASE,
+} from '../domain/demo/get-db-migrations-demo-usecase';
+import {
+  GetSQLLabDemoUseCase,
+  DB_SQL_LAB_DEMO_USE_CASE,
+} from '../domain/demo/get-sql-lab-demo-usecase';
+import {
+  GetSearchDemoUseCase,
+  DB_SEARCH_DEMO_USE_CASE,
+} from '../domain/demo/get-db-search-demo-usecase';
+import {
+  GetRaceDemoUseCase,
+  DB_RACE_DEMO_USE_CASE,
+} from '../domain/demo/get-db-race-demo-usecase';
+import {
+  GetAuditDemoUseCase,
+  DB_AUDIT_DEMO_USE_CASE,
+} from '../domain/demo/get-db-audit-demo-usecase';
 
 /**
  * The default config wires only fetch-based sources, so initializing the
@@ -305,6 +335,59 @@ describe('container', () => {
     expect(container.uuidLabRepository).toBeInstanceOf(UUIDLabRepositoryImpl);
     expect(container.appConfig.apiBaseUrl).toBe('/api');
     expect(container.resolve(DB_UUID_DEMO_USE_CASE)).toBe(container.getUUIDLabDemoUseCase);
+  });
+
+  it('wires the databases-sql demo sextet through the layers', () => {
+    const cases = [
+      {
+        useCase: container.getSQLSafetyDemoUseCase,
+        klass: GetSQLSafetyDemoUseCase,
+        repository: container.sqlSafetyRepository,
+        repositoryClass: SQLSafetyRepositoryImpl,
+        token: DB_SQL_SAFETY_DEMO_USE_CASE,
+      },
+      {
+        useCase: container.getMigrationsDemoUseCase,
+        klass: GetMigrationsDemoUseCase,
+        repository: container.migrationsRepository,
+        repositoryClass: MigrationsRepositoryImpl,
+        token: DB_MIGRATIONS_DEMO_USE_CASE,
+      },
+      {
+        useCase: container.getSQLLabDemoUseCase,
+        klass: GetSQLLabDemoUseCase,
+        repository: container.sqlLabRepository,
+        repositoryClass: SQLLabRepositoryImpl,
+        token: DB_SQL_LAB_DEMO_USE_CASE,
+      },
+      {
+        useCase: container.getSearchDemoUseCase,
+        klass: GetSearchDemoUseCase,
+        repository: container.searchRepository,
+        repositoryClass: SearchRepositoryImpl,
+        token: DB_SEARCH_DEMO_USE_CASE,
+      },
+      {
+        useCase: container.getRaceDemoUseCase,
+        klass: GetRaceDemoUseCase,
+        repository: container.raceRepository,
+        repositoryClass: RaceRepositoryImpl,
+        token: DB_RACE_DEMO_USE_CASE,
+      },
+      {
+        useCase: container.getAuditDemoUseCase,
+        klass: GetAuditDemoUseCase,
+        repository: container.auditRepository,
+        repositoryClass: AuditRepositoryImpl,
+        token: DB_AUDIT_DEMO_USE_CASE,
+      },
+    ];
+    for (const pipeline of cases) {
+      expect(pipeline.useCase).toBeInstanceOf(pipeline.klass);
+      expect(pipeline.repository).toBeInstanceOf(pipeline.repositoryClass);
+      expect(container.resolve(pipeline.token)).toBe(pipeline.useCase);
+    }
+    expect(container.appConfig.apiBaseUrl).toBe('/api');
   });
 
   it('getWiring exposes every registered singleton keyed by symbol token', () => {

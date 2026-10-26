@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"guide/internal/core"
-	postsmemory "guide/internal/data/posts"
+	postsdata "guide/internal/data/posts"
 	"guide/internal/domain/posts"
 )
 
@@ -24,7 +24,7 @@ import (
 // once, every Load returns the right post, and duplicates receive the
 // same answer twice.
 func TestConcurrentLoadsShareOneBatchFetch(t *testing.T) {
-	repo := postsmemory.NewRepository()
+	repo := postsdata.NewInMemoryRepository()
 	var fetches atomic.Int64
 	loader := NewPostsLoader(func(ctx context.Context, ids []string) (map[string]posts.Post, error) {
 		fetches.Add(1)
@@ -67,7 +67,7 @@ func TestConcurrentLoadsShareOneBatchFetch(t *testing.T) {
 // the loader costs 1 for the whole batch. Behind a database, each call is
 // a round trip.
 func TestNaiveVersusLoaderPortCalls(t *testing.T) {
-	naiveRepo := NewCountingRepository(postsmemory.NewRepository())
+	naiveRepo := NewCountingRepository(postsdata.NewInMemoryRepository())
 	naivePage, err := naiveRepo.List(context.Background(), posts.ListQuery{Page: 1, Limit: posts.MaxPageLimit, Sort: posts.SortOldest})
 	if err != nil {
 		t.Fatalf("naive setup: %v", err)
@@ -83,7 +83,7 @@ func TestNaiveVersusLoaderPortCalls(t *testing.T) {
 	}
 	naiveCounts := naiveRepo.Snapshot()
 
-	loaderRepo := NewCountingRepository(postsmemory.NewRepository())
+	loaderRepo := NewCountingRepository(postsdata.NewInMemoryRepository())
 	loader := NewPostsLoader(PortBatch(loaderRepo))
 	var wg sync.WaitGroup
 	for _, id := range ids {
@@ -114,7 +114,7 @@ func TestNaiveVersusLoaderPortCalls(t *testing.T) {
 // next cannot be batched (it is not concurrent), so each gets its own
 // fetch — sequential callers pay one call each, concurrent ones share.
 func TestSequentialLoadsGetTheirOwnBatches(t *testing.T) {
-	repo := postsmemory.NewRepository()
+	repo := postsdata.NewInMemoryRepository()
 	var fetches atomic.Int64
 	loader := NewPostsLoader(func(ctx context.Context, ids []string) (map[string]posts.Post, error) {
 		fetches.Add(1)
@@ -138,7 +138,7 @@ func TestSequentialLoadsGetTheirOwnBatches(t *testing.T) {
 // batch did not find arrives as core.NotFound — the same typed taxonomy
 // error a point read serves, ready for extensions.code not_found.
 func TestAbsentIDReportsTheTypedMiss(t *testing.T) {
-	loader := NewPostsLoader(PortBatch(postsmemory.NewRepository()))
+	loader := NewPostsLoader(PortBatch(postsdata.NewInMemoryRepository()))
 	_, err := loader.Load(context.Background(), "p-999")
 	if err == nil {
 		t.Fatal("absent id must error")
@@ -151,7 +151,7 @@ func TestAbsentIDReportsTheTypedMiss(t *testing.T) {
 // TestCountingRepositoryCountsEveryPortMethod proves the instrument
 // itself: one call through each method moves exactly its own counter.
 func TestCountingRepositoryCountsEveryPortMethod(t *testing.T) {
-	counting := NewCountingRepository(postsmemory.NewRepository())
+	counting := NewCountingRepository(postsdata.NewInMemoryRepository())
 	ctx := context.Background()
 
 	if _, err := counting.List(ctx, posts.ListQuery{Page: 1, Limit: 2}); err != nil {

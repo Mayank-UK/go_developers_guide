@@ -35,7 +35,7 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/grpc/test/bufconn"
 
-	postsmemory "guide/internal/data/posts"
+	postsdata "guide/internal/data/posts"
 	"guide/internal/domain/posts"
 	"guide/internal/grpcapi"
 	pb "guide/internal/grpcapi/pb"
@@ -387,7 +387,7 @@ func dialBufconn(listener *bufconn.Listener) *grpc.ClientConn {
 // reports. Same call, same payload — the stack inside is what makes the
 // demo real rather than narrated.
 func BuildGRPCConsolePayload() GRPCConsolePayload {
-	repository := postsmemory.NewRepository()
+	repository := postsdata.NewInMemoryRepository()
 	server := grpcapi.NewGRPCServer(
 		posts.NewListPostsUseCase(repository),
 		posts.NewGetPostUseCase(repository),

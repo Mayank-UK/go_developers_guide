@@ -148,6 +148,48 @@ import {
   GetUUIDLabDemoUseCase,
   DB_UUID_DEMO_USE_CASE,
 } from '../domain/demo/get-uuid-lab-demo-usecase';
+import { SQLSafetyApi } from '../data/demo/sql-safety-api';
+import { SQLSafetyRepositoryImpl } from '../data/demo/sql-safety-repository-impl';
+import type { SQLSafetyRepository } from '../domain/demo/sql-safety-repository';
+import {
+  GetSQLSafetyDemoUseCase,
+  DB_SQL_SAFETY_DEMO_USE_CASE,
+} from '../domain/demo/get-sql-safety-demo-usecase';
+import { MigrationsApi } from '../data/demo/db-migrations-api';
+import { MigrationsRepositoryImpl } from '../data/demo/db-migrations-repository-impl';
+import type { MigrationsRepository } from '../domain/demo/db-migrations-repository';
+import {
+  GetMigrationsDemoUseCase,
+  DB_MIGRATIONS_DEMO_USE_CASE,
+} from '../domain/demo/get-db-migrations-demo-usecase';
+import { SQLLabApi } from '../data/demo/sql-lab-api';
+import { SQLLabRepositoryImpl } from '../data/demo/sql-lab-repository-impl';
+import type { SQLLabRepository } from '../domain/demo/sql-lab-repository';
+import {
+  GetSQLLabDemoUseCase,
+  DB_SQL_LAB_DEMO_USE_CASE,
+} from '../domain/demo/get-sql-lab-demo-usecase';
+import { SearchApi } from '../data/demo/db-search-api';
+import { SearchRepositoryImpl } from '../data/demo/db-search-repository-impl';
+import type { SearchRepository } from '../domain/demo/db-search-repository';
+import {
+  GetSearchDemoUseCase,
+  DB_SEARCH_DEMO_USE_CASE,
+} from '../domain/demo/get-db-search-demo-usecase';
+import { RaceApi } from '../data/demo/db-race-api';
+import { RaceRepositoryImpl } from '../data/demo/db-race-repository-impl';
+import type { RaceRepository } from '../domain/demo/db-race-repository';
+import {
+  GetRaceDemoUseCase,
+  DB_RACE_DEMO_USE_CASE,
+} from '../domain/demo/get-db-race-demo-usecase';
+import { AuditApi } from '../data/demo/db-audit-api';
+import { AuditRepositoryImpl } from '../data/demo/db-audit-repository-impl';
+import type { AuditRepository } from '../domain/demo/db-audit-repository';
+import {
+  GetAuditDemoUseCase,
+  DB_AUDIT_DEMO_USE_CASE,
+} from '../domain/demo/get-db-audit-demo-usecase';
 
 /**
  * Service-locator container — this client's composition root, mirroring the
@@ -270,6 +312,30 @@ export const ContainerTokens = {
   UUIDLabRepository: Symbol('UUIDLabRepository'),
   // Same aliasing story as the headers demo (DB_UUID_DEMO_USE_CASE).
   GetUUIDLabDemoUseCase: DB_UUID_DEMO_USE_CASE,
+  SQLSafetyApi: Symbol('SQLSafetyApi'),
+  SQLSafetyRepository: Symbol('SQLSafetyRepository'),
+  // Same aliasing story as the headers demo (DB_SQL_SAFETY_DEMO_USE_CASE).
+  GetSQLSafetyDemoUseCase: DB_SQL_SAFETY_DEMO_USE_CASE,
+  MigrationsApi: Symbol('MigrationsApi'),
+  MigrationsRepository: Symbol('MigrationsRepository'),
+  // Same aliasing story as the headers demo (DB_MIGRATIONS_DEMO_USE_CASE).
+  GetMigrationsDemoUseCase: DB_MIGRATIONS_DEMO_USE_CASE,
+  SQLLabApi: Symbol('SQLLabApi'),
+  SQLLabRepository: Symbol('SQLLabRepository'),
+  // Same aliasing story as the headers demo (DB_SQL_LAB_DEMO_USE_CASE).
+  GetSQLLabDemoUseCase: DB_SQL_LAB_DEMO_USE_CASE,
+  SearchApi: Symbol('SearchApi'),
+  SearchRepository: Symbol('SearchRepository'),
+  // Same aliasing story as the headers demo (DB_SEARCH_DEMO_USE_CASE).
+  GetSearchDemoUseCase: DB_SEARCH_DEMO_USE_CASE,
+  RaceApi: Symbol('RaceApi'),
+  RaceRepository: Symbol('RaceRepository'),
+  // Same aliasing story as the headers demo (DB_RACE_DEMO_USE_CASE).
+  GetRaceDemoUseCase: DB_RACE_DEMO_USE_CASE,
+  AuditApi: Symbol('AuditApi'),
+  AuditRepository: Symbol('AuditRepository'),
+  // Same aliasing story as the headers demo (DB_AUDIT_DEMO_USE_CASE).
+  GetAuditDemoUseCase: DB_AUDIT_DEMO_USE_CASE,
 } as const;
 
 class Container {
@@ -540,6 +606,69 @@ class Container {
     this.register(
       ContainerTokens.GetUUIDLabDemoUseCase,
       new GetUUIDLabDemoUseCase(this.uuidLabRepository),
+    );
+
+    // The databases-sql topic's demo sextet — one api + repository + use
+    // case per demo, all over the same config → api → repository → use
+    // case shape.
+    this.register(ContainerTokens.SQLSafetyApi, new SQLSafetyApi(config));
+    this.register(
+      ContainerTokens.SQLSafetyRepository,
+      new SQLSafetyRepositoryImpl(this.sqlSafetyApi),
+    );
+    this.register(
+      ContainerTokens.GetSQLSafetyDemoUseCase,
+      new GetSQLSafetyDemoUseCase(this.sqlSafetyRepository),
+    );
+
+    this.register(ContainerTokens.MigrationsApi, new MigrationsApi(config));
+    this.register(
+      ContainerTokens.MigrationsRepository,
+      new MigrationsRepositoryImpl(this.migrationsApi),
+    );
+    this.register(
+      ContainerTokens.GetMigrationsDemoUseCase,
+      new GetMigrationsDemoUseCase(this.migrationsRepository),
+    );
+
+    this.register(ContainerTokens.SQLLabApi, new SQLLabApi(config));
+    this.register(
+      ContainerTokens.SQLLabRepository,
+      new SQLLabRepositoryImpl(this.sqlLabApi),
+    );
+    this.register(
+      ContainerTokens.GetSQLLabDemoUseCase,
+      new GetSQLLabDemoUseCase(this.sqlLabRepository),
+    );
+
+    this.register(ContainerTokens.SearchApi, new SearchApi(config));
+    this.register(
+      ContainerTokens.SearchRepository,
+      new SearchRepositoryImpl(this.searchApi),
+    );
+    this.register(
+      ContainerTokens.GetSearchDemoUseCase,
+      new GetSearchDemoUseCase(this.searchRepository),
+    );
+
+    this.register(ContainerTokens.RaceApi, new RaceApi(config));
+    this.register(
+      ContainerTokens.RaceRepository,
+      new RaceRepositoryImpl(this.raceApi),
+    );
+    this.register(
+      ContainerTokens.GetRaceDemoUseCase,
+      new GetRaceDemoUseCase(this.raceRepository),
+    );
+
+    this.register(ContainerTokens.AuditApi, new AuditApi(config));
+    this.register(
+      ContainerTokens.AuditRepository,
+      new AuditRepositoryImpl(this.auditApi),
+    );
+    this.register(
+      ContainerTokens.GetAuditDemoUseCase,
+      new GetAuditDemoUseCase(this.auditRepository),
     );
   }
 
@@ -862,6 +991,78 @@ class Container {
 
   get getUUIDLabDemoUseCase(): GetUUIDLabDemoUseCase {
     return this.resolve<GetUUIDLabDemoUseCase>(ContainerTokens.GetUUIDLabDemoUseCase);
+  }
+
+  get sqlSafetyApi(): SQLSafetyApi {
+    return this.resolve<SQLSafetyApi>(ContainerTokens.SQLSafetyApi);
+  }
+
+  get sqlSafetyRepository(): SQLSafetyRepository {
+    return this.resolve<SQLSafetyRepository>(ContainerTokens.SQLSafetyRepository);
+  }
+
+  get getSQLSafetyDemoUseCase(): GetSQLSafetyDemoUseCase {
+    return this.resolve<GetSQLSafetyDemoUseCase>(ContainerTokens.GetSQLSafetyDemoUseCase);
+  }
+
+  get migrationsApi(): MigrationsApi {
+    return this.resolve<MigrationsApi>(ContainerTokens.MigrationsApi);
+  }
+
+  get migrationsRepository(): MigrationsRepository {
+    return this.resolve<MigrationsRepository>(ContainerTokens.MigrationsRepository);
+  }
+
+  get getMigrationsDemoUseCase(): GetMigrationsDemoUseCase {
+    return this.resolve<GetMigrationsDemoUseCase>(ContainerTokens.GetMigrationsDemoUseCase);
+  }
+
+  get sqlLabApi(): SQLLabApi {
+    return this.resolve<SQLLabApi>(ContainerTokens.SQLLabApi);
+  }
+
+  get sqlLabRepository(): SQLLabRepository {
+    return this.resolve<SQLLabRepository>(ContainerTokens.SQLLabRepository);
+  }
+
+  get getSQLLabDemoUseCase(): GetSQLLabDemoUseCase {
+    return this.resolve<GetSQLLabDemoUseCase>(ContainerTokens.GetSQLLabDemoUseCase);
+  }
+
+  get searchApi(): SearchApi {
+    return this.resolve<SearchApi>(ContainerTokens.SearchApi);
+  }
+
+  get searchRepository(): SearchRepository {
+    return this.resolve<SearchRepository>(ContainerTokens.SearchRepository);
+  }
+
+  get getSearchDemoUseCase(): GetSearchDemoUseCase {
+    return this.resolve<GetSearchDemoUseCase>(ContainerTokens.GetSearchDemoUseCase);
+  }
+
+  get raceApi(): RaceApi {
+    return this.resolve<RaceApi>(ContainerTokens.RaceApi);
+  }
+
+  get raceRepository(): RaceRepository {
+    return this.resolve<RaceRepository>(ContainerTokens.RaceRepository);
+  }
+
+  get getRaceDemoUseCase(): GetRaceDemoUseCase {
+    return this.resolve<GetRaceDemoUseCase>(ContainerTokens.GetRaceDemoUseCase);
+  }
+
+  get auditApi(): AuditApi {
+    return this.resolve<AuditApi>(ContainerTokens.AuditApi);
+  }
+
+  get auditRepository(): AuditRepository {
+    return this.resolve<AuditRepository>(ContainerTokens.AuditRepository);
+  }
+
+  get getAuditDemoUseCase(): GetAuditDemoUseCase {
+    return this.resolve<GetAuditDemoUseCase>(ContainerTokens.GetAuditDemoUseCase);
   }
 
   // ---- wiring helpers ----

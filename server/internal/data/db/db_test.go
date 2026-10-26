@@ -95,10 +95,10 @@ func TestMigrationsEmbedTheExpectedFileSet(t *testing.T) {
 	if err != nil {
 		t.Fatalf("read embedded migrations: %v", err)
 	}
-	if len(files) != 2 {
-		t.Fatalf("embedded migrations = %d files, want 2 (init + audit_log)", len(files))
+	if len(files) != 3 {
+		t.Fatalf("embedded migrations = %d files, want 3 (init + audit_log + fts_index)", len(files))
 	}
-	want := []string{"00001_init.sql", "00002_audit_log.sql"}
+	want := []string{"00001_init.sql", "00002_audit_log.sql", "00003_fts_index.sql"}
 	for i, file := range files {
 		if file.Name() != want[i] {
 			t.Errorf("migration %d = %q, want %q", i, file.Name(), want[i])
@@ -127,8 +127,8 @@ func TestMigrateAppliesTheFullSetThenIsIdempotent(t *testing.T) {
 	if err != nil {
 		t.Fatalf("first Migrate: %v", err)
 	}
-	if first != 2 {
-		t.Fatalf("first Migrate applied %d migrations, want 2", first)
+	if first != 3 {
+		t.Fatalf("first Migrate applied %d migrations, want 3", first)
 	}
 
 	second, err := Migrate(ctx, pool)
@@ -228,12 +228,18 @@ func TestMigratedSchemaMatchesWhatTheTopicTeaches(t *testing.T) {
 	if !ok || len(auditIdx.Columns) != 2 || auditIdx.Columns[0] != "post_id" || auditIdx.Columns[1] != "changed_at" {
 		t.Errorf("audit_log_post_changed_idx = %+v, want (post_id, changed_at)", auditIdx)
 	}
+	// The topic 17 full-text expression index: a GIN over the computed
+	// tsvector, carried in the index definition itself.
+	searchIdx, ok := indexes["posts_search_idx"]
+	if !ok || searchIdx.Kind != "gin" || !strings.Contains(searchIdx.Definition, "to_tsvector") {
+		t.Errorf("posts_search_idx = %+v, want a gin expression index over to_tsvector", searchIdx)
+	}
 
 	// History: goose's ledger, live — its version-0 row (the baseline
-	// insert that creates the table) plus the two applied migrations.
-	if len(snapshot.History) != 3 || !snapshot.History[0].Applied || snapshot.History[0].Version != 0 ||
-		snapshot.History[1].Version != 1 || snapshot.History[2].Version != 2 {
-		t.Errorf("migration history = %+v, want baseline 0 plus versions 1 and 2 applied", snapshot.History)
+	// insert that creates the table) plus the three applied migrations.
+	if len(snapshot.History) != 4 || !snapshot.History[0].Applied || snapshot.History[0].Version != 0 ||
+		snapshot.History[1].Version != 1 || snapshot.History[2].Version != 2 || snapshot.History[3].Version != 3 {
+		t.Errorf("migration history = %+v, want baseline 0 plus versions 1–3 applied", snapshot.History)
 	}
 }
 

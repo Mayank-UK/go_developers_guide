@@ -9,7 +9,7 @@ import (
 	"github.com/99designs/gqlgen/graphql"
 
 	"guide/internal/core"
-	postsmemory "guide/internal/data/posts"
+	postsdata "guide/internal/data/posts"
 	"guide/internal/domain/posts"
 	"guide/internal/graph"
 	"guide/internal/graph/generated"
@@ -26,7 +26,7 @@ import (
 // scratchSchema builds a one-test GraphQL surface over a fresh in-memory
 // repository — the same private-world shape the playground demo uses.
 func scratchSchema() graphql.ExecutableSchema {
-	repo := postsmemory.NewRepository()
+	repo := postsdata.NewInMemoryRepository()
 	return generated.NewExecutableSchema(generated.Config{
 		Resolvers: resolver.NewResolver(
 			posts.NewListPostsUseCase(repo),

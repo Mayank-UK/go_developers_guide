@@ -37,8 +37,8 @@ func TestAppInfoModuleFactsMatchTheLiveBuildInfo(t *testing.T) {
 	// 12 = the deliberate-direct-requires count since the Phase 5 deps
 	// landed (grpc-go, gqlgen, pgx, …); still pinned against the live
 	// build info so a manifest change fails here first.
-	if payload.Module.DependencyCount != len(buildInfo.Deps) || payload.Module.DependencyCount != 12 {
-		t.Errorf("dependency count = %d, want 12 (the deliberate-direct-requires count, confirmed live)", payload.Module.DependencyCount)
+	if payload.Module.DependencyCount != len(buildInfo.Deps) || payload.Module.DependencyCount != 16 {
+		t.Errorf("dependency count = %d, want 16 (the deliberate direct-requires count, confirmed live)", payload.Module.DependencyCount)
 	}
 	// go run, go test, and an untagged go build all report "(devel)"; a
 	// VCS-stamped release build reports its version. Either is honest —

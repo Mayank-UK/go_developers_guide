@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"guide/internal/core"
-	postsmemory "guide/internal/data/posts"
+	postsdata "guide/internal/data/posts"
 	"guide/internal/domain/posts"
 )
 
@@ -21,7 +21,7 @@ import (
 
 // newPostsServer builds the production-shaped stack for the posts routes.
 func newPostsServer(logger *slog.Logger) http.Handler {
-	repository := postsmemory.NewRepository()
+	repository := postsdata.NewInMemoryRepository()
 	mux := http.NewServeMux()
 	mux.Handle("GET /api/posts", NewPostsListHandler(posts.NewListPostsUseCase(repository), logger))
 	mux.Handle("POST /api/posts", NewPostsCreateHandler(posts.NewCreatePostUseCase(repository), logger))
@@ -171,8 +171,10 @@ func TestPostsCreateAnswers201WithLocation(t *testing.T) {
 	if err := json.Unmarshal(rec.Body.Bytes(), &created); err != nil {
 		t.Fatalf("body not a post: %v", err)
 	}
-	if created.ID != "p-7" || len(created.Tags) != 2 || created.Tags[0] != "go" {
-		t.Errorf("created = %+v, tags normalized on the way in", created)
+	if created.ID != "p-7" || len(created.Tags) != 2 || created.Tags[0] != "api" || created.Tags[1] != "go" {
+		// Sorted order since the databases topic: tags are a set, and both
+		// stores behind the port return the same canonical order.
+		t.Errorf("created = %+v, tags normalized and set-ordered on the way in", created)
 	}
 
 	// And it is immediately readable at the Location the header promised.

@@ -407,9 +407,13 @@ func apiDesignTopic() (Topic, error) {
 					"header, and the stored post. The wiring that makes this real is one block in the "+
 					"composition root — Go's answer to dependency injection, constructor by constructor:"),
 			code("pipe-main-code", "go",
-				"The composition root: one adapter, five use cases, five thin handlers, five routes.",
+				"The composition root: one port behind the switching facade, five use cases, five thin handlers, five routes.",
 				"server/cmd/guide/main.go",
-				"postsRepo := postsmemory.NewRepository()\n"+
+				"postsRepo := postsdata.NewSwitchingRepository(\n"+
+					"    scenarioStore,\n"+
+					"    postsdata.NewInMemoryRepository(),\n"+
+					"    postsdata.NewPostgresRepository(pool),\n"+
+					")\n"+
 					"postsList := posts.NewListPostsUseCase(postsRepo)\n"+
 					"postsCreate := posts.NewCreatePostUseCase(postsRepo)\n"+
 					"// …the get, replace, and delete use cases wire identically over the same port\n"+

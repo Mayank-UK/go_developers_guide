@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	postsmemory "guide/internal/data/posts"
+	postsdata "guide/internal/data/posts"
 	"guide/internal/domain/posts"
 )
 
@@ -14,7 +14,7 @@ import (
 // factory the builder takes (Go has no function covariance — the closure
 // is the one-line adapter the composition root writes too).
 func scratchFactory() func() posts.PostsRepository {
-	return func() posts.PostsRepository { return postsmemory.NewRepository() }
+	return func() posts.PostsRepository { return postsdata.NewInMemoryRepository() }
 }
 
 // The graphql topic's prose quotes this payload as the playground card;

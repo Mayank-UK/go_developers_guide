@@ -80,6 +80,12 @@ describe('DemoHost', () => {
       'api:grpc-console',
       'db:schema-explorer',
       'db:uuid',
+      'db:sql-safety',
+      'db:migrations',
+      'db:sql-lab',
+      'db:search',
+      'db:race',
+      'db:audit',
     ]);
   });
 });
