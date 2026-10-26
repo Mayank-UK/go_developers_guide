@@ -38,17 +38,24 @@
   Content model: topic → sections → blocks (text | code | demo | list), Go structs + JSON tags, CONTENT_API_VERSION = 1; the server content registry is the single topic-id source; wire contract =
   the fastapi guide's VERBATIM incl. the list block {kind:"list", id, ordered, items 3–8, "Lead term — explanation."} (full contract in ../fastapi/fastapi_developers_guide agentic_development.md;
   record here at Phase 1 close). Markers: ✅ done · 🚧 in progress · ⏳ pending.
+- Wire contract (STABLE — recorded at Phase 1 close 2026-10-26, supersedes the pointer above): GET /api/content → {version:1,groups:[{id,title,order}],topics:[{id,title,subtitle?,group,order,
+  sectionCount}]}; GET /api/content/{topicId} → {version:1,id,title,subtitle?,group,order,sections:[{id,title,lead?,blocks}]} — blocks discriminate on kind: text {kind,id,text} · code
+  {kind,id,language,caption?,source?,snippet} · demo {kind,id,title,description?} · list {kind,id,ordered,items[3–8]}; unknown topic → 404 envelope; GET/PATCH /api/demo/scenario →
+  {dataMode:"fake"|"live",injectFailure:"none"|"error"|"latency"} (invalid → 422 + details.expected); errors → {error:{code,message,requestId,details?}} + x-request-id — codes:
+  validation_failed 422 · unauthorized 401 · forbidden 403 · not_found 404 · conflict 409 · rate_limited 429 · service_unavailable 503 · internal 500; 405 keeps truthful status + Allow header
+  (code bucket not_found); empty collections marshal [] never null; optionals omitted never null; topic order = global curriculum number 1–43 (registry enforces global uniqueness).
 - Stack decisions — Go latest stable + stdlib net/http backbone (ServeMux 1.22+ patterns; chi/gin/echo by comparison only, not used) · PostgreSQL-ONLY via pgx v5 (real-PG tests via
   testcontainers-go) · sqlc AND GORM both in topic 18 (sqlc = typed queries, GORM = ORM comparison) · slog stdlib (zap/zerolog by comparison) · stdlib testing + httptest + testcontainers-go, NO
   testify (YAGNI, revisit if earned) · root module `guide`. Canon additions: interfaces-and-composition, goroutines-and-channels, sqlc-gorm; Reactivity N/A (concurrency lives in 02+06).
-- Directives — (1) STRICTLY SEQUENTIAL: one subagent at a time, never parallel; quality/detail over speed. (2) Whole setup on Docker. (3) REVIEW GATE: STOP for developer review after Phase 0 + 1;
+- Directives — (1) SEQUENTIAL by default; AMENDED 2026-10-26 by developer (full limits available): PARALLEL subagents allowed, but ONLY for provably independent subtrees (disjoint files, no shared state — e.g. server/ ∥ client/); phases still complete in order; Phase 3+ per-topic authoring stays strictly sequential (quality/detail over speed). (2) Whole setup on Docker. (3) REVIEW GATE: STOP for developer review after Phase 0 + 1;
   later phases per approval cadence. (4) QUALITY BAR: 10/10 to a 15+yr engineer — no shortcuts, no dead code, no "good enough for now". (5) STACK STAYS UP: compose runs CONTINUOUSLY in active dev
   — NO compose down at task end; teardown only on explicit request / long pauses. (6) Verification = PROTOCOL v2, above. (7) agentic_development.md is MASTER-OWNED — subagents never edit it; they
   report facts, master bookkeeps. (8) PER-TOPIC sequential authoring from Phase 3, exemplar first; template = fastapi's TOPIC AUTHORING PATTERN (mirror at 3.1 close).
-- State — FRESH START: repo has only this file (no code/git/infra); this file is the single planning source. Pin at bootstrap (verify latest stable): Go (expect 1.27.x, Oct 2026) + golang image,
-  pgx v5, goose or golang-migrate (decide at 0.B), gqlgen, grpc-go, asynq, go-redis v9, mongo-driver; client = fastapi client's pins; images postgres:17 / redis:7-alpine / mongo:8 /
+- State — bootstrapped (0.A ✅ 2026-10-26, git main): golang:1.27.3-bookworm PINNED; still to pin when they land: pgx v5, gqlgen, grpc-go, asynq, go-redis v9, mongo-driver; MIGRATIONS DECIDED =
+  goose v3 (2026-10-26 master: SQL-first files, embed.FS, single-binary story; lands topic 16); client = fastapi client's pins; images postgres:17 / redis:7-alpine / mongo:8 /
   node:22-bookworm. Family traps: npm 10.9.9 arborist crash on the client lockfile → npm ≥ 11 in-container; pre-create cache volumes on fresh machines (`docker volume create gdg-go gdg-gocache
-  gdg-npm`); test-file basenames unique per package; subagents killed after 600s idle → poll long runs; docker -v ALWAYS absolute paths; rename workspace dirs BETWEEN sessions only.
+  gdg-npm`); bash -lc resets PATH → dev image ships /usr/local/bin go/gofmt symlinks + /etc/profile.d/go-toolchain.sh (0.A fix); test-file basenames unique per package; subagents killed after
+  600s idle → poll long runs; docker -v ALWAYS absolute paths; rename workspace dirs BETWEEN sessions only.
 - Curriculum — 43 topics / 10 groups / ~62 demos / 14 phases; canon from the family; `+` go-new, `=` canon-adapted; per-topic sections + demos → devlog.md (2026-10-24; read before authoring).
   - Foundations: 01 go-language · 02 go-runtime · 03 http-web | Framework: 04 go-http-fundamentals · 05 interfaces-and-composition + · 06 goroutines-and-channels +
   - Request handling: 07 routing · 08 middleware · 09 request-response · 10 validation | APIs: 11 api-design · 12 api-documentation · 13 graphql · 14 webhooks · 15 grpc
@@ -57,7 +64,7 @@
   - 34 testing · 35 debugging · 36 environments | Ship: 37 deployment · 38 performance · 39 reliability · 40 scaling | Capstones: 41 best-practices · 42 third-party · 43 advanced-architecture
 
 ## Active tasks
-- All 14 build phases ⏳ pending — full breakdown in the Developer section's Development tasks; next up: Phase 0 — Bootstrap (0.A → 0.B → 0.C).
+- Phase 0 ✅ + Phase 1 ✅ (2026-10-26; commits 3eee136 · 571b919 · 0bd335d · c3f624c · a247ac6) · REVIEW GATE REACHED — awaiting developer review · Phase 2 onward → NEW CHAT per developer (one phase per chat). Full breakdown in the Developer section's Development tasks.
 
 # Developer defined section:
 
@@ -77,11 +84,11 @@
 
 - Development tasks:
     - Phase 0 — Bootstrap ⏳
-        - 🚧 0.A Infra: .gitignore/.zcodeignore/.dockerignore, README stub, git init, .devcontainer, .docker (Dockerfile.dev golang+node; server dev/prod images — prod = multi-stage distroless static binary; client dev/prod + nginx; dev + prod compose with gdg-* cache volumes + co-run ports) — compose configs + Dockerfile.dev build verified; bring the stack UP at the end and LEAVE IT UP (directive 5). Launched 2026-10-26 (subagent, background).
-        - ⏳ 0.B Server skeleton: go mod init guide + pinned toolchain, cmd/guide/main.go + internal/ layout, typed env config, slog JSON, /api/health handler, go test/vet/gofmt green (via docker exec from 0.A onward — Protocol v2)
-        - ⏳ 0.C Client skeleton: clone-and-adapt the fastapi guide's client (lockfile regeneration via npm ≥ 11 in-container — the arborist trap), 5175 + /api proxy → 8100, tokens + dark theme ('gdg-theme'), health ping through layers, vitest green
-    - Phase 1 — Content engine ⏳: typed content model (topic → sections → blocks discriminated on kind) + registry with startup validation; GET /api/content (+ detail); ScenarioStore + GET/PATCH /api/demo/scenario; error taxonomy + one envelope + recovery middleware + request-id middleware; snippet matcher + ratchet harness (canary test proves it bites); wire contract = fastapi's, recorded here at close. REVIEW GATE: STOP for developer review after this phase.
-    - Phase 2 — Client shell ⏳: generic TopicView renderer, DemoHost + lazy demo-registry, group nav, friendly degradation (clone fastapi's Phase 2 shape)
+        - ✅ 0.A Infra (2026-10-26, 3eee136; detail → devlog 2026-10-26)
+        - ✅ 0.B Server skeleton (2026-10-26, 571b919; detail → devlog 2026-10-26)
+        - ✅ 0.C Client skeleton (2026-10-26, 0bd335d; skeleton only — per-topic demo layers land Phase 3+; detail → devlog 2026-10-26)
+    - Phase 1 — Content engine ✅ 2026-10-26 (c3f624c + fix a247ac6 + master diff-review pass — one doc-comment fix; wire contract recorded in Current state below; detail → devlog 2026-10-26). REVIEW GATE REACHED — Phase 2 starts in a NEW CHAT.
+    - Phase 2 — Client shell ⏳: generic TopicView renderer, DemoHost + lazy demo-registry, group nav, friendly degradation (clone fastapi's Phase 2 shape) + author the client scenario DTO/UI to the recorded wire contract (0.C stripped fastapi's scenario wiring; injectFailure is the three-value enum)
     - Phase 3 — Fundamentals ⏳ (SIX sequential per-topic delegations, exemplar first): 3.1 go-language — EXEMPLAR, fixes the authoring pattern (mirror fastapi's TOPIC AUTHORING PATTERN, adapted: content/topics/<snake_id>.go exporting Topic, demos in internal/domain/demos/, handlers in internal/presentation/demo/<area>.go, prose floor 2500) · 3.2 go-runtime · 3.3 http-web · 3.4 go-http-fundamentals · 3.5 interfaces-and-composition · 3.6 goroutines-and-channels
     - Phase 4 — Request handling ⏳: 07 routing · 08 middleware · 09 request-response · 10 validation
     - Phase 5 — APIs ⏳: 11 api-design (posts substrate) · 12 api-documentation (oapi-codegen spec-first) · 13 graphql (gqlgen) · 14 webhooks · 15 grpc (grpc-go)

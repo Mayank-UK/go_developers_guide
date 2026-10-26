@@ -65,7 +65,10 @@ type Block interface {
 	blockKind() string
 }
 
-// TextBlock is prose. May contain \n\n paragraph breaks; never blank.
+// TextBlock is ONE paragraph of prose — never blank, and never multiple
+// paragraphs stitched with \n\n (block-selection standard: a new paragraph
+// is a new text block; the per-topic prose floor is test-pinned at authoring
+// time, not enforced here).
 type TextBlock struct {
 	Kind string `json:"kind"`
 	ID   string `json:"id"`
