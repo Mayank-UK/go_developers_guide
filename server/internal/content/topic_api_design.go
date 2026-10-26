@@ -401,9 +401,10 @@ func apiDesignTopic() (Topic, error) {
 					"the ServeMux pattern matches the method and path to exactly one handler; the handler "+
 					"decodes and shape-checks the body (the validation topic's discipline) and calls ONE "+
 					"use case; the use case normalizes and validates the draft, then calls the repository "+
-					"PORT — an interface it owns; the in-memory adapter (until the databases topic swaps "+
-					"in PostgreSQL behind the same port) stores the post and stamps its identity and "+
-					"timestamps; the result flows back up and the handler writes 201, a ``Location`` "+
+					"PORT — an interface it owns; the adapter behind it — the in-memory fake or the live "+
+					"PostgreSQL, chosen per call by the databases topic's switching facade and flippable "+
+					"at runtime through the scenario endpoint — stores the post and stamps its identity "+
+					"and timestamps; the result flows back up and the handler writes 201, a ``Location`` "+
 					"header, and the stored post. The wiring that makes this real is one block in the "+
 					"composition root — Go's answer to dependency injection, constructor by constructor:"),
 			code("pipe-main-code", "go",

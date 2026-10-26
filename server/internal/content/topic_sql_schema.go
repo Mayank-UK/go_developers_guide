@@ -259,8 +259,8 @@ func sqlSchemaTopic() (Topic, error) {
 					"structure PostgreSQL uses for ``tsvector`` full-text search in topic 17. The other kinds earn "+
 					"one sentence each so the vocabulary is complete when you meet them:"),
 			list("ix-kinds-list", false,
-				"B-tree — ordered equality/range/sorting; the default and the guide's only kind today.",
-				"GIN — inverted index for containment: array members, jsonb paths, full-text tokens.",
+				"B-tree — ordered equality/range/sorting; the default, and live in the guide's schema from day one.",
+				"GIN — inverted index for containment: array members, jsonb paths, full-text tokens — live here since topic 17's FTS expression index.",
 				"BRIN — block-range summaries for huge, naturally-ordered tables (timestamp columns of append-only logs).",
 				"Hash — plain equality only, rarely better than B-tree in practice.",
 				"GiST/SP-GiST — geometric and nearest-neighbor searches; the geography workhorses of PostGIS.",
