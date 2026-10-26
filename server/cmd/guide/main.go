@@ -15,6 +15,7 @@ import (
 	"syscall"
 	"time"
 
+	"guide/internal/content"
 	"guide/internal/core"
 	"guide/internal/presentation"
 )
@@ -32,9 +33,10 @@ func main() {
 	}
 }
 
-// run is the composition root: config → logger → routes → serve → shut
-// down. Operational failures return an error for main to exit non-zero —
-// panics are reserved for programmer bugs, which this code has none of.
+// run is the composition root: config → logger → content registry →
+// routes + middleware → serve → shut down. Operational failures return an
+// error for main to exit non-zero — panics are reserved for programmer
+// bugs, which this code has none of.
 func run() error {
 	cfg, err := core.LoadConfig(os.Getenv)
 	if err != nil {
@@ -42,12 +44,37 @@ func run() error {
 	}
 	logger := core.NewLogger(cfg)
 
+	// The content registry validates every registered topic at startup and
+	// fails the process here — broken content never reaches a request.
+	registry, err := content.NewProductionRegistry()
+	if err != nil {
+		logger.Error("content registry invalid", "error", err)
+		return fmt.Errorf("content registry: %w", err)
+	}
+
 	mux := http.NewServeMux()
 	mux.Handle("GET /api/health", presentation.NewHealthHandler(cfg.Env))
+	mux.Handle("GET /api/content", presentation.NewContentListHandler(registry))
+	mux.Handle("GET /api/content/{topicId}", presentation.NewContentTopicHandler(registry, logger))
+	scenarioStore := core.NewScenarioStore()
+	mux.Handle("GET /api/demo/scenario", presentation.NewScenarioGetHandler(scenarioStore))
+	mux.Handle("PATCH /api/demo/scenario", presentation.NewScenarioPatchHandler(scenarioStore, logger))
+
+	// The documented order: request-id outermost (recovery, logging, and
+	// every error envelope share the id), access logging outside recovery
+	// (recovered panics log as finished 500s), recovery converting panics
+	// to the envelope, and the mux-error wrapper innermost so even the
+	// router's own 404/405 replies ride the same envelope.
+	handler := presentation.Chain(
+		presentation.RequestID,
+		presentation.RequestLogger(logger),
+		presentation.Recover(logger),
+		presentation.EnvelopeMuxErrors(logger),
+	)(mux)
 
 	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%d", cfg.Port),
-		Handler: mux,
+		Handler: handler,
 		// Bounded reads/writes defeat slow-client abuse while leaving ample
 		// headroom for the guide's demos.
 		ReadHeaderTimeout: 5 * time.Second,

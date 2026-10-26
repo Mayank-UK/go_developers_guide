@@ -1,5 +1,7 @@
-// Package presentation is the HTTP edge: handlers that translate between
-// the HTTP wire and the rest of the server. Middleware joins in Phase 1.
+// Package presentation is the HTTP edge: middleware (request id, access
+// logging, panic recovery, envelope-shaped routing errors) and thin
+// handlers that translate between the HTTP wire and the rest of the
+// server.
 package presentation
 
 import (
