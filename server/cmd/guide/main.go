@@ -63,6 +63,7 @@ func run() error {
 	mux.Handle("GET /api/demo/runtime/concurrency", presentation.NewConcurrencyHandler())
 	mux.Handle("GET /api/demo/http/headers", presentation.NewHTTPHeadersHandler())
 	mux.Handle("GET /api/demo/gohttp/app-info", presentation.NewAppInfoHandler(cfg))
+	mux.Handle("GET /api/demo/iface/matrix", presentation.NewInterfaceMatrixHandler())
 	mux.Handle("GET /api/demo/conc/context", presentation.NewContextCancellationHandler())
 	mux.Handle("GET /api/demo/conc/race", presentation.NewRaceDetectorHandler())
 

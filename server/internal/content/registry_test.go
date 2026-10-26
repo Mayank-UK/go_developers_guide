@@ -349,7 +349,7 @@ func TestProductionRegistryIsValid(t *testing.T) {
 	if strings.Join(gotGroups, ",") != strings.Join(wantGroups, ",") {
 		t.Errorf("production groups = %v, want %v (ordered)", gotGroups, wantGroups)
 	}
-	if count := len(registry.Summaries()); count != 5 {
-		t.Errorf("production registry has %d topics, want 5 (go-language, go-runtime, http-web, go-http-fundamentals, goroutines-and-channels)", count)
+	if count := len(registry.Summaries()); count != 6 {
+		t.Errorf("production registry has %d topics, want 6 (go-language, go-runtime, http-web, go-http-fundamentals, interfaces-and-composition, goroutines-and-channels)", count)
 	}
 }

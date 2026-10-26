@@ -37,6 +37,7 @@ func newAPIServer(registry content.Registry, store *core.ScenarioStore, logger *
 		Env:      "test",
 		LogLevel: slog.LevelInfo,
 	}))
+	mux.Handle("GET /api/demo/iface/matrix", NewInterfaceMatrixHandler())
 	mux.Handle("GET /api/demo/conc/context", NewContextCancellationHandler())
 	mux.Handle("GET /api/demo/conc/race", NewRaceDetectorHandler())
 	return Chain(

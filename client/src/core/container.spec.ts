@@ -23,6 +23,11 @@ import {
   GetAppInfoDemoUseCase,
   GetAppInfoDemoUseCaseToken,
 } from '../domain/demo/get-app-info-demo-usecase';
+import { InterfaceMatrixRepositoryImpl } from '../data/demo/interface-matrix-repository-impl';
+import {
+  GetInterfaceMatrixDemoUseCase,
+  INTERFACE_MATRIX_DEMO_USE_CASE,
+} from '../domain/demo/get-interface-matrix-demo-usecase';
 import { ContextCancellationRepositoryImpl } from '../data/demo/context-cancellation-repository-impl';
 import { GetContextCancellationDemoUseCase } from '../domain/demo/get-context-cancellation-demo-usecase';
 import { RaceDetectorRepositoryImpl } from '../data/demo/race-detector-repository-impl';
@@ -82,6 +87,15 @@ describe('container', () => {
     expect(container.appInfoRepository).toBeInstanceOf(AppInfoRepositoryImpl);
     expect(container.appConfig.apiBaseUrl).toBe('/api');
     expect(container.resolve(GetAppInfoDemoUseCaseToken)).toBe(container.getAppInfoDemoUseCase);
+  });
+
+  it('wires the interface-matrix demo pipeline through the layers: config → api → repository → use case', () => {
+    expect(container.getInterfaceMatrixDemoUseCase).toBeInstanceOf(GetInterfaceMatrixDemoUseCase);
+    expect(container.interfaceMatrixRepository).toBeInstanceOf(InterfaceMatrixRepositoryImpl);
+    expect(container.appConfig.apiBaseUrl).toBe('/api');
+    expect(container.resolve(INTERFACE_MATRIX_DEMO_USE_CASE)).toBe(
+      container.getInterfaceMatrixDemoUseCase,
+    );
   });
 
   it('wires the context-cancellation demo pipeline through the layers: config → api → repository → use case', () => {

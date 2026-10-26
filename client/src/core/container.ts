@@ -35,6 +35,13 @@ import {
   GetAppInfoDemoUseCase,
   GetAppInfoDemoUseCaseToken,
 } from '../domain/demo/get-app-info-demo-usecase';
+import { InterfaceMatrixApi } from '../data/demo/interface-matrix-api';
+import { InterfaceMatrixRepositoryImpl } from '../data/demo/interface-matrix-repository-impl';
+import type { InterfaceMatrixRepository } from '../domain/demo/interface-matrix-repository';
+import {
+  GetInterfaceMatrixDemoUseCase,
+  INTERFACE_MATRIX_DEMO_USE_CASE,
+} from '../domain/demo/get-interface-matrix-demo-usecase';
 import { ContextCancellationApi } from '../data/demo/context-cancellation-api';
 import { ContextCancellationRepositoryImpl } from '../data/demo/context-cancellation-repository-impl';
 import type { ContextCancellationRepository } from '../domain/demo/context-cancellation-repository';
@@ -99,6 +106,10 @@ export const ContainerTokens = {
   AppInfoRepository: Symbol('AppInfoRepository'),
   // Same aliasing story as the headers demo (GetAppInfoDemoUseCaseToken).
   GetAppInfoDemoUseCase: GetAppInfoDemoUseCaseToken,
+  InterfaceMatrixApi: Symbol('InterfaceMatrixApi'),
+  InterfaceMatrixRepository: Symbol('InterfaceMatrixRepository'),
+  // Same aliasing story as the headers demo (INTERFACE_MATRIX_DEMO_USE_CASE).
+  GetInterfaceMatrixDemoUseCase: INTERFACE_MATRIX_DEMO_USE_CASE,
   ContextCancellationApi: Symbol('ContextCancellationApi'),
   ContextCancellationRepository: Symbol('ContextCancellationRepository'),
   GetContextCancellationDemoUseCase: Symbol('GetContextCancellationDemoUseCase'),
@@ -191,6 +202,16 @@ class Container {
     this.register(
       ContainerTokens.GetAppInfoDemoUseCase,
       new GetAppInfoDemoUseCase(this.appInfoRepository),
+    );
+
+    this.register(ContainerTokens.InterfaceMatrixApi, new InterfaceMatrixApi(config));
+    this.register(
+      ContainerTokens.InterfaceMatrixRepository,
+      new InterfaceMatrixRepositoryImpl(this.interfaceMatrixApi),
+    );
+    this.register(
+      ContainerTokens.GetInterfaceMatrixDemoUseCase,
+      new GetInterfaceMatrixDemoUseCase(this.interfaceMatrixRepository),
     );
 
     this.register(ContainerTokens.ContextCancellationApi, new ContextCancellationApi(config));
@@ -310,6 +331,18 @@ class Container {
 
   get getAppInfoDemoUseCase(): GetAppInfoDemoUseCase {
     return this.resolve<GetAppInfoDemoUseCase>(ContainerTokens.GetAppInfoDemoUseCase);
+  }
+
+  get interfaceMatrixApi(): InterfaceMatrixApi {
+    return this.resolve<InterfaceMatrixApi>(ContainerTokens.InterfaceMatrixApi);
+  }
+
+  get interfaceMatrixRepository(): InterfaceMatrixRepository {
+    return this.resolve<InterfaceMatrixRepository>(ContainerTokens.InterfaceMatrixRepository);
+  }
+
+  get getInterfaceMatrixDemoUseCase(): GetInterfaceMatrixDemoUseCase {
+    return this.resolve<GetInterfaceMatrixDemoUseCase>(ContainerTokens.GetInterfaceMatrixDemoUseCase);
   }
 
   get contextCancellationApi(): ContextCancellationApi {

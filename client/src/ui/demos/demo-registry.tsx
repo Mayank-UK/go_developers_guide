@@ -43,6 +43,7 @@ const RuntimeTypesDemo = lazy(() => import('./go/runtime_types_demo'));
 const ConcurrencyDemo = lazy(() => import('./runtime/concurrency_demo'));
 const HeadersDemo = lazy(() => import('./http/headers_demo'));
 const AppInfoDemo = lazy(() => import('./gohttp/app_info_demo'));
+const InterfaceMatrixDemo = lazy(() => import('./iface/matrix_demo'));
 const ContextCancellationDemo = lazy(() => import('./conc/context_demo'));
 const RaceDetectorDemo = lazy(() => import('./conc/race_demo'));
 
@@ -51,6 +52,7 @@ export const demoRegistry: DemoRegistry = {
   'runtime:concurrency': ConcurrencyDemo,
   'http:headers': HeadersDemo,
   'gohttp:app-info': AppInfoDemo,
+  'iface:matrix': InterfaceMatrixDemo,
   'conc:context': ContextCancellationDemo,
   'conc:race': RaceDetectorDemo,
 };

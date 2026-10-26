@@ -147,8 +147,8 @@ func TestContentListServesProductionGroups(t *testing.T) {
 	if decoded.Version != 1 || len(decoded.Groups) != 10 || decoded.Groups[0].ID != "foundations" || decoded.Groups[9].ID != "capstones" {
 		t.Errorf("production groups drifted: %+v", decoded.Groups)
 	}
-	if len(decoded.Topics) != 5 {
-		t.Errorf("content index serves %d topics, want 5 (go-language, go-runtime, http-web, go-http-fundamentals, goroutines-and-channels)", len(decoded.Topics))
+	if len(decoded.Topics) != 6 {
+		t.Errorf("content index serves %d topics, want 6 (go-language, go-runtime, http-web, go-http-fundamentals, interfaces-and-composition, goroutines-and-channels)", len(decoded.Topics))
 	}
 }
 
