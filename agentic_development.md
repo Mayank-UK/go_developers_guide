@@ -69,7 +69,7 @@
 
 ## Active tasks
 - Phase 0 ✅ + Phase 1 ✅ + Phase 2 ✅ (2026-10-26; commits 3eee136 · 571b919 · 0bd335d · c3f624c · a247ac6 · da69083). Review gate PASSED (developer: continue); parallel subagents sanctioned 2026-10-26 (server/ ∥ client/ only; phases close in order; per-topic authoring sequential).
-- IN FLIGHT: Phase 3.1 go-language CLIENT demo view (port of fastapi's py slice; server half ✅ e1e09f4 — exemplar master-reviewed, pattern mirrored to Conventions). Next: 3.2 go-runtime (full-stack, one agent, mirrors the pattern). Full breakdown in the Developer section's Development tasks.
+- IN FLIGHT: Phase 3.2 go-runtime (full-stack, ONE agent per topic, mirrors the fixed pattern). 3.1 go-language ✅ COMPLETE 2026-10-26 (server e1e09f4 + client 0293168; client 23 specs/147 tests + proxy smoke green). Full breakdown in the Developer section's Development tasks.
 
 # Developer defined section:
 
@@ -94,7 +94,7 @@
         - ✅ 0.C Client skeleton (2026-10-26, 0bd335d; skeleton only — per-topic demo layers land Phase 3+; detail → devlog 2026-10-26)
     - Phase 1 — Content engine ✅ 2026-10-26 (c3f624c + fix a247ac6 + master diff-review pass — one doc-comment fix; wire contract recorded in Current state below; detail → devlog 2026-10-26). REVIEW GATE REACHED — Phase 2 starts in a NEW CHAT.
     - Phase 2 — Client shell ✅ 2026-10-26 (da69083): shell cloned at 0.C held; added shared scenario slice (domain/data/ui) to the wire contract + ScenarioPanel in root-layout header + home zero-topic degradation; client 19 specs/112 tests + live smoke green (detail → devlog 2026-10-26)
-    - Phase 3 — Fundamentals ⏳ (SIX sequential per-topic delegations, exemplar first): 3.1 go-language — EXEMPLAR: server half ✅ 2026-10-26 (e1e09f4; pattern FIXED — see Conventions; client demo view in flight) · 3.2 go-runtime · 3.3 http-web · 3.4 go-http-fundamentals · 3.5 interfaces-and-composition · 3.6 goroutines-and-channels
+    - Phase 3 — Fundamentals ⏳ (SIX sequential per-topic delegations, exemplar first): 3.1 go-language — EXEMPLAR ✅ 2026-10-26 (server e1e09f4 + client 0293168; pattern FIXED in Conventions; detail → devlog) · 3.2 go-runtime 🚧 · 3.3 http-web · 3.4 go-http-fundamentals · 3.5 interfaces-and-composition · 3.6 goroutines-and-channels
     - Phase 4 — Request handling ⏳: 07 routing · 08 middleware · 09 request-response · 10 validation
     - Phase 5 — APIs ⏳: 11 api-design (posts substrate) · 12 api-documentation (oapi-codegen spec-first) · 13 graphql (gqlgen) · 14 webhooks · 15 grpc (grpc-go)
     - Phase 6 — Data ⏳: 16 sql-schema (goose) · 17 databases-sql (pgx) · 18 sqlc-gorm (testcontainers-go) · 19 mongodb · 20 redis — testcontainers wiring (docker.sock + host override) lands here
