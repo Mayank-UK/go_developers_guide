@@ -1,0 +1,169 @@
+// posts.proto — the guide's gRPC contract for the posts substrate.
+//
+// This file is the single source of truth for the PostsService API: the
+// server implementation (internal/grpcapi), the generated client stubs
+// (internal/grpcapi/pb), and the grpc-console demo all derive from it via
+// `buf generate`. Everything a caller can do over gRPC is defined HERE,
+// before any Go code exists — contract-first, the same discipline the
+// OpenAPI topic teaches for REST.
+//
+// The service deliberately exercises all four gRPC method kinds on one
+// honest resource: GetPost (unary), ListPosts (server streaming),
+// CreatePosts (client streaming), SyncTags (bidirectional streaming).
+
+syntax = "proto3";
+
+// Package names the API: a root (guide), the domain (posts), and an API
+// version (v1). The version suffix is a compatibility PROMISE — v2 would be
+// a new package, letting v1 clients keep compiling against v1 while the
+// server hosts both. On the wire this becomes the method-name prefix
+// "/guide.posts.v1.PostsService/GetPost".
+package guide.posts.v1;
+
+// go_package tells protoc-gen-go WHERE the generated code lives and what
+// its package name is ("...;pb" → package pb at that import path).
+option go_package = "guide/internal/grpcapi/pb;pb";
+
+// Timestamps use the well-known type instead of hand-rolled strings: the
+// generated Go code gets a *timestamppb.Timestamp that converts to
+// time.Time in one call, and every client language knows the type.
+import "google/protobuf/timestamp.proto";
+
+// ── Unary: one request, one response ────────────────────────────────────
+
+// PostRequest names one post. proto3 has no "required": an empty id is a
+// VALID message on the wire (present-but-empty is data), and the server
+// answers it with codes.InvalidArgument — the same stance the posts REST
+// API's 422s take. Validation lives at the boundary, in the service.
+message PostRequest {
+  string id = 1;
+}
+
+// Post is the full resource: identity, content, classification, lifecycle.
+//
+// FIELD NUMBERS ARE THE CONTRACT. Not the field names — the numbers. The
+// serialized tag is `field_number << 3 | wire_type`, so renaming a field is
+// wire-compatible (old data still decodes), but renumbering or reusing a
+// number silently corrupts every message ever stored. The reserved block
+// below is the discipline that prevents that: numbers 7–11 once held an
+// experiment (subtitle, author, status, weight, slug) that was removed.
+// They are burned forever — a future field starts at 12.
+message Post {
+  string id = 1;                                 // "p-3" — stable identity
+  string title = 2;                              // 1–120 runes (validated server-side)
+  string body = 3;                               // 1–5000 runes (validated server-side)
+  repeated string tags = 4;                      // normalized on write: trimmed, lowercase
+  google.protobuf.Timestamp created_at = 5;      // set by storage, UTC
+  google.protobuf.Timestamp updated_at = 6;      // moves on every write
+
+  // Retired fields — do not reuse. Numbers stay reserved even though the
+  // fields are gone; old messages carrying them are rejected instead of
+  // misdecoded into whatever might be tempted to take the number.
+  reserved 7 to 11;
+  reserved "subtitle", "author", "status", "weight", "slug";
+}
+
+// ── Server streaming: one request, a stream of responses ────────────────
+
+// ListRequest selects a view of the collection. Pagination is CURSOR-based
+// — the gRPC-idiomatic shape, unlike the REST API's page numbers: the
+// client sends back the opaque next_page_token the previous page's last
+// item carried. Tokens are opaque by contract: encode, send, echo, never
+// parse. page_size mirrors the REST limit bounds (1–50, default 10).
+message ListRequest {
+  string tag = 1;        // exact-match filter against normalized tags; "" = no filter
+  int32 page_size = 2;   // 1–50; 0 means "server default" (10)
+  string page_token = 3; // "" = first page; otherwise the token the last page handed back
+}
+
+// PostListItem is the list VIEW of a post: identity and classification,
+// no body — the same "list views carry identity, not full content" cut the
+// REST API makes. next_page_token rides ONLY on the final message of a
+// page: the cursor for the next page, empty when the collection is
+// exhausted. An empty final token means "no more pages"; an empty tag
+// means "no filter" — emptiness is data, judged by the field it sits in.
+message PostListItem {
+  string id = 1;
+  string title = 2;
+  repeated string tags = 3;
+  google.protobuf.Timestamp created_at = 4;
+  string next_page_token = 5; // set only on the stream's final message
+}
+
+// ── Client streaming: a stream of requests, one response ────────────────
+
+// CreatePostRequest is one draft in a batch. The client streams N of these
+// on ONE connection and receives a single CreateSummary when the stream
+// closes — the batch shapes (bulk import, mobile upload queues, batching
+// writers) that would otherwise need one round trip per item.
+//
+// FIELD NUMBERS ARE LOCAL TO THE MESSAGE. CreatePostRequest.title is 1 and
+// Post.title is 2 and nothing collides — numbers scope per message, which
+// is why a new message starts fresh at 1 rather than continuing Post's.
+message CreatePostRequest {
+  string title = 1;          // 1–120 runes after trimming
+  string body = 2;           // 1–5000 runes after trimming
+  repeated string tags = 3;  // normalized on write; at most 8 after blanks drop
+}
+
+// CreateSummary is the single answer to the whole stream: how many drafts
+// arrived, how many stored, and the ids in ARRIVAL order so the client can
+// correlate its queue with what the server created. A draft that fails
+// validation aborts the RPC with codes.InvalidArgument BEFORE anything is
+// summarized — one RPC has exactly one status; partial-failure reporting
+// would have to be designed INTO the messages (the way SyncTags does it).
+message CreateSummary {
+  int32 received = 1;       // messages the server read off the stream
+  int32 created = 2;        // drafts that passed validation and were stored
+  repeated string ids = 3;  // stored post ids, in the order their drafts arrived
+}
+
+// ── Bidirectional: two streams, independently, on one call ──────────────
+
+// TagUpdate replaces one post's tag set (full-replace semantics, like the
+// REST API's PUT: the tags listed ARE the next state, absent tags are
+// gone). SyncTags accepts a STREAM of these — an editor session syncing
+// tag edits as they happen, without one round trip per edit.
+message TagUpdate {
+  string post_id = 1;       // which post's tag set this is
+  repeated string tags = 2; // the WHOLE next tag set — replace, not merge
+}
+
+// SyncAck is the server's answer to ONE TagUpdate, sent back on the same
+// call while the client may still be sending. Unlike CreatePosts, a bad
+// update does NOT kill the stream: applied=false plus a note naming why is
+// a per-item result — the acknowledgment protocol this API deliberately
+// designs in, because tag sync wants "keep going, tell me which failed",
+// while batch create wants "all or nothing".
+message SyncAck {
+  string post_id = 1;                    // the update this ack answers
+  bool applied = 2;                      // false = rejected, see note
+  string note = 3;                       // rejection reason when !applied
+  repeated string tags = 4;              // stored tags after applying
+  google.protobuf.Timestamp updated_at = 5; // storage's new UpdatedAt
+}
+
+// ── The service: four methods, four kinds ───────────────────────────────
+
+// PostsService is the whole gRPC surface over the posts substrate — the
+// same domain the REST /api/posts routes serve, so every method below maps
+// onto the same use cases with a different transport shape. Generated code
+// turns this into a server interface and a client stub per language.
+service PostsService {
+  // Fetch one post by id. codes: OK, NotFound, InvalidArgument (empty id),
+  // DeadlineExceeded (a deadline that expires mid-call).
+  rpc GetPost(PostRequest) returns (Post);
+
+  // Stream one page of list items for a tag filter, newest first. The
+  // final message carries next_page_token when more pages exist.
+  rpc ListPosts(ListRequest) returns (stream PostListItem);
+
+  // Stream a batch of drafts; one summary answers the whole stream. The
+  // first invalid draft fails the RPC with InvalidArgument.
+  rpc CreatePosts(stream CreatePostRequest) returns (CreateSummary);
+
+  // Stream tag replacements; each update is acked individually (applied or
+  // applied=false + note) on the same call. Bidi: both sides send when
+  // ready — the server does not wait for the client's stream to close.
+  rpc SyncTags(stream TagUpdate) returns (stream SyncAck);
+}

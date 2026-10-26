@@ -1,0 +1,32 @@
+# buf.yaml — the buf module definition for the guide's protobuf sources.
+#
+# buf is the toolchain this guide pins for protobuf work: it lints,
+# detects breaking changes, and runs code generation from one config. The
+# module root is api/proto (every .proto under it belongs to the module).
+#
+# The lint config runs buf's STANDARD rule set with three rules deliberately
+# excluded — a scoped decision, not a shrug:
+#   PACKAGE_DIRECTORY_MATCH wants guide/posts/v1/ directories mirroring the
+#     package; this guide keeps ONE flat file (api/proto/posts.proto) because
+#     a single-service module gains nothing from the tree.
+#   RPC_REQUEST_STANDARD_NAME / RPC_RESPONSE_STANDARD_NAME want
+#     GetPostRequest/GetPostResponse per method; this API SHARES request and
+#     response types across methods deliberately (Post answers GetPost, the
+#     same Post message a future UpdatePost would return), so the exception
+#     documents the design instead of renaming types to satisfy the linter.
+# breaking runs against the FILE view — the strictest stance, where moving a
+# message between files counts as a break. Regenerate with: buf generate
+# (buf.gen.yaml holds the plugins).
+version: v2
+modules:
+  - path: api/proto
+lint:
+  use:
+    - STANDARD
+  except:
+    - PACKAGE_DIRECTORY_MATCH
+    - RPC_REQUEST_STANDARD_NAME
+    - RPC_RESPONSE_STANDARD_NAME
+breaking:
+  use:
+    - FILE

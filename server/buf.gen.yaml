@@ -1,0 +1,17 @@
+# buf.gen.yaml — the code-generation config `buf generate` reads.
+#
+# Two LOCAL plugins (on PATH, pinned at the toolchain versions the dev
+# container installs): protoc-gen-go emits the message types, then
+# protoc-gen-go-grpc emits the service interface and client stub. Output is
+# source-relative (posts.proto → internal/grpcapi/pb/posts*.go), so the
+# generated tree mirrors the proto tree exactly one level deep — which is
+# why the whole generated package is committed and reviewed like any other
+# code, not fetched at build time.
+version: v2
+plugins:
+  - local: protoc-gen-go
+    out: internal/grpcapi/pb
+    opt: paths=source_relative
+  - local: protoc-gen-go-grpc
+    out: internal/grpcapi/pb
+    opt: paths=source_relative
