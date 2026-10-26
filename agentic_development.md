@@ -38,6 +38,10 @@
   Content model: topic → sections → blocks (text | code | demo | list), Go structs + JSON tags, CONTENT_API_VERSION = 1; the server content registry is the single topic-id source; wire contract =
   the fastapi guide's VERBATIM incl. the list block {kind:"list", id, ordered, items 3–8, "Lead term — explanation."} (full contract in ../fastapi/fastapi_developers_guide agentic_development.md;
   record here at Phase 1 close). Markers: ✅ done · 🚧 in progress · ⏳ pending.
+  Per-topic GO authoring pattern (FIXED by 3.1 exemplar; detail → devlog 2026-10-26): topic_<id>.go builder IN the content package (NO topics/ subpackage — Go import cycle), unexported <id>Topic() (Topic,
+  error) + errors.Join closure helpers, registered only in NewProductionRegistry; demo = pure payload builder internal/domain/demos/<name>.go + thin handler internal/presentation/demo.go + one main.go
+  route; teaching exhibits internal/domain/teaching/; per-topic test pins section order + block-id uniqueness + inline demo (prose+code+demo co-present) + bash terminal companion (no source) + prose floor
+  strings.Fields ≥2500 + must-source belt; client slice = health-pipeline mirror + ONE lazy demo-registry entry.
 - Wire contract (STABLE — recorded at Phase 1 close 2026-10-26, supersedes the pointer above): GET /api/content → {version:1,groups:[{id,title,order}],topics:[{id,title,subtitle?,group,order,
   sectionCount}]}; GET /api/content/{topicId} → {version:1,id,title,subtitle?,group,order,sections:[{id,title,lead?,blocks}]} — blocks discriminate on kind: text {kind,id,text} · code
   {kind,id,language,caption?,source?,snippet} · demo {kind,id,title,description?} · list {kind,id,ordered,items[3–8]}; unknown topic → 404 envelope; GET/PATCH /api/demo/scenario →
@@ -50,7 +54,7 @@
 - Directives — (1) SEQUENTIAL by default; AMENDED 2026-10-26 by developer (full limits available): PARALLEL subagents allowed, but ONLY for provably independent subtrees (disjoint files, no shared state — e.g. server/ ∥ client/); phases still complete in order; Phase 3+ per-topic authoring stays strictly sequential (quality/detail over speed). (2) Whole setup on Docker. (3) REVIEW GATE: STOP for developer review after Phase 0 + 1;
   later phases per approval cadence. (4) QUALITY BAR: 10/10 to a 15+yr engineer — no shortcuts, no dead code, no "good enough for now". (5) STACK STAYS UP: compose runs CONTINUOUSLY in active dev
   — NO compose down at task end; teardown only on explicit request / long pauses. (6) Verification = PROTOCOL v2, above. (7) agentic_development.md is MASTER-OWNED — subagents never edit it; they
-  report facts, master bookkeeps. (8) PER-TOPIC sequential authoring from Phase 3, exemplar first; template = fastapi's TOPIC AUTHORING PATTERN (mirror at 3.1 close).
+  report facts, master bookkeeps. (8) PER-TOPIC sequential authoring from Phase 3, exemplar first; template = the GO per-topic pattern (Conventions above; mirrored at 3.1 close 2026-10-26).
 - State — bootstrapped (0.A ✅ 2026-10-26, git main): golang:1.27.3-bookworm PINNED; still to pin when they land: pgx v5, gqlgen, grpc-go, asynq, go-redis v9, mongo-driver; MIGRATIONS DECIDED =
   goose v3 (2026-10-26 master: SQL-first files, embed.FS, single-binary story; lands topic 16); client = fastapi client's pins; images postgres:17 / redis:7-alpine / mongo:8 /
   node:22-bookworm. Family traps: npm 10.9.9 arborist crash on the client lockfile → npm ≥ 11 in-container; pre-create cache volumes on fresh machines (`docker volume create gdg-go gdg-gocache
@@ -65,7 +69,7 @@
 
 ## Active tasks
 - Phase 0 ✅ + Phase 1 ✅ + Phase 2 ✅ (2026-10-26; commits 3eee136 · 571b919 · 0bd335d · c3f624c · a247ac6 · da69083). Review gate PASSED (developer: continue); parallel subagents sanctioned 2026-10-26 (server/ ∥ client/ only; phases close in order; per-topic authoring sequential).
-- IN FLIGHT: Phase 3.1 go-language SERVER half (exemplar; client demo view follows once it lands — needs its wire shape + demo-registry/container wiring, Phase 2 files now free). Full breakdown in the Developer section's Development tasks.
+- IN FLIGHT: Phase 3.1 go-language CLIENT demo view (port of fastapi's py slice; server half ✅ e1e09f4 — exemplar master-reviewed, pattern mirrored to Conventions). Next: 3.2 go-runtime (full-stack, one agent, mirrors the pattern). Full breakdown in the Developer section's Development tasks.
 
 # Developer defined section:
 
@@ -90,7 +94,7 @@
         - ✅ 0.C Client skeleton (2026-10-26, 0bd335d; skeleton only — per-topic demo layers land Phase 3+; detail → devlog 2026-10-26)
     - Phase 1 — Content engine ✅ 2026-10-26 (c3f624c + fix a247ac6 + master diff-review pass — one doc-comment fix; wire contract recorded in Current state below; detail → devlog 2026-10-26). REVIEW GATE REACHED — Phase 2 starts in a NEW CHAT.
     - Phase 2 — Client shell ✅ 2026-10-26 (da69083): shell cloned at 0.C held; added shared scenario slice (domain/data/ui) to the wire contract + ScenarioPanel in root-layout header + home zero-topic degradation; client 19 specs/112 tests + live smoke green (detail → devlog 2026-10-26)
-    - Phase 3 — Fundamentals ⏳ (SIX sequential per-topic delegations, exemplar first): 3.1 go-language — EXEMPLAR, fixes the authoring pattern (mirror fastapi's TOPIC AUTHORING PATTERN, adapted: content/topics/<snake_id>.go exporting Topic, demos in internal/domain/demos/, handlers in internal/presentation/demo/<area>.go, prose floor 2500) · 3.2 go-runtime · 3.3 http-web · 3.4 go-http-fundamentals · 3.5 interfaces-and-composition · 3.6 goroutines-and-channels
+    - Phase 3 — Fundamentals ⏳ (SIX sequential per-topic delegations, exemplar first): 3.1 go-language — EXEMPLAR: server half ✅ 2026-10-26 (e1e09f4; pattern FIXED — see Conventions; client demo view in flight) · 3.2 go-runtime · 3.3 http-web · 3.4 go-http-fundamentals · 3.5 interfaces-and-composition · 3.6 goroutines-and-channels
     - Phase 4 — Request handling ⏳: 07 routing · 08 middleware · 09 request-response · 10 validation
     - Phase 5 — APIs ⏳: 11 api-design (posts substrate) · 12 api-documentation (oapi-codegen spec-first) · 13 graphql (gqlgen) · 14 webhooks · 15 grpc (grpc-go)
     - Phase 6 — Data ⏳: 16 sql-schema (goose) · 17 databases-sql (pgx) · 18 sqlc-gorm (testcontainers-go) · 19 mongodb · 20 redis — testcontainers wiring (docker.sock + host override) lands here
