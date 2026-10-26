@@ -50,6 +50,41 @@ import { RaceDetectorApi } from '../data/demo/race-detector-api';
 import { RaceDetectorRepositoryImpl } from '../data/demo/race-detector-repository-impl';
 import type { RaceDetectorRepository } from '../domain/demo/race-detector-repository';
 import { GetRaceDetectorDemoUseCase } from '../domain/demo/get-race-detector-demo-usecase';
+import { RoutingExplorerApi } from '../data/demo/routing-explorer-api';
+import { RoutingExplorerRepositoryImpl } from '../data/demo/routing-explorer-repository-impl';
+import type { RoutingExplorerRepository } from '../domain/demo/routing-explorer-repository';
+import {
+  GetRoutingExplorerDemoUseCase,
+  ROUTING_EXPLORER_DEMO_USE_CASE,
+} from '../domain/demo/get-routing-explorer-demo-usecase';
+import { MiddlewarePipelineApi } from '../data/demo/middleware-pipeline-api';
+import { MiddlewarePipelineRepositoryImpl } from '../data/demo/middleware-pipeline-repository-impl';
+import type { MiddlewarePipelineRepository } from '../domain/demo/middleware-pipeline-repository';
+import {
+  GetMiddlewarePipelineDemoUseCase,
+  MIDDLEWARE_PIPELINE_DEMO_USE_CASE,
+} from '../domain/demo/get-middleware-pipeline-demo-usecase';
+import { ReqresInspectorApi } from '../data/demo/reqres-inspector-api';
+import { ReqresInspectorRepositoryImpl } from '../data/demo/reqres-inspector-repository-impl';
+import type { ReqresInspectorRepository } from '../domain/demo/reqres-inspector-repository';
+import {
+  GetReqresInspectorDemoUseCase,
+  REQRES_INSPECTOR_DEMO_USE_CASE,
+} from '../domain/demo/get-reqres-inspector-demo-usecase';
+import { ReqresMethodsApi } from '../data/demo/reqres-methods-api';
+import { ReqresMethodsRepositoryImpl } from '../data/demo/reqres-methods-repository-impl';
+import type { ReqresMethodsRepository } from '../domain/demo/reqres-methods-repository';
+import {
+  GetReqresMethodsDemoUseCase,
+  REQRES_METHODS_DEMO_USE_CASE,
+} from '../domain/demo/get-reqres-methods-demo-usecase';
+import { ValidationArenaApi } from '../data/demo/validation-arena-api';
+import { ValidationArenaRepositoryImpl } from '../data/demo/validation-arena-repository-impl';
+import type { ValidationArenaRepository } from '../domain/demo/validation-arena-repository';
+import {
+  GetValidationArenaDemoUseCase,
+  VALIDATION_ARENA_DEMO_USE_CASE,
+} from '../domain/demo/get-validation-arena-demo-usecase';
 
 /**
  * Service-locator container — this client's composition root, mirroring the
@@ -116,6 +151,26 @@ export const ContainerTokens = {
   RaceDetectorApi: Symbol('RaceDetectorApi'),
   RaceDetectorRepository: Symbol('RaceDetectorRepository'),
   GetRaceDetectorDemoUseCase: Symbol('GetRaceDetectorDemoUseCase'),
+  RoutingExplorerApi: Symbol('RoutingExplorerApi'),
+  RoutingExplorerRepository: Symbol('RoutingExplorerRepository'),
+  // Same aliasing story as the headers demo (ROUTING_EXPLORER_DEMO_USE_CASE).
+  GetRoutingExplorerDemoUseCase: ROUTING_EXPLORER_DEMO_USE_CASE,
+  MiddlewarePipelineApi: Symbol('MiddlewarePipelineApi'),
+  MiddlewarePipelineRepository: Symbol('MiddlewarePipelineRepository'),
+  // Same aliasing story as the headers demo (MIDDLEWARE_PIPELINE_DEMO_USE_CASE).
+  GetMiddlewarePipelineDemoUseCase: MIDDLEWARE_PIPELINE_DEMO_USE_CASE,
+  ReqresInspectorApi: Symbol('ReqresInspectorApi'),
+  ReqresInspectorRepository: Symbol('ReqresInspectorRepository'),
+  // Same aliasing story as the headers demo (REQRES_INSPECTOR_DEMO_USE_CASE).
+  GetReqresInspectorDemoUseCase: REQRES_INSPECTOR_DEMO_USE_CASE,
+  ReqresMethodsApi: Symbol('ReqresMethodsApi'),
+  ReqresMethodsRepository: Symbol('ReqresMethodsRepository'),
+  // Same aliasing story as the headers demo (REQRES_METHODS_DEMO_USE_CASE).
+  GetReqresMethodsDemoUseCase: REQRES_METHODS_DEMO_USE_CASE,
+  ValidationArenaApi: Symbol('ValidationArenaApi'),
+  ValidationArenaRepository: Symbol('ValidationArenaRepository'),
+  // Same aliasing story as the headers demo (VALIDATION_ARENA_DEMO_USE_CASE).
+  GetValidationArenaDemoUseCase: VALIDATION_ARENA_DEMO_USE_CASE,
 } as const;
 
 class Container {
@@ -232,6 +287,56 @@ class Container {
     this.register(
       ContainerTokens.GetRaceDetectorDemoUseCase,
       new GetRaceDetectorDemoUseCase(this.raceDetectorRepository),
+    );
+
+    this.register(ContainerTokens.RoutingExplorerApi, new RoutingExplorerApi(config));
+    this.register(
+      ContainerTokens.RoutingExplorerRepository,
+      new RoutingExplorerRepositoryImpl(this.routingExplorerApi),
+    );
+    this.register(
+      ContainerTokens.GetRoutingExplorerDemoUseCase,
+      new GetRoutingExplorerDemoUseCase(this.routingExplorerRepository),
+    );
+
+    this.register(ContainerTokens.MiddlewarePipelineApi, new MiddlewarePipelineApi(config));
+    this.register(
+      ContainerTokens.MiddlewarePipelineRepository,
+      new MiddlewarePipelineRepositoryImpl(this.middlewarePipelineApi),
+    );
+    this.register(
+      ContainerTokens.GetMiddlewarePipelineDemoUseCase,
+      new GetMiddlewarePipelineDemoUseCase(this.middlewarePipelineRepository),
+    );
+
+    this.register(ContainerTokens.ReqresInspectorApi, new ReqresInspectorApi(config));
+    this.register(
+      ContainerTokens.ReqresInspectorRepository,
+      new ReqresInspectorRepositoryImpl(this.reqresInspectorApi),
+    );
+    this.register(
+      ContainerTokens.GetReqresInspectorDemoUseCase,
+      new GetReqresInspectorDemoUseCase(this.reqresInspectorRepository),
+    );
+
+    this.register(ContainerTokens.ReqresMethodsApi, new ReqresMethodsApi(config));
+    this.register(
+      ContainerTokens.ReqresMethodsRepository,
+      new ReqresMethodsRepositoryImpl(this.reqresMethodsApi),
+    );
+    this.register(
+      ContainerTokens.GetReqresMethodsDemoUseCase,
+      new GetReqresMethodsDemoUseCase(this.reqresMethodsRepository),
+    );
+
+    this.register(ContainerTokens.ValidationArenaApi, new ValidationArenaApi(config));
+    this.register(
+      ContainerTokens.ValidationArenaRepository,
+      new ValidationArenaRepositoryImpl(this.validationArenaApi),
+    );
+    this.register(
+      ContainerTokens.GetValidationArenaDemoUseCase,
+      new GetValidationArenaDemoUseCase(this.validationArenaRepository),
     );
   }
 
@@ -369,6 +474,68 @@ class Container {
 
   get getRaceDetectorDemoUseCase(): GetRaceDetectorDemoUseCase {
     return this.resolve<GetRaceDetectorDemoUseCase>(ContainerTokens.GetRaceDetectorDemoUseCase);
+  }
+
+  get routingExplorerApi(): RoutingExplorerApi {
+    return this.resolve<RoutingExplorerApi>(ContainerTokens.RoutingExplorerApi);
+  }
+
+  get routingExplorerRepository(): RoutingExplorerRepository {
+    return this.resolve<RoutingExplorerRepository>(ContainerTokens.RoutingExplorerRepository);
+  }
+
+  get getRoutingExplorerDemoUseCase(): GetRoutingExplorerDemoUseCase {
+    return this.resolve<GetRoutingExplorerDemoUseCase>(ContainerTokens.GetRoutingExplorerDemoUseCase);
+  }
+
+  get middlewarePipelineApi(): MiddlewarePipelineApi {
+    return this.resolve<MiddlewarePipelineApi>(ContainerTokens.MiddlewarePipelineApi);
+  }
+
+  get middlewarePipelineRepository(): MiddlewarePipelineRepository {
+    return this.resolve<MiddlewarePipelineRepository>(ContainerTokens.MiddlewarePipelineRepository);
+  }
+
+  get getMiddlewarePipelineDemoUseCase(): GetMiddlewarePipelineDemoUseCase {
+    return this.resolve<GetMiddlewarePipelineDemoUseCase>(
+      ContainerTokens.GetMiddlewarePipelineDemoUseCase,
+    );
+  }
+
+  get reqresInspectorApi(): ReqresInspectorApi {
+    return this.resolve<ReqresInspectorApi>(ContainerTokens.ReqresInspectorApi);
+  }
+
+  get reqresInspectorRepository(): ReqresInspectorRepository {
+    return this.resolve<ReqresInspectorRepository>(ContainerTokens.ReqresInspectorRepository);
+  }
+
+  get getReqresInspectorDemoUseCase(): GetReqresInspectorDemoUseCase {
+    return this.resolve<GetReqresInspectorDemoUseCase>(ContainerTokens.GetReqresInspectorDemoUseCase);
+  }
+
+  get reqresMethodsApi(): ReqresMethodsApi {
+    return this.resolve<ReqresMethodsApi>(ContainerTokens.ReqresMethodsApi);
+  }
+
+  get reqresMethodsRepository(): ReqresMethodsRepository {
+    return this.resolve<ReqresMethodsRepository>(ContainerTokens.ReqresMethodsRepository);
+  }
+
+  get getReqresMethodsDemoUseCase(): GetReqresMethodsDemoUseCase {
+    return this.resolve<GetReqresMethodsDemoUseCase>(ContainerTokens.GetReqresMethodsDemoUseCase);
+  }
+
+  get validationArenaApi(): ValidationArenaApi {
+    return this.resolve<ValidationArenaApi>(ContainerTokens.ValidationArenaApi);
+  }
+
+  get validationArenaRepository(): ValidationArenaRepository {
+    return this.resolve<ValidationArenaRepository>(ContainerTokens.ValidationArenaRepository);
+  }
+
+  get getValidationArenaDemoUseCase(): GetValidationArenaDemoUseCase {
+    return this.resolve<GetValidationArenaDemoUseCase>(ContainerTokens.GetValidationArenaDemoUseCase);
   }
 
   // ---- wiring helpers ----

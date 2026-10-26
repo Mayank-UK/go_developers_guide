@@ -66,6 +66,11 @@ func run() error {
 	mux.Handle("GET /api/demo/iface/matrix", presentation.NewInterfaceMatrixHandler())
 	mux.Handle("GET /api/demo/conc/context", presentation.NewContextCancellationHandler())
 	mux.Handle("GET /api/demo/conc/race", presentation.NewRaceDetectorHandler())
+	mux.Handle("GET /api/demo/routing/explorer", presentation.NewRoutingExplorerHandler())
+	mux.Handle("GET /api/demo/middleware/pipeline", presentation.NewMiddlewarePipelineHandler())
+	mux.Handle("GET /api/demo/reqres/inspector", presentation.NewReqresInspectorHandler())
+	mux.Handle("GET /api/demo/reqres/methods", presentation.NewReqresMethodsHandler())
+	mux.Handle("GET /api/demo/validation/arena", presentation.NewValidationArenaHandler())
 
 	// The documented order: request-id outermost (recovery, logging, and
 	// every error envelope share the id), access logging outside recovery

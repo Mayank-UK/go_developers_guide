@@ -40,6 +40,11 @@ func newAPIServer(registry content.Registry, store *core.ScenarioStore, logger *
 	mux.Handle("GET /api/demo/iface/matrix", NewInterfaceMatrixHandler())
 	mux.Handle("GET /api/demo/conc/context", NewContextCancellationHandler())
 	mux.Handle("GET /api/demo/conc/race", NewRaceDetectorHandler())
+	mux.Handle("GET /api/demo/routing/explorer", NewRoutingExplorerHandler())
+	mux.Handle("GET /api/demo/middleware/pipeline", NewMiddlewarePipelineHandler())
+	mux.Handle("GET /api/demo/reqres/inspector", NewReqresInspectorHandler())
+	mux.Handle("GET /api/demo/reqres/methods", NewReqresMethodsHandler())
+	mux.Handle("GET /api/demo/validation/arena", NewValidationArenaHandler())
 	return Chain(
 		RequestID,
 		RequestLogger(logger),

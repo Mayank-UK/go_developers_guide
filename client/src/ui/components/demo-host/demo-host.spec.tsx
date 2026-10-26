@@ -54,10 +54,10 @@ describe('DemoHost', () => {
   it('the live registry holds exactly the demos that have landed', () => {
     // Grows topic by topic (Phase 3+: one lazy entry per demo block id);
     // unknown ids still degrade to the friendly card above. Landed so far:
-    // go-language's runtime-types demo, go-runtime's concurrency demo,
-    // http-web's headers demo, go-http-fundamentals' app-info demo,
-    // interfaces-and-composition's matrix demo, and goroutines-and-channels'
-    // context + race demos — the full Phase 3 set.
+    // Phase 3 fundamentals (runtime-types, concurrency, headers, app-info,
+    // matrix, context, race) plus the Phase 4 request-handling set
+    // (routing explorer, middleware pipeline, reqres inspector + methods,
+    // validation arena).
     expect(Object.keys(demoRegistry)).toEqual([
       'go:runtime-types',
       'runtime:concurrency',
@@ -66,6 +66,11 @@ describe('DemoHost', () => {
       'iface:matrix',
       'conc:context',
       'conc:race',
+      'routing:explorer',
+      'middleware:pipeline',
+      'reqres:inspector',
+      'reqres:methods',
+      'validation:arena',
     ]);
   });
 });

@@ -32,6 +32,31 @@ import { ContextCancellationRepositoryImpl } from '../data/demo/context-cancella
 import { GetContextCancellationDemoUseCase } from '../domain/demo/get-context-cancellation-demo-usecase';
 import { RaceDetectorRepositoryImpl } from '../data/demo/race-detector-repository-impl';
 import { GetRaceDetectorDemoUseCase } from '../domain/demo/get-race-detector-demo-usecase';
+import { RoutingExplorerRepositoryImpl } from '../data/demo/routing-explorer-repository-impl';
+import {
+  GetRoutingExplorerDemoUseCase,
+  ROUTING_EXPLORER_DEMO_USE_CASE,
+} from '../domain/demo/get-routing-explorer-demo-usecase';
+import { MiddlewarePipelineRepositoryImpl } from '../data/demo/middleware-pipeline-repository-impl';
+import {
+  GetMiddlewarePipelineDemoUseCase,
+  MIDDLEWARE_PIPELINE_DEMO_USE_CASE,
+} from '../domain/demo/get-middleware-pipeline-demo-usecase';
+import { ReqresInspectorRepositoryImpl } from '../data/demo/reqres-inspector-repository-impl';
+import {
+  GetReqresInspectorDemoUseCase,
+  REQRES_INSPECTOR_DEMO_USE_CASE,
+} from '../domain/demo/get-reqres-inspector-demo-usecase';
+import { ReqresMethodsRepositoryImpl } from '../data/demo/reqres-methods-repository-impl';
+import {
+  GetReqresMethodsDemoUseCase,
+  REQRES_METHODS_DEMO_USE_CASE,
+} from '../domain/demo/get-reqres-methods-demo-usecase';
+import { ValidationArenaRepositoryImpl } from '../data/demo/validation-arena-repository-impl';
+import {
+  GetValidationArenaDemoUseCase,
+  VALIDATION_ARENA_DEMO_USE_CASE,
+} from '../domain/demo/get-validation-arena-demo-usecase';
 
 /**
  * The default config wires only fetch-based sources, so initializing the
@@ -112,6 +137,53 @@ describe('container', () => {
     expect(container.getRaceDetectorDemoUseCase).toBeInstanceOf(GetRaceDetectorDemoUseCase);
     expect(container.raceDetectorRepository).toBeInstanceOf(RaceDetectorRepositoryImpl);
     expect(container.appConfig.apiBaseUrl).toBe('/api');
+  });
+
+  it('wires the routing-explorer demo pipeline through the layers: config → api → repository → use case', () => {
+    expect(container.getRoutingExplorerDemoUseCase).toBeInstanceOf(GetRoutingExplorerDemoUseCase);
+    expect(container.routingExplorerRepository).toBeInstanceOf(RoutingExplorerRepositoryImpl);
+    expect(container.appConfig.apiBaseUrl).toBe('/api');
+    expect(container.resolve(ROUTING_EXPLORER_DEMO_USE_CASE)).toBe(
+      container.getRoutingExplorerDemoUseCase,
+    );
+  });
+
+  it('wires the middleware-pipeline demo pipeline through the layers: config → api → repository → use case', () => {
+    expect(container.getMiddlewarePipelineDemoUseCase).toBeInstanceOf(
+      GetMiddlewarePipelineDemoUseCase,
+    );
+    expect(container.middlewarePipelineRepository).toBeInstanceOf(MiddlewarePipelineRepositoryImpl);
+    expect(container.appConfig.apiBaseUrl).toBe('/api');
+    expect(container.resolve(MIDDLEWARE_PIPELINE_DEMO_USE_CASE)).toBe(
+      container.getMiddlewarePipelineDemoUseCase,
+    );
+  });
+
+  it('wires the reqres-inspector demo pipeline through the layers: config → api → repository → use case', () => {
+    expect(container.getReqresInspectorDemoUseCase).toBeInstanceOf(GetReqresInspectorDemoUseCase);
+    expect(container.reqresInspectorRepository).toBeInstanceOf(ReqresInspectorRepositoryImpl);
+    expect(container.appConfig.apiBaseUrl).toBe('/api');
+    expect(container.resolve(REQRES_INSPECTOR_DEMO_USE_CASE)).toBe(
+      container.getReqresInspectorDemoUseCase,
+    );
+  });
+
+  it('wires the reqres-methods demo pipeline through the layers: config → api → repository → use case', () => {
+    expect(container.getReqresMethodsDemoUseCase).toBeInstanceOf(GetReqresMethodsDemoUseCase);
+    expect(container.reqresMethodsRepository).toBeInstanceOf(ReqresMethodsRepositoryImpl);
+    expect(container.appConfig.apiBaseUrl).toBe('/api');
+    expect(container.resolve(REQRES_METHODS_DEMO_USE_CASE)).toBe(
+      container.getReqresMethodsDemoUseCase,
+    );
+  });
+
+  it('wires the validation-arena demo pipeline through the layers: config → api → repository → use case', () => {
+    expect(container.getValidationArenaDemoUseCase).toBeInstanceOf(GetValidationArenaDemoUseCase);
+    expect(container.validationArenaRepository).toBeInstanceOf(ValidationArenaRepositoryImpl);
+    expect(container.appConfig.apiBaseUrl).toBe('/api');
+    expect(container.resolve(VALIDATION_ARENA_DEMO_USE_CASE)).toBe(
+      container.getValidationArenaDemoUseCase,
+    );
   });
 
   it('getWiring exposes every registered singleton keyed by symbol token', () => {

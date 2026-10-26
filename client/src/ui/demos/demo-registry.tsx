@@ -46,6 +46,11 @@ const AppInfoDemo = lazy(() => import('./gohttp/app_info_demo'));
 const InterfaceMatrixDemo = lazy(() => import('./iface/matrix_demo'));
 const ContextCancellationDemo = lazy(() => import('./conc/context_demo'));
 const RaceDetectorDemo = lazy(() => import('./conc/race_demo'));
+const RoutingExplorerDemo = lazy(() => import('./routing/explorer_demo'));
+const MiddlewarePipelineDemo = lazy(() => import('./middleware/pipeline_demo'));
+const ReqresInspectorDemo = lazy(() => import('./reqres/inspector_demo'));
+const ReqresMethodsDemo = lazy(() => import('./reqres/methods_demo'));
+const ValidationArenaDemo = lazy(() => import('./validation/arena_demo'));
 
 export const demoRegistry: DemoRegistry = {
   'go:runtime-types': RuntimeTypesDemo,
@@ -55,4 +60,9 @@ export const demoRegistry: DemoRegistry = {
   'iface:matrix': InterfaceMatrixDemo,
   'conc:context': ContextCancellationDemo,
   'conc:race': RaceDetectorDemo,
+  'routing:explorer': RoutingExplorerDemo,
+  'middleware:pipeline': MiddlewarePipelineDemo,
+  'reqres:inspector': ReqresInspectorDemo,
+  'reqres:methods': ReqresMethodsDemo,
+  'validation:arena': ValidationArenaDemo,
 };

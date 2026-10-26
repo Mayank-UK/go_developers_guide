@@ -314,8 +314,27 @@ func NewProductionRegistry() (Registry, error) {
 	if err != nil {
 		return Registry{}, fmt.Errorf("build goroutines-and-channels topic: %w", err)
 	}
+	routing, err := routingTopic()
+	if err != nil {
+		return Registry{}, fmt.Errorf("build routing topic: %w", err)
+	}
+	middleware, err := middlewareTopic()
+	if err != nil {
+		return Registry{}, fmt.Errorf("build middleware topic: %w", err)
+	}
+	requestResponse, err := requestResponseTopic()
+	if err != nil {
+		return Registry{}, fmt.Errorf("build request-response topic: %w", err)
+	}
+	validation, err := validationTopic()
+	if err != nil {
+		return Registry{}, fmt.Errorf("build validation topic: %w", err)
+	}
 	return NewRegistry(
-		[]Topic{goLanguage, goRuntime, httpWeb, goHTTPFundamentals, interfacesComposition, goroutinesChannels},
+		[]Topic{
+			goLanguage, goRuntime, httpWeb, goHTTPFundamentals, interfacesComposition,
+			goroutinesChannels, routing, middleware, requestResponse, validation,
+		},
 		groups,
 	)
 }
