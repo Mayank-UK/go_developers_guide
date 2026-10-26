@@ -1,0 +1,22 @@
+# sqlc configuration for the orm-probe: SQL-first code generation. sqlc
+# reads the schema and the queries, type-checks every query against that
+# schema with a real PostgreSQL parser, and emits the Go that runs them —
+# sql_package pgx/v5 keeps the generated code on the SAME driver and pool
+# the guide already uses (New takes anything implementing DBTX: a pool or
+# a transaction). Regenerate after touching schema or queries:
+#   cd server/internal/data/ormprobe && go tool sqlc generate
+version: "2"
+sql:
+  - engine: "postgresql"
+    schema: "schema.sql"
+    queries: "queries"
+    gen:
+      go:
+        package: "ormprobe"
+        out: "."
+        sql_package: "pgx/v5"
+        overrides:
+          - db_type: "pg_catalog.timestamptz"
+            go_type:
+              import: "time"
+              type: "Time"
