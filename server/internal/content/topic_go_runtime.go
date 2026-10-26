@@ -615,11 +615,12 @@ func goRuntimeTopic() (Topic, error) {
 					"the definition of Go code, so formatting is never a debate. go.mod "+
 					"and go.sum carry the dependency story: the manifest names the "+
 					"module (``guide``) and its requirements, the sum file pins their "+
-					"hashes, and ``go mod tidy`` keeps both honest. This server "+
-					"currently needs no third-party code at all — the stdlib-only "+
-					"manifest from topic 01 is the honest starting point — and "+
-					"dependency management as a full discipline (MVS, upgrades, "+
-					"govulncheck) is topic 31. The verification pipeline that ties "+
+					"hashes, and ``go mod tidy`` keeps both honest. The stdlib-only "+
+					"manifest from topic 01 was the honest starting point; the API "+
+					"topics have since added deliberate direct requires — grpc, "+
+					"protobuf, gqlgen, oapi-codegen — pinned and visible in the "+
+					"live build info. Dependency management as a full discipline "+
+					"(MVS, upgrades, govulncheck) is topic 31. The verification pipeline that ties "+
 					"the toolchain together is one command, and it is the same one "+
 					"this guide runs after every change:"),
 			code("tool-verify", "bash", "", "",

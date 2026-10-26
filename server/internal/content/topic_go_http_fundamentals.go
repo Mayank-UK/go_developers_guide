@@ -200,7 +200,8 @@ func goHTTPFundamentalsTopic() (Topic, error) {
 					"}"),
 			demo("gohttp:app-info", "The running server, introduced by itself",
 				"Computed live from this very process: the module and toolchain the binary was built from, "+
-					"its dependency count (zero — the stdlib-only manifest, confirmed at runtime), the CPU "+
+					"its dependency count (the manifest's deliberate direct requires, pinned against the live "+
+					"build info), the CPU "+
 					"facts the scheduler sees (NumCPU, GOMAXPROCS), the port/env/log-level the process "+
 					"actually booted with, and the toolchain's build settings sorted by key — honest under "+
 					"go run, go test, and a release build alike."),

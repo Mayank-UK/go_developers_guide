@@ -13,10 +13,10 @@ import (
 )
 
 // The go-http-fundamentals topic's prose claims specific facts about this
-// payload ("module guide, zero dependencies, (devel) until VCS stamping,
-// build settings sorted"); these tests pin those claims next to the code
-// that must keep them true — a toolchain or config change that moves any
-// fact fails HERE first.
+// payload ("module guide, the deliberate direct requires, (devel) until VCS
+// stamping, build settings sorted"); these tests pin those claims next to
+// the code that must keep them true — a toolchain or config change that
+// moves any fact fails HERE first.
 
 func appInfoTestConfig() core.Config {
 	return core.Config{Port: 8100, Env: "dev", LogLevel: slog.LevelInfo}
