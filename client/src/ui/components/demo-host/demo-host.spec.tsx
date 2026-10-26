@@ -54,7 +54,16 @@ describe('DemoHost', () => {
   it('the live registry holds exactly the demos that have landed', () => {
     // Grows topic by topic (Phase 3+: one lazy entry per demo block id);
     // unknown ids still degrade to the friendly card above. Landed so far:
-    // go-language's runtime-types demo, go-runtime's concurrency demo.
-    expect(Object.keys(demoRegistry)).toEqual(['go:runtime-types', 'runtime:concurrency']);
+    // go-language's runtime-types demo, go-runtime's concurrency demo,
+    // http-web's headers demo, go-http-fundamentals' app-info demo, and
+    // goroutines-and-channels' context + race demos (interfaces lands later).
+    expect(Object.keys(demoRegistry)).toEqual([
+      'go:runtime-types',
+      'runtime:concurrency',
+      'http:headers',
+      'gohttp:app-info',
+      'conc:context',
+      'conc:race',
+    ]);
   });
 });

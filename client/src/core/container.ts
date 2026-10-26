@@ -21,6 +21,28 @@ import { ConcurrencyApi } from '../data/demo/concurrency-api';
 import { ConcurrencyRepositoryImpl } from '../data/demo/concurrency-repository-impl';
 import type { ConcurrencyRepository } from '../domain/demo/concurrency-repository';
 import { GetConcurrencyDemoUseCase } from '../domain/demo/get-concurrency-demo-usecase';
+import { HttpHeadersApi } from '../data/demo/http-headers-api';
+import { HttpHeadersRepositoryImpl } from '../data/demo/http-headers-repository-impl';
+import type { HttpHeadersRepository } from '../domain/demo/http-headers-repository';
+import {
+  GetHttpHeadersDemoUseCase,
+  HTTP_HEADERS_DEMO_USE_CASE,
+} from '../domain/demo/get-http-headers-demo-usecase';
+import { AppInfoApi } from '../data/demo/app-info-api';
+import { AppInfoRepositoryImpl } from '../data/demo/app-info-repository-impl';
+import type { AppInfoRepository } from '../domain/demo/app-info-repository';
+import {
+  GetAppInfoDemoUseCase,
+  GetAppInfoDemoUseCaseToken,
+} from '../domain/demo/get-app-info-demo-usecase';
+import { ContextCancellationApi } from '../data/demo/context-cancellation-api';
+import { ContextCancellationRepositoryImpl } from '../data/demo/context-cancellation-repository-impl';
+import type { ContextCancellationRepository } from '../domain/demo/context-cancellation-repository';
+import { GetContextCancellationDemoUseCase } from '../domain/demo/get-context-cancellation-demo-usecase';
+import { RaceDetectorApi } from '../data/demo/race-detector-api';
+import { RaceDetectorRepositoryImpl } from '../data/demo/race-detector-repository-impl';
+import type { RaceDetectorRepository } from '../domain/demo/race-detector-repository';
+import { GetRaceDetectorDemoUseCase } from '../domain/demo/get-race-detector-demo-usecase';
 
 /**
  * Service-locator container — this client's composition root, mirroring the
@@ -65,6 +87,24 @@ export const ContainerTokens = {
   ConcurrencyApi: Symbol('ConcurrencyApi'),
   ConcurrencyRepository: Symbol('ConcurrencyRepository'),
   GetConcurrencyDemoUseCase: Symbol('GetConcurrencyDemoUseCase'),
+  HttpHeadersApi: Symbol('HttpHeadersApi'),
+  HttpHeadersRepository: Symbol('HttpHeadersRepository'),
+  // Aliased to the domain module's own symbol, not a fresh one: the headers
+  // demo view resolves its use case via
+  // container.resolve(HTTP_HEADERS_DEMO_USE_CASE), so the registration key
+  // must be that exact symbol — ContainerTokens stays the single registry of
+  // identities by aliasing it here.
+  GetHttpHeadersDemoUseCase: HTTP_HEADERS_DEMO_USE_CASE,
+  AppInfoApi: Symbol('AppInfoApi'),
+  AppInfoRepository: Symbol('AppInfoRepository'),
+  // Same aliasing story as the headers demo (GetAppInfoDemoUseCaseToken).
+  GetAppInfoDemoUseCase: GetAppInfoDemoUseCaseToken,
+  ContextCancellationApi: Symbol('ContextCancellationApi'),
+  ContextCancellationRepository: Symbol('ContextCancellationRepository'),
+  GetContextCancellationDemoUseCase: Symbol('GetContextCancellationDemoUseCase'),
+  RaceDetectorApi: Symbol('RaceDetectorApi'),
+  RaceDetectorRepository: Symbol('RaceDetectorRepository'),
+  GetRaceDetectorDemoUseCase: Symbol('GetRaceDetectorDemoUseCase'),
 } as const;
 
 class Container {
@@ -131,6 +171,46 @@ class Container {
     this.register(
       ContainerTokens.GetConcurrencyDemoUseCase,
       new GetConcurrencyDemoUseCase(this.concurrencyRepository),
+    );
+
+    this.register(ContainerTokens.HttpHeadersApi, new HttpHeadersApi(config));
+    this.register(
+      ContainerTokens.HttpHeadersRepository,
+      new HttpHeadersRepositoryImpl(this.httpHeadersApi),
+    );
+    this.register(
+      ContainerTokens.GetHttpHeadersDemoUseCase,
+      new GetHttpHeadersDemoUseCase(this.httpHeadersRepository),
+    );
+
+    this.register(ContainerTokens.AppInfoApi, new AppInfoApi(config));
+    this.register(
+      ContainerTokens.AppInfoRepository,
+      new AppInfoRepositoryImpl(this.appInfoApi),
+    );
+    this.register(
+      ContainerTokens.GetAppInfoDemoUseCase,
+      new GetAppInfoDemoUseCase(this.appInfoRepository),
+    );
+
+    this.register(ContainerTokens.ContextCancellationApi, new ContextCancellationApi(config));
+    this.register(
+      ContainerTokens.ContextCancellationRepository,
+      new ContextCancellationRepositoryImpl(this.contextCancellationApi),
+    );
+    this.register(
+      ContainerTokens.GetContextCancellationDemoUseCase,
+      new GetContextCancellationDemoUseCase(this.contextCancellationRepository),
+    );
+
+    this.register(ContainerTokens.RaceDetectorApi, new RaceDetectorApi(config));
+    this.register(
+      ContainerTokens.RaceDetectorRepository,
+      new RaceDetectorRepositoryImpl(this.raceDetectorApi),
+    );
+    this.register(
+      ContainerTokens.GetRaceDetectorDemoUseCase,
+      new GetRaceDetectorDemoUseCase(this.raceDetectorRepository),
     );
   }
 
@@ -206,6 +286,56 @@ class Container {
 
   get getConcurrencyDemoUseCase(): GetConcurrencyDemoUseCase {
     return this.resolve<GetConcurrencyDemoUseCase>(ContainerTokens.GetConcurrencyDemoUseCase);
+  }
+
+  get httpHeadersApi(): HttpHeadersApi {
+    return this.resolve<HttpHeadersApi>(ContainerTokens.HttpHeadersApi);
+  }
+
+  get httpHeadersRepository(): HttpHeadersRepository {
+    return this.resolve<HttpHeadersRepository>(ContainerTokens.HttpHeadersRepository);
+  }
+
+  get getHttpHeadersDemoUseCase(): GetHttpHeadersDemoUseCase {
+    return this.resolve<GetHttpHeadersDemoUseCase>(ContainerTokens.GetHttpHeadersDemoUseCase);
+  }
+
+  get appInfoApi(): AppInfoApi {
+    return this.resolve<AppInfoApi>(ContainerTokens.AppInfoApi);
+  }
+
+  get appInfoRepository(): AppInfoRepository {
+    return this.resolve<AppInfoRepository>(ContainerTokens.AppInfoRepository);
+  }
+
+  get getAppInfoDemoUseCase(): GetAppInfoDemoUseCase {
+    return this.resolve<GetAppInfoDemoUseCase>(ContainerTokens.GetAppInfoDemoUseCase);
+  }
+
+  get contextCancellationApi(): ContextCancellationApi {
+    return this.resolve<ContextCancellationApi>(ContainerTokens.ContextCancellationApi);
+  }
+
+  get contextCancellationRepository(): ContextCancellationRepository {
+    return this.resolve<ContextCancellationRepository>(ContainerTokens.ContextCancellationRepository);
+  }
+
+  get getContextCancellationDemoUseCase(): GetContextCancellationDemoUseCase {
+    return this.resolve<GetContextCancellationDemoUseCase>(
+      ContainerTokens.GetContextCancellationDemoUseCase,
+    );
+  }
+
+  get raceDetectorApi(): RaceDetectorApi {
+    return this.resolve<RaceDetectorApi>(ContainerTokens.RaceDetectorApi);
+  }
+
+  get raceDetectorRepository(): RaceDetectorRepository {
+    return this.resolve<RaceDetectorRepository>(ContainerTokens.RaceDetectorRepository);
+  }
+
+  get getRaceDetectorDemoUseCase(): GetRaceDetectorDemoUseCase {
+    return this.resolve<GetRaceDetectorDemoUseCase>(ContainerTokens.GetRaceDetectorDemoUseCase);
   }
 
   // ---- wiring helpers ----

@@ -298,5 +298,23 @@ func NewProductionRegistry() (Registry, error) {
 	if err != nil {
 		return Registry{}, fmt.Errorf("build go-runtime topic: %w", err)
 	}
-	return NewRegistry([]Topic{goLanguage, goRuntime}, groups)
+	httpWeb, err := httpWebTopic()
+	if err != nil {
+		return Registry{}, fmt.Errorf("build http-web topic: %w", err)
+	}
+	goHTTPFundamentals, err := goHTTPFundamentalsTopic()
+	if err != nil {
+		return Registry{}, fmt.Errorf("build go-http-fundamentals topic: %w", err)
+	}
+	// Order 5 (interfaces-and-composition) is the reserved curriculum slot
+	// between go-http-fundamentals and goroutines-and-channels; its builder
+	// joins this list when the topic lands.
+	goroutinesChannels, err := goroutinesChannelsTopic()
+	if err != nil {
+		return Registry{}, fmt.Errorf("build goroutines-and-channels topic: %w", err)
+	}
+	return NewRegistry(
+		[]Topic{goLanguage, goRuntime, httpWeb, goHTTPFundamentals, goroutinesChannels},
+		groups,
+	)
 }

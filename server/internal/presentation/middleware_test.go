@@ -31,6 +31,14 @@ func newAPIServer(registry content.Registry, store *core.ScenarioStore, logger *
 	mux.Handle("PATCH /api/demo/scenario", NewScenarioPatchHandler(store, logger))
 	mux.Handle("GET /api/demo/go/runtime-types", NewRuntimeTypesHandler())
 	mux.Handle("GET /api/demo/runtime/concurrency", NewConcurrencyHandler())
+	mux.Handle("GET /api/demo/http/headers", NewHTTPHeadersHandler())
+	mux.Handle("GET /api/demo/gohttp/app-info", NewAppInfoHandler(core.Config{
+		Port:     8100,
+		Env:      "test",
+		LogLevel: slog.LevelInfo,
+	}))
+	mux.Handle("GET /api/demo/conc/context", NewContextCancellationHandler())
+	mux.Handle("GET /api/demo/conc/race", NewRaceDetectorHandler())
 	return Chain(
 		RequestID,
 		RequestLogger(logger),

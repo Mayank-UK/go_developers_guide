@@ -61,6 +61,10 @@ func run() error {
 	mux.Handle("PATCH /api/demo/scenario", presentation.NewScenarioPatchHandler(scenarioStore, logger))
 	mux.Handle("GET /api/demo/go/runtime-types", presentation.NewRuntimeTypesHandler())
 	mux.Handle("GET /api/demo/runtime/concurrency", presentation.NewConcurrencyHandler())
+	mux.Handle("GET /api/demo/http/headers", presentation.NewHTTPHeadersHandler())
+	mux.Handle("GET /api/demo/gohttp/app-info", presentation.NewAppInfoHandler(cfg))
+	mux.Handle("GET /api/demo/conc/context", presentation.NewContextCancellationHandler())
+	mux.Handle("GET /api/demo/conc/race", presentation.NewRaceDetectorHandler())
 
 	// The documented order: request-id outermost (recovery, logging, and
 	// every error envelope share the id), access logging outside recovery
