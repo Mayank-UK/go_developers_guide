@@ -334,10 +334,18 @@ func NewProductionRegistry() (Registry, error) {
 	if err != nil {
 		return Registry{}, fmt.Errorf("build api-design topic: %w", err)
 	}
+	// Orders 12 (api-documentation) and 13 (graphql) are the reserved
+	// curriculum slots inside the apis group; their builders join this list
+	// when those topics land.
+	webhooks, err := webhooksTopic()
+	if err != nil {
+		return Registry{}, fmt.Errorf("build webhooks topic: %w", err)
+	}
 	return NewRegistry(
 		[]Topic{
 			goLanguage, goRuntime, httpWeb, goHTTPFundamentals, interfacesComposition,
 			goroutinesChannels, routing, middleware, requestResponse, validation, apiDesign,
+			webhooks,
 		},
 		groups,
 	)

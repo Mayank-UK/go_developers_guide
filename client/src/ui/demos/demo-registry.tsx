@@ -52,6 +52,7 @@ const ReqresInspectorDemo = lazy(() => import('./reqres/inspector_demo'));
 const ReqresMethodsDemo = lazy(() => import('./reqres/methods_demo'));
 const ValidationArenaDemo = lazy(() => import('./validation/arena_demo'));
 const PostsWorkbenchDemo = lazy(() => import('./api/posts_workbench_demo'));
+const WebhookSimulatorDemo = lazy(() => import('./api/webhook_simulator_demo'));
 
 export const demoRegistry: DemoRegistry = {
   'go:runtime-types': RuntimeTypesDemo,
@@ -67,4 +68,5 @@ export const demoRegistry: DemoRegistry = {
   'reqres:methods': ReqresMethodsDemo,
   'validation:arena': ValidationArenaDemo,
   'api:posts-workbench': PostsWorkbenchDemo,
+  'api:webhook-simulator': WebhookSimulatorDemo,
 };

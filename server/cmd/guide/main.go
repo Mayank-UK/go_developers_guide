@@ -74,6 +74,7 @@ func run() error {
 	mux.Handle("GET /api/demo/reqres/methods", presentation.NewReqresMethodsHandler())
 	mux.Handle("GET /api/demo/validation/arena", presentation.NewValidationArenaHandler())
 	mux.Handle("GET /api/demo/api/posts-workbench", presentation.NewPostsWorkbenchHandler())
+	mux.Handle("GET /api/demo/api/webhook-simulator", presentation.NewWebhookSimulatorHandler())
 
 	// The posts resource — the api-design topic's real API surface, and
 	// the substrate later topics reuse (authorization guards its ids,

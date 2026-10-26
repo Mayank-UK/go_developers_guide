@@ -45,6 +45,7 @@ func newAPIServer(registry content.Registry, store *core.ScenarioStore, logger *
 	mux.Handle("GET /api/demo/reqres/inspector", NewReqresInspectorHandler())
 	mux.Handle("GET /api/demo/reqres/methods", NewReqresMethodsHandler())
 	mux.Handle("GET /api/demo/validation/arena", NewValidationArenaHandler())
+	mux.Handle("GET /api/demo/api/webhook-simulator", NewWebhookSimulatorHandler())
 	return Chain(
 		RequestID,
 		RequestLogger(logger),

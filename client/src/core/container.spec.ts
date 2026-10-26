@@ -67,6 +67,11 @@ import {
   GetPostsWorkbenchDemoUseCase,
   POSTS_WORKBENCH_DEMO_USE_CASE,
 } from '../domain/demo/get-posts-workbench-demo-usecase';
+import { WebhookSimulatorRepositoryImpl } from '../data/demo/webhook-simulator-repository-impl';
+import {
+  GetWebhookSimulatorDemoUseCase,
+  WEBHOOK_SIMULATOR_DEMO_USE_CASE,
+} from '../domain/demo/get-webhook-simulator-demo-usecase';
 
 /**
  * The default config wires only fetch-based sources, so initializing the
@@ -216,6 +221,15 @@ describe('container', () => {
     expect(container.appConfig.apiBaseUrl).toBe('/api');
     expect(container.resolve(POSTS_WORKBENCH_DEMO_USE_CASE)).toBe(
       container.getPostsWorkbenchDemoUseCase,
+    );
+  });
+
+  it('wires the webhook-simulator demo pipeline through the layers: config → api → repository → use case', () => {
+    expect(container.getWebhookSimulatorDemoUseCase).toBeInstanceOf(GetWebhookSimulatorDemoUseCase);
+    expect(container.webhookSimulatorRepository).toBeInstanceOf(WebhookSimulatorRepositoryImpl);
+    expect(container.appConfig.apiBaseUrl).toBe('/api');
+    expect(container.resolve(WEBHOOK_SIMULATOR_DEMO_USE_CASE)).toBe(
+      container.getWebhookSimulatorDemoUseCase,
     );
   });
 

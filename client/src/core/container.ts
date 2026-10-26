@@ -99,6 +99,13 @@ import {
   GetPostsWorkbenchDemoUseCase,
   POSTS_WORKBENCH_DEMO_USE_CASE,
 } from '../domain/demo/get-posts-workbench-demo-usecase';
+import { WebhookSimulatorApi } from '../data/demo/webhook-simulator-api';
+import { WebhookSimulatorRepositoryImpl } from '../data/demo/webhook-simulator-repository-impl';
+import type { WebhookSimulatorRepository } from '../domain/demo/webhook-simulator-repository';
+import {
+  GetWebhookSimulatorDemoUseCase,
+  WEBHOOK_SIMULATOR_DEMO_USE_CASE,
+} from '../domain/demo/get-webhook-simulator-demo-usecase';
 
 /**
  * Service-locator container — this client's composition root, mirroring the
@@ -195,6 +202,10 @@ export const ContainerTokens = {
   PostsWorkbenchRepository: Symbol('PostsWorkbenchRepository'),
   // Same aliasing story as the headers demo (POSTS_WORKBENCH_DEMO_USE_CASE).
   GetPostsWorkbenchDemoUseCase: POSTS_WORKBENCH_DEMO_USE_CASE,
+  WebhookSimulatorApi: Symbol('WebhookSimulatorApi'),
+  WebhookSimulatorRepository: Symbol('WebhookSimulatorRepository'),
+  // Same aliasing story as the headers demo (WEBHOOK_SIMULATOR_DEMO_USE_CASE).
+  GetWebhookSimulatorDemoUseCase: WEBHOOK_SIMULATOR_DEMO_USE_CASE,
 } as const;
 
 class Container {
@@ -396,6 +407,16 @@ class Container {
     this.register(
       ContainerTokens.GetPostsWorkbenchDemoUseCase,
       new GetPostsWorkbenchDemoUseCase(this.postsWorkbenchRepository),
+    );
+
+    this.register(ContainerTokens.WebhookSimulatorApi, new WebhookSimulatorApi(config));
+    this.register(
+      ContainerTokens.WebhookSimulatorRepository,
+      new WebhookSimulatorRepositoryImpl(this.webhookSimulatorApi),
+    );
+    this.register(
+      ContainerTokens.GetWebhookSimulatorDemoUseCase,
+      new GetWebhookSimulatorDemoUseCase(this.webhookSimulatorRepository),
     );
   }
 
@@ -631,6 +652,20 @@ class Container {
 
   get getPostsWorkbenchDemoUseCase(): GetPostsWorkbenchDemoUseCase {
     return this.resolve<GetPostsWorkbenchDemoUseCase>(ContainerTokens.GetPostsWorkbenchDemoUseCase);
+  }
+
+  get webhookSimulatorApi(): WebhookSimulatorApi {
+    return this.resolve<WebhookSimulatorApi>(ContainerTokens.WebhookSimulatorApi);
+  }
+
+  get webhookSimulatorRepository(): WebhookSimulatorRepository {
+    return this.resolve<WebhookSimulatorRepository>(ContainerTokens.WebhookSimulatorRepository);
+  }
+
+  get getWebhookSimulatorDemoUseCase(): GetWebhookSimulatorDemoUseCase {
+    return this.resolve<GetWebhookSimulatorDemoUseCase>(
+      ContainerTokens.GetWebhookSimulatorDemoUseCase,
+    );
   }
 
   // ---- wiring helpers ----

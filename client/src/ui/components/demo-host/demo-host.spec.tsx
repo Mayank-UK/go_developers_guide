@@ -55,9 +55,10 @@ describe('DemoHost', () => {
     // Grows topic by topic (Phase 3+: one lazy entry per demo block id);
     // unknown ids still degrade to the friendly card above. Landed so far:
     // Phase 3 fundamentals (runtime-types, concurrency, headers, app-info,
-    // matrix, context, race) plus the Phase 4 request-handling set
-    // (routing explorer, middleware pipeline, reqres inspector + methods,
-    // validation arena) and the Phase 5 api-design posts workbench.
+    // matrix, context, race), the Phase 4 request-handling set (routing
+    // explorer, middleware pipeline, reqres inspector + methods, validation
+    // arena), the Phase 5 api-design posts workbench, and the webhooks
+    // topic's webhook simulator (api-documentation + graphql land later).
     expect(Object.keys(demoRegistry)).toEqual([
       'go:runtime-types',
       'runtime:concurrency',
@@ -72,6 +73,7 @@ describe('DemoHost', () => {
       'reqres:methods',
       'validation:arena',
       'api:posts-workbench',
+      'api:webhook-simulator',
     ]);
   });
 });
