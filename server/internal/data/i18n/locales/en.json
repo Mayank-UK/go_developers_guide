@@ -1,0 +1,12 @@
+{
+  "demo.greeting": {
+    "other": "Welcome back, {name}!"
+  },
+  "demo.new_posts": {
+    "one": "You have {count} new post in your feed.",
+    "other": "You have {count} new posts in your feed."
+  },
+  "demo.published_at": {
+    "other": "Published {date} at {time} ({zone})."
+  }
+}

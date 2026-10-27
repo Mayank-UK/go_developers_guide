@@ -1,0 +1,12 @@
+{
+  "demo.greeting": {
+    "other": "Bienvenue, {name} !"
+  },
+  "demo.new_posts": {
+    "one": "Tu as {count} nouvelle publication dans ton fil.",
+    "other": "Tu as {count} nouvelles publications dans ton fil."
+  },
+  "demo.published_at": {
+    "other": "Publié le {date} à {time} ({zone})."
+  }
+}

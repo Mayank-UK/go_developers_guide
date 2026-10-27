@@ -1,0 +1,11 @@
+{
+  "demo.greeting": {
+    "other": "おかえりなさい、{name}さん！"
+  },
+  "demo.new_posts": {
+    "other": "フィードに新しい投稿が{count}件あります。"
+  },
+  "demo.published_at": {
+    "other": "{date} {time}（{zone}）に公開しました。"
+  }
+}
