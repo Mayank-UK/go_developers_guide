@@ -110,9 +110,14 @@ const ArchTracerDemo = lazy(() => import('./arch/tracer_demo'));
 const ObsViewerDemo = lazy(() => import('./obs/viewer_demo'));
 const ObsTraceDemo = lazy(() => import('./obs/trace_demo'));
 // The testing topic's runner: a real, bounded `go test -json` run over
-// a curated set of the repo's own packages, executed once at boot and
+// a curated set of the repo's packages, executed once at boot and
 // served as a parsed timeline — one lazy entry like every other.
 const TestingRunnerDemo = lazy(() => import('./testing/runner_demo'));
+// The debugging topic's stall: a real wedge per request — one worker
+// of a bounded set stuck on a channel receive — captured from the
+// process's own goroutine profile and released before the response
+// returns; one lazy entry like every other.
+const DebugStallDemo = lazy(() => import('./debug/stall_demo'));
 
 export const demoRegistry: DemoRegistry = {
   'go:runtime-types': RuntimeTypesDemo,
@@ -167,4 +172,5 @@ export const demoRegistry: DemoRegistry = {
   'obs:viewer': ObsViewerDemo,
   'obs:trace': ObsTraceDemo,
   'testing:runner': TestingRunnerDemo,
+  'debug:stall': DebugStallDemo,
 };

@@ -65,7 +65,7 @@ describe('DemoHost', () => {
     // authentication topic's seven story demos), and the Phase 8-9 sets
     // (files workbench, i18n negotiator, realtime pair, jobs console,
     // errors explorer, deps manifest, arch tracer, the slog viewer,
-    // the trace round-trip, and the testing runner).
+    // the trace round-trip, the testing runner, and the debug stall).
     expect(Object.keys(demoRegistry)).toEqual([
       'go:runtime-types',
       'runtime:concurrency',
@@ -119,6 +119,7 @@ describe('DemoHost', () => {
       'obs:viewer',
       'obs:trace',
       'testing:runner',
+      'debug:stall',
     ]);
   });
 });

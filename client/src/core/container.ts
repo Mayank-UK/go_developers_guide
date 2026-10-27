@@ -334,6 +334,13 @@ import {
   GetTestingRunnerDemoUseCase,
   TESTING_RUNNER_DEMO_USE_CASE,
 } from '../domain/demo/get-testing-runner-demo-usecase';
+import { DebugStallApi } from '../data/demo/debug-stall-api';
+import { DebugStallRepositoryImpl } from '../data/demo/debug-stall-repository-impl';
+import type { DebugStallRepository } from '../domain/demo/debug-stall-repository';
+import {
+  GetDebugStallDemoUseCase,
+  DEBUG_STALL_DEMO_USE_CASE,
+} from '../domain/demo/get-debug-stall-demo-usecase';
 
 /**
  * Service-locator container — this client's composition root, mirroring the
@@ -551,6 +558,10 @@ export const ContainerTokens = {
   TestingRunnerRepository: Symbol('TestingRunnerRepository'),
   // Same aliasing story as the auth stories (TESTING_RUNNER_DEMO_USE_CASE).
   GetTestingRunnerDemoUseCase: TESTING_RUNNER_DEMO_USE_CASE,
+  DebugStallApi: Symbol('DebugStallApi'),
+  DebugStallRepository: Symbol('DebugStallRepository'),
+  // Same aliasing story as the auth stories (DEBUG_STALL_DEMO_USE_CASE).
+  GetDebugStallDemoUseCase: DEBUG_STALL_DEMO_USE_CASE,
 } as const;
 
 class Container {
@@ -1078,6 +1089,17 @@ class Container {
     this.register(
       ContainerTokens.GetTestingRunnerDemoUseCase,
       new GetTestingRunnerDemoUseCase(this.testingRunnerRepository),
+    );
+
+    // Topic 35's debug stall — the same shape once more.
+    this.register(ContainerTokens.DebugStallApi, new DebugStallApi(config));
+    this.register(
+      ContainerTokens.DebugStallRepository,
+      new DebugStallRepositoryImpl(this.debugStallApi),
+    );
+    this.register(
+      ContainerTokens.GetDebugStallDemoUseCase,
+      new GetDebugStallDemoUseCase(this.debugStallRepository),
     );
   }
 
@@ -1677,6 +1699,20 @@ class Container {
   get getTestingRunnerDemoUseCase(): GetTestingRunnerDemoUseCase {
     return this.resolve<GetTestingRunnerDemoUseCase>(
       ContainerTokens.GetTestingRunnerDemoUseCase,
+    );
+  }
+
+  get debugStallApi(): DebugStallApi {
+    return this.resolve<DebugStallApi>(ContainerTokens.DebugStallApi);
+  }
+
+  get debugStallRepository(): DebugStallRepository {
+    return this.resolve<DebugStallRepository>(ContainerTokens.DebugStallRepository);
+  }
+
+  get getDebugStallDemoUseCase(): GetDebugStallDemoUseCase {
+    return this.resolve<GetDebugStallDemoUseCase>(
+      ContainerTokens.GetDebugStallDemoUseCase,
     );
   }
 

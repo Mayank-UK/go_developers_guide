@@ -402,6 +402,15 @@ func run() error {
 	testingRunner.Start()
 	mux.Handle("GET /api/demo/testing/runner", testingRunner)
 
+	// Topic 35's stall: one real wedge per request — a bounded worker
+	// set with one goroutine stuck on a channel receive — captured from
+	// this process's own goroutine profile (the same profile the
+	// /internal/ endpoints serve), parsed into the stuck stack with a
+	// healthy contrast, and RELEASED before the response returns; every
+	// internal wait is bounded, so the demo can never wedge its own
+	// request.
+	mux.Handle("GET /api/demo/debug/stall", presentation.NewDebugStallHandler(logger))
+
 	// The posts resource — the api-design topic's real API surface, and
 	// the substrate later topics reuse (authorization guards its ids,
 	// webhooks fire on its writes, the docs topics document its routes).
