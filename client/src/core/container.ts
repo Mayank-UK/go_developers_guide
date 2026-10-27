@@ -292,6 +292,13 @@ import {
   GetJobsConsoleDemoUseCase,
   JOBS_CONSOLE_DEMO_USE_CASE,
 } from '../domain/demo/get-jobs-console-demo-usecase';
+import { ErrorsExplorerApi } from '../data/demo/errors-explorer-api';
+import { ErrorsExplorerRepositoryImpl } from '../data/demo/errors-explorer-repository-impl';
+import type { ErrorsExplorerRepository } from '../domain/demo/errors-explorer-repository';
+import {
+  GetErrorsExplorerDemoUseCase,
+  ERRORS_EXPLORER_DEMO_USE_CASE,
+} from '../domain/demo/get-errors-explorer-demo-usecase';
 
 /**
  * Service-locator container — this client's composition root, mirroring the
@@ -485,6 +492,10 @@ export const ContainerTokens = {
   JobsConsoleRepository: Symbol('JobsConsoleRepository'),
   // Same aliasing story as the auth stories (JOBS_CONSOLE_DEMO_USE_CASE).
   GetJobsConsoleDemoUseCase: JOBS_CONSOLE_DEMO_USE_CASE,
+  ErrorsExplorerApi: Symbol('ErrorsExplorerApi'),
+  ErrorsExplorerRepository: Symbol('ErrorsExplorerRepository'),
+  // Same aliasing story as the auth stories (ERRORS_EXPLORER_DEMO_USE_CASE).
+  GetErrorsExplorerDemoUseCase: ERRORS_EXPLORER_DEMO_USE_CASE,
 } as const;
 
 class Container {
@@ -948,6 +959,17 @@ class Container {
     this.register(
       ContainerTokens.GetJobsConsoleDemoUseCase,
       new GetJobsConsoleDemoUseCase(this.jobsConsoleRepository),
+    );
+
+    // Topic 30's errors explorer — the same shape once more.
+    this.register(ContainerTokens.ErrorsExplorerApi, new ErrorsExplorerApi(config));
+    this.register(
+      ContainerTokens.ErrorsExplorerRepository,
+      new ErrorsExplorerRepositoryImpl(this.errorsExplorerApi),
+    );
+    this.register(
+      ContainerTokens.GetErrorsExplorerDemoUseCase,
+      new GetErrorsExplorerDemoUseCase(this.errorsExplorerRepository),
     );
   }
 
@@ -1463,6 +1485,20 @@ class Container {
   get getJobsConsoleDemoUseCase(): GetJobsConsoleDemoUseCase {
     return this.resolve<GetJobsConsoleDemoUseCase>(
       ContainerTokens.GetJobsConsoleDemoUseCase,
+    );
+  }
+
+  get errorsExplorerApi(): ErrorsExplorerApi {
+    return this.resolve<ErrorsExplorerApi>(ContainerTokens.ErrorsExplorerApi);
+  }
+
+  get errorsExplorerRepository(): ErrorsExplorerRepository {
+    return this.resolve<ErrorsExplorerRepository>(ContainerTokens.ErrorsExplorerRepository);
+  }
+
+  get getErrorsExplorerDemoUseCase(): GetErrorsExplorerDemoUseCase {
+    return this.resolve<GetErrorsExplorerDemoUseCase>(
+      ContainerTokens.GetErrorsExplorerDemoUseCase,
     );
   }
 

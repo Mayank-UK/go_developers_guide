@@ -110,6 +110,7 @@ describe('DemoHost', () => {
       'realtime:ticker',
       'realtime:chat',
       'jobs:console',
+      'errors:explorer',
     ]);
   });
 });

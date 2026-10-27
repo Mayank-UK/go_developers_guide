@@ -92,6 +92,9 @@ const I18nNegotiatorDemo = lazy(() => import('./i18n/negotiator_demo'));
 const RealtimeTickerDemo = lazy(() => import('./realtime/ticker_demo'));
 const RealtimeChatDemo = lazy(() => import('./realtime/chat_demo'));
 const JobsConsoleDemo = lazy(() => import('./jobs/console_demo'));
+// The error-handling explorer walks the scenario-honoring probe live —
+// the topic's failure-injection demo, one lazy entry like every other.
+const ErrorsExplorerDemo = lazy(() => import('./errors/explorer_demo'));
 
 export const demoRegistry: DemoRegistry = {
   'go:runtime-types': RuntimeTypesDemo,
@@ -140,4 +143,5 @@ export const demoRegistry: DemoRegistry = {
   'realtime:ticker': RealtimeTickerDemo,
   'realtime:chat': RealtimeChatDemo,
   'jobs:console': JobsConsoleDemo,
+  'errors:explorer': ErrorsExplorerDemo,
 };

@@ -315,6 +315,16 @@ func run() error {
 	mux.Handle("GET /api/demo/jobs/console",
 		presentation.NewJobsConsoleHandler(jobsdata.NewConsoleStoryRunner(redisClient), logger))
 
+	// Topic 30's error-handling pair: the explorer narrates the taxonomy
+	// and walks the scenario-honoring probe live through the production
+	// middleware chain, and the probe IS the teaching — it answers
+	// healthy, or the deliberate panic the recovery layer converts into
+	// the 500 envelope, or the latency injection slept out before 200.
+	mux.Handle("GET /api/demo/errors/explorer",
+		presentation.NewErrorsExplorerHandler(scenarioStore, logger))
+	mux.Handle("GET /api/demo/errors/probe",
+		presentation.NewErrorsProbeHandler(scenarioStore))
+
 	// The posts resource — the api-design topic's real API surface, and
 	// the substrate later topics reuse (authorization guards its ids,
 	// webhooks fire on its writes, the docs topics document its routes).

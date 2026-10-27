@@ -406,13 +406,17 @@ func NewProductionRegistry() (Registry, error) {
 	if err != nil {
 		return Registry{}, fmt.Errorf("build background-jobs topic: %w", err)
 	}
+	errorHandling, err := errorHandlingTopic()
+	if err != nil {
+		return Registry{}, fmt.Errorf("build error-handling topic: %w", err)
+	}
 	return NewRegistry(
 		[]Topic{
 			goLanguage, goRuntime, httpWeb, goHTTPFundamentals, interfacesComposition,
 			goroutinesChannels, routing, middleware, requestResponse, validation, apiDesign,
 			apiDocumentation, graphql, webhooks, grpc, sqlSchema, databasesSQL, sqlcGorm,
 			mongodb, redis, caching, messaging, authentication, authorization, security,
-			filesMedia, internationalization, realtime, backgroundJobs,
+			filesMedia, internationalization, realtime, backgroundJobs, errorHandling,
 		},
 		groups,
 	)
