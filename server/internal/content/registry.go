@@ -414,6 +414,10 @@ func NewProductionRegistry() (Registry, error) {
 	if err != nil {
 		return Registry{}, fmt.Errorf("build dependency-management topic: %w", err)
 	}
+	architecture, err := architectureTopic()
+	if err != nil {
+		return Registry{}, fmt.Errorf("build architecture topic: %w", err)
+	}
 	return NewRegistry(
 		[]Topic{
 			goLanguage, goRuntime, httpWeb, goHTTPFundamentals, interfacesComposition,
@@ -421,7 +425,7 @@ func NewProductionRegistry() (Registry, error) {
 			apiDocumentation, graphql, webhooks, grpc, sqlSchema, databasesSQL, sqlcGorm,
 			mongodb, redis, caching, messaging, authentication, authorization, security,
 			filesMedia, internationalization, realtime, backgroundJobs, errorHandling,
-			dependencyManagement,
+			dependencyManagement, architecture,
 		},
 		groups,
 	)

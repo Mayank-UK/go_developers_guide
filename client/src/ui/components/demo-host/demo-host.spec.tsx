@@ -64,7 +64,7 @@ describe('DemoHost', () => {
     // caching lab, the messaging stream + outbox pair, and the
     // authentication topic's seven story demos), and the Phase 8-9 sets
     // (files workbench, i18n negotiator, realtime pair, jobs console,
-    // errors explorer, deps manifest).
+    // errors explorer, deps manifest, arch tracer).
     expect(Object.keys(demoRegistry)).toEqual([
       'go:runtime-types',
       'runtime:concurrency',
@@ -114,6 +114,7 @@ describe('DemoHost', () => {
       'jobs:console',
       'errors:explorer',
       'deps:manifest',
+      'arch:tracer',
     ]);
   });
 });

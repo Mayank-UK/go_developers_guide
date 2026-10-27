@@ -99,6 +99,10 @@ const ErrorsExplorerDemo = lazy(() => import('./errors/explorer_demo'));
 // build info and runs the real govulncheck when it can — one lazy
 // entry like every other.
 const DepsManifestDemo = lazy(() => import('./deps/manifest_demo'));
+// The architecture tracer walks one real posts request through the
+// layers with recorders at the seams — the timeline the topic draws,
+// one lazy entry like every other.
+const ArchTracerDemo = lazy(() => import('./arch/tracer_demo'));
 
 export const demoRegistry: DemoRegistry = {
   'go:runtime-types': RuntimeTypesDemo,
@@ -149,4 +153,5 @@ export const demoRegistry: DemoRegistry = {
   'jobs:console': JobsConsoleDemo,
   'errors:explorer': ErrorsExplorerDemo,
   'deps:manifest': DepsManifestDemo,
+  'arch:tracer': ArchTracerDemo,
 };

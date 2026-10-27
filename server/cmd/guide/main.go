@@ -341,6 +341,20 @@ func run() error {
 	mux.Handle("GET /api/demo/deps/manifest",
 		presentation.NewDepsManifestHandler(depsModuleDir, logger))
 
+	// Topic 32's architecture tracer: the SAME chain the posts API serves
+	// — middleware → thin handler → use case → port → adapter — with
+	// recorders at the seams, walked live on every request. The leaf
+	// recorders sit INSIDE the switching facade (one per adapter), so the
+	// timeline's data hop is the store that actually answered under the
+	// scenario's current mode.
+	archSink := demos.NewArchTraceSink(time.Now)
+	archFake := demos.NewArchTraceRecorder(postsdata.NewInMemoryRepository(), demos.ArchDataInMemoryHop, archSink)
+	archLive := demos.NewArchTraceRecorder(postsdata.NewPostgresRepository(pool), demos.ArchDataPostgresHop, archSink)
+	archRepo := postsdata.NewSwitchingRepository(scenarioStore, archFake, archLive)
+	archList := posts.NewListPostsUseCase(demos.NewArchTraceRecorder(archRepo, demos.ArchDomainHop, archSink))
+	mux.Handle("GET /api/demo/arch/tracer",
+		presentation.NewArchTracerHandler(scenarioStore, archList, archSink, logger))
+
 	// The posts resource — the api-design topic's real API surface, and
 	// the substrate later topics reuse (authorization guards its ids,
 	// webhooks fire on its writes, the docs topics document its routes).

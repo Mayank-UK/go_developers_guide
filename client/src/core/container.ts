@@ -306,6 +306,13 @@ import {
   GetDepsManifestDemoUseCase,
   DEPS_MANIFEST_DEMO_USE_CASE,
 } from '../domain/demo/get-deps-manifest-demo-usecase';
+import { ArchTracerApi } from '../data/demo/arch-tracer-api';
+import { ArchTracerRepositoryImpl } from '../data/demo/arch-tracer-repository-impl';
+import type { ArchTracerRepository } from '../domain/demo/arch-tracer-repository';
+import {
+  GetArchTracerDemoUseCase,
+  ARCH_TRACER_DEMO_USE_CASE,
+} from '../domain/demo/get-arch-tracer-demo-usecase';
 
 /**
  * Service-locator container — this client's composition root, mirroring the
@@ -507,6 +514,10 @@ export const ContainerTokens = {
   DepsManifestRepository: Symbol('DepsManifestRepository'),
   // Same aliasing story as the auth stories (DEPS_MANIFEST_DEMO_USE_CASE).
   GetDepsManifestDemoUseCase: DEPS_MANIFEST_DEMO_USE_CASE,
+  ArchTracerApi: Symbol('ArchTracerApi'),
+  ArchTracerRepository: Symbol('ArchTracerRepository'),
+  // Same aliasing story as the auth stories (ARCH_TRACER_DEMO_USE_CASE).
+  GetArchTracerDemoUseCase: ARCH_TRACER_DEMO_USE_CASE,
 } as const;
 
 class Container {
@@ -992,6 +1003,17 @@ class Container {
     this.register(
       ContainerTokens.GetDepsManifestDemoUseCase,
       new GetDepsManifestDemoUseCase(this.depsManifestRepository),
+    );
+
+    // Topic 32's architecture tracer — the same shape once more.
+    this.register(ContainerTokens.ArchTracerApi, new ArchTracerApi(config));
+    this.register(
+      ContainerTokens.ArchTracerRepository,
+      new ArchTracerRepositoryImpl(this.archTracerApi),
+    );
+    this.register(
+      ContainerTokens.GetArchTracerDemoUseCase,
+      new GetArchTracerDemoUseCase(this.archTracerRepository),
     );
   }
 
@@ -1535,6 +1557,20 @@ class Container {
   get getDepsManifestDemoUseCase(): GetDepsManifestDemoUseCase {
     return this.resolve<GetDepsManifestDemoUseCase>(
       ContainerTokens.GetDepsManifestDemoUseCase,
+    );
+  }
+
+  get archTracerApi(): ArchTracerApi {
+    return this.resolve<ArchTracerApi>(ContainerTokens.ArchTracerApi);
+  }
+
+  get archTracerRepository(): ArchTracerRepository {
+    return this.resolve<ArchTracerRepository>(ContainerTokens.ArchTracerRepository);
+  }
+
+  get getArchTracerDemoUseCase(): GetArchTracerDemoUseCase {
+    return this.resolve<GetArchTracerDemoUseCase>(
+      ContainerTokens.GetArchTracerDemoUseCase,
     );
   }
 
