@@ -95,6 +95,10 @@ const JobsConsoleDemo = lazy(() => import('./jobs/console_demo'));
 // The error-handling explorer walks the scenario-honoring probe live —
 // the topic's failure-injection demo, one lazy entry like every other.
 const ErrorsExplorerDemo = lazy(() => import('./errors/explorer_demo'));
+// The dependency manifest puts go.mod beside the serving binary's own
+// build info and runs the real govulncheck when it can — one lazy
+// entry like every other.
+const DepsManifestDemo = lazy(() => import('./deps/manifest_demo'));
 
 export const demoRegistry: DemoRegistry = {
   'go:runtime-types': RuntimeTypesDemo,
@@ -144,4 +148,5 @@ export const demoRegistry: DemoRegistry = {
   'realtime:chat': RealtimeChatDemo,
   'jobs:console': JobsConsoleDemo,
   'errors:explorer': ErrorsExplorerDemo,
+  'deps:manifest': DepsManifestDemo,
 };

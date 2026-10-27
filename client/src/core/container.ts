@@ -299,6 +299,13 @@ import {
   GetErrorsExplorerDemoUseCase,
   ERRORS_EXPLORER_DEMO_USE_CASE,
 } from '../domain/demo/get-errors-explorer-demo-usecase';
+import { DepsManifestApi } from '../data/demo/deps-manifest-api';
+import { DepsManifestRepositoryImpl } from '../data/demo/deps-manifest-repository-impl';
+import type { DepsManifestRepository } from '../domain/demo/deps-manifest-repository';
+import {
+  GetDepsManifestDemoUseCase,
+  DEPS_MANIFEST_DEMO_USE_CASE,
+} from '../domain/demo/get-deps-manifest-demo-usecase';
 
 /**
  * Service-locator container — this client's composition root, mirroring the
@@ -496,6 +503,10 @@ export const ContainerTokens = {
   ErrorsExplorerRepository: Symbol('ErrorsExplorerRepository'),
   // Same aliasing story as the auth stories (ERRORS_EXPLORER_DEMO_USE_CASE).
   GetErrorsExplorerDemoUseCase: ERRORS_EXPLORER_DEMO_USE_CASE,
+  DepsManifestApi: Symbol('DepsManifestApi'),
+  DepsManifestRepository: Symbol('DepsManifestRepository'),
+  // Same aliasing story as the auth stories (DEPS_MANIFEST_DEMO_USE_CASE).
+  GetDepsManifestDemoUseCase: DEPS_MANIFEST_DEMO_USE_CASE,
 } as const;
 
 class Container {
@@ -970,6 +981,17 @@ class Container {
     this.register(
       ContainerTokens.GetErrorsExplorerDemoUseCase,
       new GetErrorsExplorerDemoUseCase(this.errorsExplorerRepository),
+    );
+
+    // Topic 31's deps manifest — the classic single-demo triple.
+    this.register(ContainerTokens.DepsManifestApi, new DepsManifestApi(config));
+    this.register(
+      ContainerTokens.DepsManifestRepository,
+      new DepsManifestRepositoryImpl(this.depsManifestApi),
+    );
+    this.register(
+      ContainerTokens.GetDepsManifestDemoUseCase,
+      new GetDepsManifestDemoUseCase(this.depsManifestRepository),
     );
   }
 
@@ -1499,6 +1521,20 @@ class Container {
   get getErrorsExplorerDemoUseCase(): GetErrorsExplorerDemoUseCase {
     return this.resolve<GetErrorsExplorerDemoUseCase>(
       ContainerTokens.GetErrorsExplorerDemoUseCase,
+    );
+  }
+
+  get depsManifestApi(): DepsManifestApi {
+    return this.resolve<DepsManifestApi>(ContainerTokens.DepsManifestApi);
+  }
+
+  get depsManifestRepository(): DepsManifestRepository {
+    return this.resolve<DepsManifestRepository>(ContainerTokens.DepsManifestRepository);
+  }
+
+  get getDepsManifestDemoUseCase(): GetDepsManifestDemoUseCase {
+    return this.resolve<GetDepsManifestDemoUseCase>(
+      ContainerTokens.GetDepsManifestDemoUseCase,
     );
   }
 

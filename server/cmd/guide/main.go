@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 	"time"
 
@@ -324,6 +325,21 @@ func run() error {
 		presentation.NewErrorsExplorerHandler(scenarioStore, logger))
 	mux.Handle("GET /api/demo/errors/probe",
 		presentation.NewErrorsProbeHandler(scenarioStore))
+
+	// Topic 31's dependency manifest: the module's own go.mod parsed
+	// live beside the serving binary's build info, the tools/deps.go
+	// anchors, the Docker cache volumes, and a govulncheck scan that
+	// runs for real when the source tree sits beside the process (the
+	// dev container: `go run` from server/) and degrades honestly when
+	// it does not (the distroless prod image ships no sources).
+	depsModuleDir := ""
+	if wd, wdErr := os.Getwd(); wdErr == nil {
+		if _, statErr := os.Stat(filepath.Join(wd, "go.mod")); statErr == nil {
+			depsModuleDir = wd
+		}
+	}
+	mux.Handle("GET /api/demo/deps/manifest",
+		presentation.NewDepsManifestHandler(depsModuleDir, logger))
 
 	// The posts resource — the api-design topic's real API surface, and
 	// the substrate later topics reuse (authorization guards its ids,
