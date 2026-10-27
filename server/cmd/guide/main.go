@@ -18,6 +18,7 @@ import (
 
 	"guide/internal/content"
 	"guide/internal/core"
+	"guide/internal/data/cachinglab"
 	"guide/internal/data/db"
 	"guide/internal/data/mongodb"
 	"guide/internal/data/ormprobe"
@@ -172,6 +173,13 @@ func run() error {
 		"GET /api/demo/redis/playground",
 		presentation.NewRedisPlaygroundHandler(redis.NewPlaygroundRunner(redisClient), logger),
 	)
+
+	// Topic 21's caching lab: the REAL cache-aside decorator on throwaway
+	// stores — cold/warm beats, write invalidation, TTL expiry on a fixture
+	// clock, the coalesced herd, and the fake/live store swap — on a payload
+	// deterministic enough to carry a strong ETag and answer a replayed
+	// If-None-Match with an honest 304.
+	mux.Handle("GET /api/demo/caching/lab", presentation.NewCachingLabHandler(cachinglab.New(), logger))
 
 	// The posts resource — the api-design topic's real API surface, and
 	// the substrate later topics reuse (authorization guards its ids,

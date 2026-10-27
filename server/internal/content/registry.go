@@ -370,12 +370,16 @@ func NewProductionRegistry() (Registry, error) {
 	if err != nil {
 		return Registry{}, fmt.Errorf("build redis topic: %w", err)
 	}
+	caching, err := cachingTopic()
+	if err != nil {
+		return Registry{}, fmt.Errorf("build caching topic: %w", err)
+	}
 	return NewRegistry(
 		[]Topic{
 			goLanguage, goRuntime, httpWeb, goHTTPFundamentals, interfacesComposition,
 			goroutinesChannels, routing, middleware, requestResponse, validation, apiDesign,
 			apiDocumentation, graphql, webhooks, grpc, sqlSchema, databasesSQL, sqlcGorm,
-			mongodb, redis,
+			mongodb, redis, caching,
 		},
 		groups,
 	)

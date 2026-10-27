@@ -211,6 +211,13 @@ import {
   GetRedisPlaygroundDemoUseCase,
   REDIS_PLAYGROUND_DEMO_USE_CASE,
 } from '../domain/demo/get-redis-playground-demo-usecase';
+import { CachingLabApi } from '../data/demo/caching-lab-api';
+import { CachingLabRepositoryImpl } from '../data/demo/caching-lab-repository-impl';
+import type { CachingLabRepository } from '../domain/demo/caching-lab-repository';
+import {
+  GetCachingLabDemoUseCase,
+  CACHING_LAB_DEMO_USE_CASE,
+} from '../domain/demo/get-caching-lab-demo-usecase';
 
 /**
  * Service-locator container — this client's composition root, mirroring the
@@ -369,6 +376,10 @@ export const ContainerTokens = {
   RedisPlaygroundRepository: Symbol('RedisPlaygroundRepository'),
   // Same aliasing story as the headers demo (REDIS_PLAYGROUND_DEMO_USE_CASE).
   GetRedisPlaygroundDemoUseCase: REDIS_PLAYGROUND_DEMO_USE_CASE,
+  CachingLabApi: Symbol('CachingLabApi'),
+  CachingLabRepository: Symbol('CachingLabRepository'),
+  // Same aliasing story as the headers demo (CACHING_LAB_DEMO_USE_CASE).
+  GetCachingLabDemoUseCase: CACHING_LAB_DEMO_USE_CASE,
 } as const;
 
 class Container {
@@ -732,6 +743,16 @@ class Container {
     this.register(
       ContainerTokens.GetRedisPlaygroundDemoUseCase,
       new GetRedisPlaygroundDemoUseCase(this.redisPlaygroundRepository),
+    );
+
+    this.register(ContainerTokens.CachingLabApi, new CachingLabApi(config));
+    this.register(
+      ContainerTokens.CachingLabRepository,
+      new CachingLabRepositoryImpl(this.cachingLabApi),
+    );
+    this.register(
+      ContainerTokens.GetCachingLabDemoUseCase,
+      new GetCachingLabDemoUseCase(this.cachingLabRepository),
     );
   }
 
@@ -1163,6 +1184,20 @@ class Container {
   get getRedisPlaygroundDemoUseCase(): GetRedisPlaygroundDemoUseCase {
     return this.resolve<GetRedisPlaygroundDemoUseCase>(
       ContainerTokens.GetRedisPlaygroundDemoUseCase,
+    );
+  }
+
+  get cachingLabApi(): CachingLabApi {
+    return this.resolve<CachingLabApi>(ContainerTokens.CachingLabApi);
+  }
+
+  get cachingLabRepository(): CachingLabRepository {
+    return this.resolve<CachingLabRepository>(ContainerTokens.CachingLabRepository);
+  }
+
+  get getCachingLabDemoUseCase(): GetCachingLabDemoUseCase {
+    return this.resolve<GetCachingLabDemoUseCase>(
+      ContainerTokens.GetCachingLabDemoUseCase,
     );
   }
 

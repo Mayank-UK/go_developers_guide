@@ -67,6 +67,7 @@ const AuditDemo = lazy(() => import('./db/audit_demo'));
 const ORMProbeDemo = lazy(() => import('./db/orm_probe_demo'));
 const MongoConsoleDemo = lazy(() => import('./db/mongo_console_demo'));
 const RedisPlaygroundDemo = lazy(() => import('./redis/playground_demo'));
+const CachingLabDemo = lazy(() => import('./caching/lab_demo'));
 
 export const demoRegistry: DemoRegistry = {
   'go:runtime-types': RuntimeTypesDemo,
@@ -97,4 +98,5 @@ export const demoRegistry: DemoRegistry = {
   'db:orm-probe': ORMProbeDemo,
   'db:mongo-console': MongoConsoleDemo,
   'redis:playground': RedisPlaygroundDemo,
+  'caching:lab': CachingLabDemo,
 };

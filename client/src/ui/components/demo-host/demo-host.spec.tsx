@@ -58,9 +58,10 @@ describe('DemoHost', () => {
     // matrix, context, race), the Phase 4 request-handling set (routing
     // explorer, middleware pipeline, reqres inspector + methods, validation
     // arena), the full Phase 5 apis set (posts workbench, webhook
-    // simulator, docs link, graphql playground, grpc console), and the
-    // Phase 6 data demos (schema explorer, uuid lab, the sql sextet, the
-    // orm probe, mongo console, redis playground).
+    // simulator, docs link, graphql playground, grpc console), the Phase 6
+    // data demos (schema explorer, uuid lab, the sql sextet, the orm probe,
+    // mongo console, redis playground), and the Phase 7 state demos (the
+    // caching lab).
     expect(Object.keys(demoRegistry)).toEqual([
       'go:runtime-types',
       'runtime:concurrency',
@@ -90,6 +91,7 @@ describe('DemoHost', () => {
       'db:orm-probe',
       'db:mongo-console',
       'redis:playground',
+      'caching:lab',
     ]);
   });
 });
