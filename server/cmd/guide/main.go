@@ -391,6 +391,17 @@ func run() error {
 	mux.Handle("GET /api/demo/obs/trace",
 		presentation.NewObsTraceHandler(posts.NewListPostsUseCase(obsPort), obsSpans, logger))
 
+	// Topic 34's testing runner: a real, bounded `go test -json` run over
+	// a curated set of this repo's own test packages, executed ONCE at
+	// boot in the background (single-flight like the dependency topic's
+	// govulncheck scan) so no request waits on a compiler; the endpoint
+	// serves the cached parsed timeline with its wall-clock age plus the
+	// suite's shape counted live from the source tree, and degrades to
+	// the typed 503 when the toolchain or tree is absent.
+	testingRunner := presentation.NewTestingRunnerHandler(depsModuleDir, logger)
+	testingRunner.Start()
+	mux.Handle("GET /api/demo/testing/runner", testingRunner)
+
 	// The posts resource — the api-design topic's real API surface, and
 	// the substrate later topics reuse (authorization guards its ids,
 	// webhooks fire on its writes, the docs topics document its routes).

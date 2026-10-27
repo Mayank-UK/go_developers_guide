@@ -327,6 +327,13 @@ import {
   GetObsTraceDemoUseCase,
   OBS_TRACE_DEMO_USE_CASE,
 } from '../domain/demo/get-obs-trace-demo-usecase';
+import { TestingRunnerApi } from '../data/demo/testing-runner-api';
+import { TestingRunnerRepositoryImpl } from '../data/demo/testing-runner-repository-impl';
+import type { TestingRunnerRepository } from '../domain/demo/testing-runner-repository';
+import {
+  GetTestingRunnerDemoUseCase,
+  TESTING_RUNNER_DEMO_USE_CASE,
+} from '../domain/demo/get-testing-runner-demo-usecase';
 
 /**
  * Service-locator container — this client's composition root, mirroring the
@@ -540,6 +547,10 @@ export const ContainerTokens = {
   ObsTraceRepository: Symbol('ObsTraceRepository'),
   // Same aliasing story as the auth stories (OBS_TRACE_DEMO_USE_CASE).
   GetObsTraceDemoUseCase: OBS_TRACE_DEMO_USE_CASE,
+  TestingRunnerApi: Symbol('TestingRunnerApi'),
+  TestingRunnerRepository: Symbol('TestingRunnerRepository'),
+  // Same aliasing story as the auth stories (TESTING_RUNNER_DEMO_USE_CASE).
+  GetTestingRunnerDemoUseCase: TESTING_RUNNER_DEMO_USE_CASE,
 } as const;
 
 class Container {
@@ -1056,6 +1067,17 @@ class Container {
     this.register(
       ContainerTokens.GetObsTraceDemoUseCase,
       new GetObsTraceDemoUseCase(this.obsTraceRepository),
+    );
+
+    // Topic 34's testing runner — the same shape once more.
+    this.register(ContainerTokens.TestingRunnerApi, new TestingRunnerApi(config));
+    this.register(
+      ContainerTokens.TestingRunnerRepository,
+      new TestingRunnerRepositoryImpl(this.testingRunnerApi),
+    );
+    this.register(
+      ContainerTokens.GetTestingRunnerDemoUseCase,
+      new GetTestingRunnerDemoUseCase(this.testingRunnerRepository),
     );
   }
 
@@ -1641,6 +1663,20 @@ class Container {
   get getObsTraceDemoUseCase(): GetObsTraceDemoUseCase {
     return this.resolve<GetObsTraceDemoUseCase>(
       ContainerTokens.GetObsTraceDemoUseCase,
+    );
+  }
+
+  get testingRunnerApi(): TestingRunnerApi {
+    return this.resolve<TestingRunnerApi>(ContainerTokens.TestingRunnerApi);
+  }
+
+  get testingRunnerRepository(): TestingRunnerRepository {
+    return this.resolve<TestingRunnerRepository>(ContainerTokens.TestingRunnerRepository);
+  }
+
+  get getTestingRunnerDemoUseCase(): GetTestingRunnerDemoUseCase {
+    return this.resolve<GetTestingRunnerDemoUseCase>(
+      ContainerTokens.GetTestingRunnerDemoUseCase,
     );
   }
 

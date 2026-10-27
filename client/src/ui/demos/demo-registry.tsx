@@ -109,6 +109,10 @@ const ArchTracerDemo = lazy(() => import('./arch/tracer_demo'));
 // tree out) — one lazy entry each, same as every other.
 const ObsViewerDemo = lazy(() => import('./obs/viewer_demo'));
 const ObsTraceDemo = lazy(() => import('./obs/trace_demo'));
+// The testing topic's runner: a real, bounded `go test -json` run over
+// a curated set of the repo's own packages, executed once at boot and
+// served as a parsed timeline — one lazy entry like every other.
+const TestingRunnerDemo = lazy(() => import('./testing/runner_demo'));
 
 export const demoRegistry: DemoRegistry = {
   'go:runtime-types': RuntimeTypesDemo,
@@ -162,4 +166,5 @@ export const demoRegistry: DemoRegistry = {
   'arch:tracer': ArchTracerDemo,
   'obs:viewer': ObsViewerDemo,
   'obs:trace': ObsTraceDemo,
+  'testing:runner': TestingRunnerDemo,
 };
