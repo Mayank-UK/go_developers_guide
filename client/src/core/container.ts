@@ -313,6 +313,20 @@ import {
   GetArchTracerDemoUseCase,
   ARCH_TRACER_DEMO_USE_CASE,
 } from '../domain/demo/get-arch-tracer-demo-usecase';
+import { ObsViewerApi } from '../data/demo/obs-viewer-api';
+import { ObsViewerRepositoryImpl } from '../data/demo/obs-viewer-repository-impl';
+import type { ObsViewerRepository } from '../domain/demo/obs-viewer-repository';
+import {
+  GetObsViewerDemoUseCase,
+  OBS_VIEWER_DEMO_USE_CASE,
+} from '../domain/demo/get-obs-viewer-demo-usecase';
+import { ObsTraceApi } from '../data/demo/obs-trace-api';
+import { ObsTraceRepositoryImpl } from '../data/demo/obs-trace-repository-impl';
+import type { ObsTraceRepository } from '../domain/demo/obs-trace-repository';
+import {
+  GetObsTraceDemoUseCase,
+  OBS_TRACE_DEMO_USE_CASE,
+} from '../domain/demo/get-obs-trace-demo-usecase';
 
 /**
  * Service-locator container — this client's composition root, mirroring the
@@ -518,6 +532,14 @@ export const ContainerTokens = {
   ArchTracerRepository: Symbol('ArchTracerRepository'),
   // Same aliasing story as the auth stories (ARCH_TRACER_DEMO_USE_CASE).
   GetArchTracerDemoUseCase: ARCH_TRACER_DEMO_USE_CASE,
+  ObsViewerApi: Symbol('ObsViewerApi'),
+  ObsViewerRepository: Symbol('ObsViewerRepository'),
+  // Same aliasing story as the auth stories (OBS_VIEWER_DEMO_USE_CASE).
+  GetObsViewerDemoUseCase: OBS_VIEWER_DEMO_USE_CASE,
+  ObsTraceApi: Symbol('ObsTraceApi'),
+  ObsTraceRepository: Symbol('ObsTraceRepository'),
+  // Same aliasing story as the auth stories (OBS_TRACE_DEMO_USE_CASE).
+  GetObsTraceDemoUseCase: OBS_TRACE_DEMO_USE_CASE,
 } as const;
 
 class Container {
@@ -1014,6 +1036,26 @@ class Container {
     this.register(
       ContainerTokens.GetArchTracerDemoUseCase,
       new GetArchTracerDemoUseCase(this.archTracerRepository),
+    );
+
+    // Topic 33's observability pair — the same shape once more.
+    this.register(ContainerTokens.ObsViewerApi, new ObsViewerApi(config));
+    this.register(
+      ContainerTokens.ObsViewerRepository,
+      new ObsViewerRepositoryImpl(this.obsViewerApi),
+    );
+    this.register(
+      ContainerTokens.GetObsViewerDemoUseCase,
+      new GetObsViewerDemoUseCase(this.obsViewerRepository),
+    );
+    this.register(ContainerTokens.ObsTraceApi, new ObsTraceApi(config));
+    this.register(
+      ContainerTokens.ObsTraceRepository,
+      new ObsTraceRepositoryImpl(this.obsTraceApi),
+    );
+    this.register(
+      ContainerTokens.GetObsTraceDemoUseCase,
+      new GetObsTraceDemoUseCase(this.obsTraceRepository),
     );
   }
 
@@ -1571,6 +1613,34 @@ class Container {
   get getArchTracerDemoUseCase(): GetArchTracerDemoUseCase {
     return this.resolve<GetArchTracerDemoUseCase>(
       ContainerTokens.GetArchTracerDemoUseCase,
+    );
+  }
+
+  get obsViewerApi(): ObsViewerApi {
+    return this.resolve<ObsViewerApi>(ContainerTokens.ObsViewerApi);
+  }
+
+  get obsViewerRepository(): ObsViewerRepository {
+    return this.resolve<ObsViewerRepository>(ContainerTokens.ObsViewerRepository);
+  }
+
+  get getObsViewerDemoUseCase(): GetObsViewerDemoUseCase {
+    return this.resolve<GetObsViewerDemoUseCase>(
+      ContainerTokens.GetObsViewerDemoUseCase,
+    );
+  }
+
+  get obsTraceApi(): ObsTraceApi {
+    return this.resolve<ObsTraceApi>(ContainerTokens.ObsTraceApi);
+  }
+
+  get obsTraceRepository(): ObsTraceRepository {
+    return this.resolve<ObsTraceRepository>(ContainerTokens.ObsTraceRepository);
+  }
+
+  get getObsTraceDemoUseCase(): GetObsTraceDemoUseCase {
+    return this.resolve<GetObsTraceDemoUseCase>(
+      ContainerTokens.GetObsTraceDemoUseCase,
     );
   }
 

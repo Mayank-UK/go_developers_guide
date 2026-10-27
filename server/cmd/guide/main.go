@@ -28,12 +28,14 @@ import (
 	jobsdata "guide/internal/data/jobs"
 	"guide/internal/data/messaging"
 	"guide/internal/data/mongodb"
+	obsdata "guide/internal/data/obs"
 	"guide/internal/data/ormprobe"
 	postsdata "guide/internal/data/posts"
 	"guide/internal/data/redis"
 	"guide/internal/data/security"
 	domauthz "guide/internal/domain/authorization"
 	"guide/internal/domain/demos"
+	domobs "guide/internal/domain/obs"
 	"guide/internal/domain/posts"
 	"guide/internal/domain/realtime"
 	"guide/internal/grpcapi"
@@ -355,6 +357,40 @@ func run() error {
 	mux.Handle("GET /api/demo/arch/tracer",
 		presentation.NewArchTracerHandler(scenarioStore, archList, archSink, logger))
 
+	// Topic 33's observability wiring — the production edge the topic
+	// teaches, all stdlib: /metrics serves the registry the middleware
+	// below feeds, readiness pings the stack's REAL dependencies inside
+	// bounded timeouts, and pprof rides a dedicated /internal/ path off
+	// the public root (one prefix for ops to fence, the runtime's own
+	// profiles inside).
+	metricsRegistry := domobs.NewMetricsRegistry()
+	httpRequests, httpDurations := presentation.RegisterHTTPMetrics(metricsRegistry)
+	mux.Handle("GET /metrics", presentation.NewMetricsHandler(metricsRegistry, logger))
+	mux.Handle("GET /api/ready", presentation.NewReadinessHandler([]domobs.DependencyCheck{
+		{Name: "postgres", Pinger: obsdata.NewPgxPinger(pool), Timeout: time.Second},
+		{Name: "redis", Pinger: obsdata.NewGoRedisPinger(redisClient), Timeout: time.Second},
+	}, logger))
+	mux.Handle("/internal/", presentation.NewInternalHandler())
+
+	// The slog viewer demo replays the REAL posts handlers over a fresh
+	// in-memory repository — scenario-independent by design, so the
+	// replayed 200 and 404 hold under every mode.
+	obsViewRepo := postsdata.NewInMemoryRepository()
+	mux.Handle("GET /api/demo/obs/viewer",
+		presentation.NewObsViewerHandler(
+			posts.NewListPostsUseCase(obsViewRepo),
+			posts.NewGetPostUseCase(obsViewRepo)))
+
+	// The trace-context demo walks the same posts list with spanning
+	// recorders at the seams — the leaf adapter inside, the domain's
+	// port boundary outside — under whatever traceparent the caller
+	// actually sent.
+	obsSpans := domobs.NewSpanRecorder(time.Now)
+	obsLeaf := demos.NewObsSpanningRepository(postsdata.NewInMemoryRepository(), "data", "InMemoryRepository", obsSpans)
+	obsPort := demos.NewObsSpanningRepository(obsLeaf, "domain", "PostsRepository", obsSpans)
+	mux.Handle("GET /api/demo/obs/trace",
+		presentation.NewObsTraceHandler(posts.NewListPostsUseCase(obsPort), obsSpans, logger))
+
 	// The posts resource — the api-design topic's real API surface, and
 	// the substrate later topics reuse (authorization guards its ids,
 	// webhooks fire on its writes, the docs topics document its routes).
@@ -415,6 +451,15 @@ func run() error {
 		presentation.Recover(logger),
 		presentation.EnvelopeMuxErrors(logger),
 	)(mux)
+
+	// Topic 33's observability edge wraps the finished chain from the
+	// OUTSIDE — no line inside the documented order above changes: the
+	// trace-context middleware propagates W3C traceparent end to end
+	// (accepted inbound, echoed outbound, malformed rejected to a fresh
+	// root), and the metrics middleware counts every request onto the
+	// bounded route-pattern labels /metrics serves.
+	handler = presentation.TraceContext(logger)(handler)
+	handler = presentation.MetricsMiddleware(httpRequests, httpDurations, mux)(handler)
 
 	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%d", cfg.Port),

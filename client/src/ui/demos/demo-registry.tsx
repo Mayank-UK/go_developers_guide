@@ -103,6 +103,12 @@ const DepsManifestDemo = lazy(() => import('./deps/manifest_demo'));
 // layers with recorders at the seams — the timeline the topic draws,
 // one lazy entry like every other.
 const ArchTracerDemo = lazy(() => import('./arch/tracer_demo'));
+// The observability topic's pair: the slog viewer (one real log line
+// dissected, the level gate computed, the request-id correlation
+// replayed) and the trace round-trip (your traceparent in, a span
+// tree out) — one lazy entry each, same as every other.
+const ObsViewerDemo = lazy(() => import('./obs/viewer_demo'));
+const ObsTraceDemo = lazy(() => import('./obs/trace_demo'));
 
 export const demoRegistry: DemoRegistry = {
   'go:runtime-types': RuntimeTypesDemo,
@@ -154,4 +160,6 @@ export const demoRegistry: DemoRegistry = {
   'errors:explorer': ErrorsExplorerDemo,
   'deps:manifest': DepsManifestDemo,
   'arch:tracer': ArchTracerDemo,
+  'obs:viewer': ObsViewerDemo,
+  'obs:trace': ObsTraceDemo,
 };
