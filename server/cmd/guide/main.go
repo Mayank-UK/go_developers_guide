@@ -22,6 +22,8 @@ import (
 	authzdata "guide/internal/data/authorization"
 	"guide/internal/data/cachinglab"
 	"guide/internal/data/db"
+	filesdata "guide/internal/data/files"
+	datai18n "guide/internal/data/i18n"
 	"guide/internal/data/messaging"
 	"guide/internal/data/mongodb"
 	"guide/internal/data/ormprobe"
@@ -31,6 +33,7 @@ import (
 	domauthz "guide/internal/domain/authorization"
 	"guide/internal/domain/demos"
 	"guide/internal/domain/posts"
+	"guide/internal/domain/realtime"
 	"guide/internal/grpcapi"
 	"guide/internal/presentation"
 )
@@ -255,6 +258,54 @@ func run() error {
 			presentation.RateLimit(securityConsole.RouteLimiter, logger),
 		)(presentation.NewSecurityPIIHandler(securityConsole, logger)))
 
+	// Topic 26's files workbench: real streaming routes over the local
+	// store — a bounded multipart upload, a Content-Disposition download
+	// that honors ranges, a stdlib thumbnail transform, and the story
+	// payload that narrates the same machinery.
+	filesConsole, err := filesdata.NewConsole()
+	if err != nil {
+		return fmt.Errorf("files console: %w", err)
+	}
+	mux.Handle("POST /api/demo/files/upload",
+		presentation.NewFilesUploadHandler(filesConsole.Store, filesConsole.UploadLimit, logger))
+	mux.Handle("GET /api/demo/files/download/{name...}",
+		presentation.NewFilesDownloadHandler(filesConsole.Store, logger))
+	mux.Handle("GET /api/demo/files/thumb/{name...}",
+		presentation.NewFilesThumbHandler(filesConsole.Store, logger))
+	mux.Handle("GET /api/demo/files/workbench",
+		presentation.NewFilesWorkbenchHandler(filesConsole, logger))
+
+	// Topic 27's negotiator reads the request's ACTUAL Accept-Language
+	// header and answers with the parsed candidates, the matched catalog,
+	// and the same message per locale.
+	datai18nConsole, err := datai18n.NewConsole()
+	if err != nil {
+		return fmt.Errorf("i18n console: %w", err)
+	}
+	mux.Handle("GET /api/demo/i18n/negotiator",
+		presentation.NewI18nNegotiatorHandler(datai18nConsole, logger))
+
+	// Topic 28's realtime pair: story payloads describe the mechanics,
+	// while the stream and room routes ARE the mechanics — one hub, one
+	// ticker feed broadcasting into the "ticker" room, SSE with
+	// Last-Event-ID replay, and a WebSocket chat room with a
+	// slow-consumer policy and honest close codes.
+	rtHub, err := realtime.NewHub(realtime.DefaultHubPolicy())
+	if err != nil {
+		return fmt.Errorf("realtime hub: %w", err)
+	}
+	rtFeed, err := realtime.NewTickerFeed(rtHub, "ticker", 64, realtime.FeedOptions{Interval: time.Second})
+	if err != nil {
+		return fmt.Errorf("realtime ticker feed: %w", err)
+	}
+	mux.Handle("GET /api/demo/realtime/ticker", presentation.NewRealtimeTickerStoryHandler())
+	mux.Handle("GET /api/demo/realtime/chat", presentation.NewRealtimeChatStoryHandler())
+	mux.Handle("GET /api/demo/realtime/ticker/stream",
+		presentation.NewRealtimeTickerStreamHandler(rtFeed, 3000, 15*time.Second, logger))
+	mux.Handle("GET /api/demo/realtime/chat/ws",
+		presentation.NewRealtimeChatHandler(rtHub, "chat", realtime.DefaultChatPolicy(),
+			[]string{"localhost:5175", "127.0.0.1:5175"}, logger))
+
 	// The posts resource — the api-design topic's real API surface, and
 	// the substrate later topics reuse (authorization guards its ids,
 	// webhooks fire on its writes, the docs topics document its routes).
@@ -330,6 +381,10 @@ func run() error {
 	// SIGINT/SIGTERM cancel ctx, which triggers the graceful shutdown path.
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
+
+	// The ticker feed broadcasts until the boot context's cancellation —
+	// the same signal path that drains the HTTP server below.
+	go rtFeed.Run(ctx)
 
 	serveErr := make(chan error, 1)
 	go func() {

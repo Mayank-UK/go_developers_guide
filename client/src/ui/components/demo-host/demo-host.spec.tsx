@@ -105,6 +105,10 @@ describe('DemoHost', () => {
       'authz:matrix',
       'security:lab',
       'security:pii',
+      'files:workbench',
+      'i18n:negotiator',
+      'realtime:ticker',
+      'realtime:chat',
     ]);
   });
 });

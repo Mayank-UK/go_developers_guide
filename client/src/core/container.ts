@@ -263,6 +263,28 @@ import {
   SECURITY_LAB_DEMO_USE_CASE,
   SECURITY_PII_DEMO_USE_CASE,
 } from '../domain/demo/get-security-story-demo-usecase';
+import { FilesStoryApi } from '../data/demo/files-story-api';
+import { FilesStoryRepositoryImpl } from '../data/demo/files-story-repository-impl';
+import { FILES_STORY_PATH } from '../data/demo/files-story-dto';
+import {
+  GetFilesWorkbenchDemoUseCase,
+  FILES_WORKBENCH_DEMO_USE_CASE,
+} from '../domain/demo/get-files-workbench-demo-usecase';
+import { I18nStoryApi } from '../data/demo/i18n-story-api';
+import { I18nStoryRepositoryImpl } from '../data/demo/i18n-story-repository-impl';
+import { I18N_STORY_PATH } from '../data/demo/i18n-story-dto';
+import {
+  GetI18nNegotiatorDemoUseCase,
+  I18N_NEGOTIATOR_DEMO_USE_CASE,
+} from '../domain/demo/get-i18n-negotiator-demo-usecase';
+import { RealtimeStoryApi } from '../data/demo/realtime-story-api';
+import { RealtimeStoryRepositoryImpl } from '../data/demo/realtime-story-repository-impl';
+import { REALTIME_STORY_PATHS } from '../data/demo/realtime-story-dto';
+import {
+  GetRealtimeStoryDemoUseCase,
+  REALTIME_TICKER_DEMO_USE_CASE,
+  REALTIME_CHAT_DEMO_USE_CASE,
+} from '../domain/demo/get-realtime-story-demo-usecase';
 
 /**
  * Service-locator container — this client's composition root, mirroring the
@@ -447,6 +469,11 @@ export const ContainerTokens = {
   // Same aliasing story as the auth stories (the security demos' tokens).
   GetSecurityLabDemoUseCase: SECURITY_LAB_DEMO_USE_CASE,
   GetSecurityPIIDemoUseCase: SECURITY_PII_DEMO_USE_CASE,
+  // Same aliasing story as the auth stories (files / i18n / realtime).
+  GetFilesWorkbenchDemoUseCase: FILES_WORKBENCH_DEMO_USE_CASE,
+  GetI18nNegotiatorDemoUseCase: I18N_NEGOTIATOR_DEMO_USE_CASE,
+  GetRealtimeTickerDemoUseCase: REALTIME_TICKER_DEMO_USE_CASE,
+  GetRealtimeChatDemoUseCase: REALTIME_CHAT_DEMO_USE_CASE,
 } as const;
 
 class Container {
@@ -875,6 +902,30 @@ class Container {
     for (const [token, path] of securityStoryPipelines) {
       const repository = new SecurityStoryRepositoryImpl(new SecurityStoryApi(config, path));
       this.register(token, new GetSecurityStoryDemoUseCase(repository));
+    }
+
+    // Topics 26 + 27: single-story pipelines, the same shape again.
+    this.register(
+      ContainerTokens.GetFilesWorkbenchDemoUseCase,
+      new GetFilesWorkbenchDemoUseCase(
+        new FilesStoryRepositoryImpl(new FilesStoryApi(config, FILES_STORY_PATH)),
+      ),
+    );
+    this.register(
+      ContainerTokens.GetI18nNegotiatorDemoUseCase,
+      new GetI18nNegotiatorDemoUseCase(
+        new I18nStoryRepositoryImpl(new I18nStoryApi(config, I18N_STORY_PATH)),
+      ),
+    );
+
+    // Topic 28's two realtime stories: the auth loop pattern once more.
+    const realtimeStoryPipelines = [
+      [ContainerTokens.GetRealtimeTickerDemoUseCase, REALTIME_STORY_PATHS.ticker],
+      [ContainerTokens.GetRealtimeChatDemoUseCase, REALTIME_STORY_PATHS.chat],
+    ] as const;
+    for (const [token, path] of realtimeStoryPipelines) {
+      const repository = new RealtimeStoryRepositoryImpl(new RealtimeStoryApi(config, path));
+      this.register(token, new GetRealtimeStoryDemoUseCase(repository));
     }
   }
 

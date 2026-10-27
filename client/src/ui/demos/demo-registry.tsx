@@ -85,6 +85,12 @@ const AuthzMatrixDemo = lazy(() => import('./authz/matrix_demo'));
 // so they ride the same shared-view pattern.
 const SecurityLabDemo = lazy(() => import('./security/lab_demo'));
 const SecurityPIIDemo = lazy(() => import('./security/pii_demo'));
+const FilesWorkbenchDemo = lazy(() => import('./files/workbench_demo'));
+const I18nNegotiatorDemo = lazy(() => import('./i18n/negotiator_demo'));
+// The realtime demos hold LIVE connections (EventSource + WebSocket) —
+// the lazy chunk pays for itself only when the topic is opened.
+const RealtimeTickerDemo = lazy(() => import('./realtime/ticker_demo'));
+const RealtimeChatDemo = lazy(() => import('./realtime/chat_demo'));
 
 export const demoRegistry: DemoRegistry = {
   'go:runtime-types': RuntimeTypesDemo,
@@ -128,4 +134,8 @@ export const demoRegistry: DemoRegistry = {
   'authz:matrix': AuthzMatrixDemo,
   'security:lab': SecurityLabDemo,
   'security:pii': SecurityPIIDemo,
+  'files:workbench': FilesWorkbenchDemo,
+  'i18n:negotiator': I18nNegotiatorDemo,
+  'realtime:ticker': RealtimeTickerDemo,
+  'realtime:chat': RealtimeChatDemo,
 };

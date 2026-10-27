@@ -390,12 +390,25 @@ func NewProductionRegistry() (Registry, error) {
 	if err != nil {
 		return Registry{}, fmt.Errorf("build security topic: %w", err)
 	}
+	filesMedia, err := filesMediaTopic()
+	if err != nil {
+		return Registry{}, fmt.Errorf("build files-media topic: %w", err)
+	}
+	internationalization, err := internationalizationTopic()
+	if err != nil {
+		return Registry{}, fmt.Errorf("build internationalization topic: %w", err)
+	}
+	realtime, err := realtimeTopic()
+	if err != nil {
+		return Registry{}, fmt.Errorf("build realtime topic: %w", err)
+	}
 	return NewRegistry(
 		[]Topic{
 			goLanguage, goRuntime, httpWeb, goHTTPFundamentals, interfacesComposition,
 			goroutinesChannels, routing, middleware, requestResponse, validation, apiDesign,
 			apiDocumentation, graphql, webhooks, grpc, sqlSchema, databasesSQL, sqlcGorm,
 			mongodb, redis, caching, messaging, authentication, authorization, security,
+			filesMedia, internationalization, realtime,
 		},
 		groups,
 	)
