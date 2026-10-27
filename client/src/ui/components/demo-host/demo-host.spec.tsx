@@ -109,6 +109,7 @@ describe('DemoHost', () => {
       'i18n:negotiator',
       'realtime:ticker',
       'realtime:chat',
+      'jobs:console',
     ]);
   });
 });

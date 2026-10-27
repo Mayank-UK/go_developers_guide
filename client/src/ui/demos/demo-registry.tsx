@@ -91,6 +91,7 @@ const I18nNegotiatorDemo = lazy(() => import('./i18n/negotiator_demo'));
 // the lazy chunk pays for itself only when the topic is opened.
 const RealtimeTickerDemo = lazy(() => import('./realtime/ticker_demo'));
 const RealtimeChatDemo = lazy(() => import('./realtime/chat_demo'));
+const JobsConsoleDemo = lazy(() => import('./jobs/console_demo'));
 
 export const demoRegistry: DemoRegistry = {
   'go:runtime-types': RuntimeTypesDemo,
@@ -138,4 +139,5 @@ export const demoRegistry: DemoRegistry = {
   'i18n:negotiator': I18nNegotiatorDemo,
   'realtime:ticker': RealtimeTickerDemo,
   'realtime:chat': RealtimeChatDemo,
+  'jobs:console': JobsConsoleDemo,
 };

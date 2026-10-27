@@ -24,6 +24,7 @@ import (
 	"guide/internal/data/db"
 	filesdata "guide/internal/data/files"
 	datai18n "guide/internal/data/i18n"
+	jobsdata "guide/internal/data/jobs"
 	"guide/internal/data/messaging"
 	"guide/internal/data/mongodb"
 	"guide/internal/data/ormprobe"
@@ -306,6 +307,14 @@ func run() error {
 		presentation.NewRealtimeChatHandler(rtHub, "chat", realtime.DefaultChatPolicy(),
 			[]string{"localhost:5175", "127.0.0.1:5175"}, logger))
 
+	// Topic 29's background jobs: the console demo choreographs real
+	// enqueue → retry/backoff → archive/replay cycles against the hosted
+	// asynq worker, which shares the process's redis client and rides the
+	// same boot context and graceful shutdown as everything else.
+	jobsWorker := jobsdata.NewServerRunner(redisClient)
+	mux.Handle("GET /api/demo/jobs/console",
+		presentation.NewJobsConsoleHandler(jobsdata.NewConsoleStoryRunner(redisClient), logger))
+
 	// The posts resource — the api-design topic's real API surface, and
 	// the substrate later topics reuse (authorization guards its ids,
 	// webhooks fire on its writes, the docs topics document its routes).
@@ -386,6 +395,13 @@ func run() error {
 	// the same signal path that drains the HTTP server below.
 	go rtFeed.Run(ctx)
 
+	// The jobs worker serves the demos queue until the same cancellation;
+	// Start blocks until the broker answers, so a dead redis fails boot
+	// honestly instead of stranding the console demo.
+	if err := jobsWorker.Start(ctx); err != nil {
+		return fmt.Errorf("jobs worker start: %w", err)
+	}
+
 	serveErr := make(chan error, 1)
 	go func() {
 		logger.Info("server listening", "addr", srv.Addr, "env", cfg.Env)
@@ -423,5 +439,10 @@ func run() error {
 		return fmt.Errorf("graceful shutdown: %w", err)
 	}
 	logger.Info("server stopped")
+
+	// The worker drains last: in-flight demo stories finish, then the
+	// asynq server and its redis client stand down (idempotent).
+	jobsWorker.Shutdown()
+	logger.Info("jobs worker stopped")
 	return nil
 }

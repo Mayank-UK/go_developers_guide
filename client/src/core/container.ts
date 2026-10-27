@@ -285,6 +285,13 @@ import {
   REALTIME_TICKER_DEMO_USE_CASE,
   REALTIME_CHAT_DEMO_USE_CASE,
 } from '../domain/demo/get-realtime-story-demo-usecase';
+import { JobsConsoleApi } from '../data/demo/jobs-console-api';
+import { JobsConsoleRepositoryImpl } from '../data/demo/jobs-console-repository-impl';
+import type { JobsConsoleRepository } from '../domain/demo/jobs-console-repository';
+import {
+  GetJobsConsoleDemoUseCase,
+  JOBS_CONSOLE_DEMO_USE_CASE,
+} from '../domain/demo/get-jobs-console-demo-usecase';
 
 /**
  * Service-locator container — this client's composition root, mirroring the
@@ -474,6 +481,10 @@ export const ContainerTokens = {
   GetI18nNegotiatorDemoUseCase: I18N_NEGOTIATOR_DEMO_USE_CASE,
   GetRealtimeTickerDemoUseCase: REALTIME_TICKER_DEMO_USE_CASE,
   GetRealtimeChatDemoUseCase: REALTIME_CHAT_DEMO_USE_CASE,
+  JobsConsoleApi: Symbol('JobsConsoleApi'),
+  JobsConsoleRepository: Symbol('JobsConsoleRepository'),
+  // Same aliasing story as the auth stories (JOBS_CONSOLE_DEMO_USE_CASE).
+  GetJobsConsoleDemoUseCase: JOBS_CONSOLE_DEMO_USE_CASE,
 } as const;
 
 class Container {
@@ -927,6 +938,17 @@ class Container {
       const repository = new RealtimeStoryRepositoryImpl(new RealtimeStoryApi(config, path));
       this.register(token, new GetRealtimeStoryDemoUseCase(repository));
     }
+
+    // Topic 29's jobs console — the classic single-demo triple.
+    this.register(ContainerTokens.JobsConsoleApi, new JobsConsoleApi(config));
+    this.register(
+      ContainerTokens.JobsConsoleRepository,
+      new JobsConsoleRepositoryImpl(this.jobsConsoleApi),
+    );
+    this.register(
+      ContainerTokens.GetJobsConsoleDemoUseCase,
+      new GetJobsConsoleDemoUseCase(this.jobsConsoleRepository),
+    );
   }
 
   // ---- typed getters: the only resolution surface views/hooks use ----
@@ -1428,6 +1450,20 @@ class Container {
 
   get getAuthRefreshDemoUseCase(): GetAuthStoryDemoUseCase {
     return this.resolve<GetAuthStoryDemoUseCase>(ContainerTokens.GetAuthRefreshDemoUseCase);
+  }
+
+  get jobsConsoleApi(): JobsConsoleApi {
+    return this.resolve<JobsConsoleApi>(ContainerTokens.JobsConsoleApi);
+  }
+
+  get jobsConsoleRepository(): JobsConsoleRepository {
+    return this.resolve<JobsConsoleRepository>(ContainerTokens.JobsConsoleRepository);
+  }
+
+  get getJobsConsoleDemoUseCase(): GetJobsConsoleDemoUseCase {
+    return this.resolve<GetJobsConsoleDemoUseCase>(
+      ContainerTokens.GetJobsConsoleDemoUseCase,
+    );
   }
 
   // ---- wiring helpers ----
