@@ -19,6 +19,7 @@ import (
 	"guide/internal/content"
 	"guide/internal/core"
 	"guide/internal/data/auth"
+	authzdata "guide/internal/data/authorization"
 	"guide/internal/data/cachinglab"
 	"guide/internal/data/db"
 	"guide/internal/data/messaging"
@@ -26,6 +27,8 @@ import (
 	"guide/internal/data/ormprobe"
 	postsdata "guide/internal/data/posts"
 	"guide/internal/data/redis"
+	"guide/internal/data/security"
+	domauthz "guide/internal/domain/authorization"
 	"guide/internal/domain/demos"
 	"guide/internal/domain/posts"
 	"guide/internal/grpcapi"
@@ -215,6 +218,42 @@ func run() error {
 	mux.Handle("GET /api/demo/auth/refresh", presentation.NewAuthRefreshHandler(authConsole, logger))
 	mux.Handle("GET /api/demo/auth/whoami",
 		presentation.RequireIdentity(authConsole.Resolver, logger)(presentation.NewAuthWhoamiHandler(logger)))
+
+	// Topic 24's authorization pair: the matrix demo tells the whole
+	// roles × scopes × ownership story unauthenticated, and two guarded
+	// proof routes enforce it FOR REAL on top of topic 23's identity
+	// middleware — RequirePermission for a flat RBAC check,
+	// RequireOwnership for the object-level one.
+	authzConsole := authzdata.NewConsole()
+	mux.Handle("GET /api/demo/authz/matrix", presentation.NewAuthzMatrixHandler(authzConsole, logger))
+	mux.Handle("GET /api/demo/authz/guarded",
+		presentation.RequireIdentity(authConsole.Resolver, logger)(
+			presentation.RequirePermission(authzConsole, domauthz.PermPostsWrite, logger)(
+				presentation.NewAuthzGuardedHandler(domauthz.PermPostsWrite, logger))))
+	mux.Handle("GET /api/demo/authz/guarded/post/{id}",
+		presentation.RequireIdentity(authConsole.Resolver, logger)(
+			presentation.RequireOwnership(authzConsole, authzConsole, domauthz.PermPostsWrite, logger)(
+				presentation.NewAuthzGuardedPostHandler(domauthz.PermPostsWrite, authzConsole, logger))))
+
+	// Topic 25's security pair, wrapped in their own teaching: the
+	// headers middleware sits OUTSIDE the rate limiter so a 429 reply
+	// still carries the full security-header set, and one shared limiter
+	// (2/s sustained, burst 5, keyed per client) makes the demo's 429
+	// boundary reachable by a plain curl loop.
+	securityConsole, err := security.NewConsole()
+	if err != nil {
+		return fmt.Errorf("security console: %w", err)
+	}
+	mux.Handle("GET /api/demo/security/lab",
+		presentation.Chain(
+			presentation.SecurityHeaders(securityConsole.Headers),
+			presentation.RateLimit(securityConsole.RouteLimiter, logger),
+		)(presentation.NewSecurityLabHandler(securityConsole, logger)))
+	mux.Handle("GET /api/demo/security/pii",
+		presentation.Chain(
+			presentation.SecurityHeaders(securityConsole.Headers),
+			presentation.RateLimit(securityConsole.RouteLimiter, logger),
+		)(presentation.NewSecurityPIIHandler(securityConsole, logger)))
 
 	// The posts resource — the api-design topic's real API surface, and
 	// the substrate later topics reuse (authorization guards its ids,

@@ -102,6 +102,9 @@ describe('DemoHost', () => {
       'auth:oauth',
       'auth:hashing',
       'auth:refresh',
+      'authz:matrix',
+      'security:lab',
+      'security:pii',
     ]);
   });
 });

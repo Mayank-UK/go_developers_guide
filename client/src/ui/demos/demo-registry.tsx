@@ -80,6 +80,11 @@ const AuthJWTDemo = lazy(() => import('./auth/jwt_demo'));
 const AuthOAuthDemo = lazy(() => import('./auth/oauth_demo'));
 const AuthHashingDemo = lazy(() => import('./auth/hashing_demo'));
 const AuthRefreshDemo = lazy(() => import('./auth/refresh_demo'));
+const AuthzMatrixDemo = lazy(() => import('./authz/matrix_demo'));
+// The security topic's two stories share the auth stories' wire shape,
+// so they ride the same shared-view pattern.
+const SecurityLabDemo = lazy(() => import('./security/lab_demo'));
+const SecurityPIIDemo = lazy(() => import('./security/pii_demo'));
 
 export const demoRegistry: DemoRegistry = {
   'go:runtime-types': RuntimeTypesDemo,
@@ -120,4 +125,7 @@ export const demoRegistry: DemoRegistry = {
   'auth:oauth': AuthOAuthDemo,
   'auth:hashing': AuthHashingDemo,
   'auth:refresh': AuthRefreshDemo,
+  'authz:matrix': AuthzMatrixDemo,
+  'security:lab': SecurityLabDemo,
+  'security:pii': SecurityPIIDemo,
 };

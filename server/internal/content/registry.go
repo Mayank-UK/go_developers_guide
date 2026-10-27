@@ -382,12 +382,20 @@ func NewProductionRegistry() (Registry, error) {
 	if err != nil {
 		return Registry{}, fmt.Errorf("build authentication topic: %w", err)
 	}
+	authorization, err := authorizationTopic()
+	if err != nil {
+		return Registry{}, fmt.Errorf("build authorization topic: %w", err)
+	}
+	security, err := securityTopic()
+	if err != nil {
+		return Registry{}, fmt.Errorf("build security topic: %w", err)
+	}
 	return NewRegistry(
 		[]Topic{
 			goLanguage, goRuntime, httpWeb, goHTTPFundamentals, interfacesComposition,
 			goroutinesChannels, routing, middleware, requestResponse, validation, apiDesign,
 			apiDocumentation, graphql, webhooks, grpc, sqlSchema, databasesSQL, sqlcGorm,
-			mongodb, redis, caching, messaging, authentication,
+			mongodb, redis, caching, messaging, authentication, authorization, security,
 		},
 		groups,
 	)

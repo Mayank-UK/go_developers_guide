@@ -249,6 +249,20 @@ import {
   AUTH_HASHING_DEMO_USE_CASE,
   AUTH_REFRESH_DEMO_USE_CASE,
 } from '../domain/demo/get-auth-story-demo-usecase';
+import { AuthzMatrixApi } from '../data/demo/authz-matrix-api';
+import { AuthzMatrixRepositoryImpl } from '../data/demo/authz-matrix-repository-impl';
+import {
+  GetAuthzMatrixDemoUseCase,
+  AUTHZ_MATRIX_DEMO_USE_CASE,
+} from '../domain/demo/get-authz-matrix-demo-usecase';
+import { SecurityStoryApi } from '../data/demo/security-story-api';
+import { SecurityStoryRepositoryImpl } from '../data/demo/security-story-repository-impl';
+import { SECURITY_STORY_PATHS } from '../data/demo/security-story-dto';
+import {
+  GetSecurityStoryDemoUseCase,
+  SECURITY_LAB_DEMO_USE_CASE,
+  SECURITY_PII_DEMO_USE_CASE,
+} from '../domain/demo/get-security-story-demo-usecase';
 
 /**
  * Service-locator container — this client's composition root, mirroring the
@@ -428,6 +442,11 @@ export const ContainerTokens = {
   GetAuthOAuthDemoUseCase: AUTH_OAUTH_DEMO_USE_CASE,
   GetAuthHashingDemoUseCase: AUTH_HASHING_DEMO_USE_CASE,
   GetAuthRefreshDemoUseCase: AUTH_REFRESH_DEMO_USE_CASE,
+  // Same aliasing story as the auth stories (AUTHZ_MATRIX_DEMO_USE_CASE).
+  GetAuthzMatrixDemoUseCase: AUTHZ_MATRIX_DEMO_USE_CASE,
+  // Same aliasing story as the auth stories (the security demos' tokens).
+  GetSecurityLabDemoUseCase: SECURITY_LAB_DEMO_USE_CASE,
+  GetSecurityPIIDemoUseCase: SECURITY_PII_DEMO_USE_CASE,
 } as const;
 
 class Container {
@@ -837,6 +856,25 @@ class Container {
     for (const [token, path] of authStoryPipelines) {
       const repository = new AuthStoryRepositoryImpl(new AuthStoryApi(config, path));
       this.register(token, new GetAuthStoryDemoUseCase(repository));
+    }
+
+    // Topic 24's authz matrix — the classic single-demo triple.
+    const authzMatrixRepository = new AuthzMatrixRepositoryImpl(
+      new AuthzMatrixApi(config),
+    );
+    this.register(
+      ContainerTokens.GetAuthzMatrixDemoUseCase,
+      new GetAuthzMatrixDemoUseCase(authzMatrixRepository),
+    );
+
+    // Topic 25's two security stories: the auth loop pattern again.
+    const securityStoryPipelines = [
+      [ContainerTokens.GetSecurityLabDemoUseCase, SECURITY_STORY_PATHS.lab],
+      [ContainerTokens.GetSecurityPIIDemoUseCase, SECURITY_STORY_PATHS.pii],
+    ] as const;
+    for (const [token, path] of securityStoryPipelines) {
+      const repository = new SecurityStoryRepositoryImpl(new SecurityStoryApi(config, path));
+      this.register(token, new GetSecurityStoryDemoUseCase(repository));
     }
   }
 
