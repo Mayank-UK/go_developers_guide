@@ -118,6 +118,12 @@ const TestingRunnerDemo = lazy(() => import('./testing/runner_demo'));
 // process's own goroutine profile and released before the response
 // returns; one lazy entry like every other.
 const DebugStallDemo = lazy(() => import('./debug/stall_demo'));
+// The environments topic's inspector: this process's resolved config,
+// derived at request time — every variable with its
+// environment-vs-default attribution, credentials redacted by a
+// table-tested policy, the twelve-factor scorecard, and the
+// ScenarioStore's current state as the live flag panel.
+const EnvInspectorDemo = lazy(() => import('./env/inspector_demo'));
 
 export const demoRegistry: DemoRegistry = {
   'go:runtime-types': RuntimeTypesDemo,
@@ -173,4 +179,5 @@ export const demoRegistry: DemoRegistry = {
   'obs:trace': ObsTraceDemo,
   'testing:runner': TestingRunnerDemo,
   'debug:stall': DebugStallDemo,
+  'env:inspector': EnvInspectorDemo,
 };

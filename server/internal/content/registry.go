@@ -430,6 +430,10 @@ func NewProductionRegistry() (Registry, error) {
 	if err != nil {
 		return Registry{}, fmt.Errorf("build debugging topic: %w", err)
 	}
+	environments, err := environmentsTopic()
+	if err != nil {
+		return Registry{}, fmt.Errorf("build environments topic: %w", err)
+	}
 	return NewRegistry(
 		[]Topic{
 			goLanguage, goRuntime, httpWeb, goHTTPFundamentals, interfacesComposition,
@@ -438,6 +442,7 @@ func NewProductionRegistry() (Registry, error) {
 			mongodb, redis, caching, messaging, authentication, authorization, security,
 			filesMedia, internationalization, realtime, backgroundJobs, errorHandling,
 			dependencyManagement, architecture, observability, testingContent, debugging,
+			environments,
 		},
 		groups,
 	)

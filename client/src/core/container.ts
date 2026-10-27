@@ -341,6 +341,13 @@ import {
   GetDebugStallDemoUseCase,
   DEBUG_STALL_DEMO_USE_CASE,
 } from '../domain/demo/get-debug-stall-demo-usecase';
+import { EnvInspectorApi } from '../data/demo/env-inspector-api';
+import { EnvInspectorRepositoryImpl } from '../data/demo/env-inspector-repository-impl';
+import type { EnvInspectorRepository } from '../domain/demo/env-inspector-repository';
+import {
+  GetEnvInspectorDemoUseCase,
+  ENV_INSPECTOR_DEMO_USE_CASE,
+} from '../domain/demo/get-env-inspector-demo-usecase';
 
 /**
  * Service-locator container — this client's composition root, mirroring the
@@ -562,6 +569,10 @@ export const ContainerTokens = {
   DebugStallRepository: Symbol('DebugStallRepository'),
   // Same aliasing story as the auth stories (DEBUG_STALL_DEMO_USE_CASE).
   GetDebugStallDemoUseCase: DEBUG_STALL_DEMO_USE_CASE,
+  EnvInspectorApi: Symbol('EnvInspectorApi'),
+  EnvInspectorRepository: Symbol('EnvInspectorRepository'),
+  // Same aliasing story as the auth stories (ENV_INSPECTOR_DEMO_USE_CASE).
+  GetEnvInspectorDemoUseCase: ENV_INSPECTOR_DEMO_USE_CASE,
 } as const;
 
 class Container {
@@ -1100,6 +1111,17 @@ class Container {
     this.register(
       ContainerTokens.GetDebugStallDemoUseCase,
       new GetDebugStallDemoUseCase(this.debugStallRepository),
+    );
+
+    // Topic 36's env inspector — the same shape once more.
+    this.register(ContainerTokens.EnvInspectorApi, new EnvInspectorApi(config));
+    this.register(
+      ContainerTokens.EnvInspectorRepository,
+      new EnvInspectorRepositoryImpl(this.envInspectorApi),
+    );
+    this.register(
+      ContainerTokens.GetEnvInspectorDemoUseCase,
+      new GetEnvInspectorDemoUseCase(this.envInspectorRepository),
     );
   }
 
@@ -1713,6 +1735,20 @@ class Container {
   get getDebugStallDemoUseCase(): GetDebugStallDemoUseCase {
     return this.resolve<GetDebugStallDemoUseCase>(
       ContainerTokens.GetDebugStallDemoUseCase,
+    );
+  }
+
+  get envInspectorApi(): EnvInspectorApi {
+    return this.resolve<EnvInspectorApi>(ContainerTokens.EnvInspectorApi);
+  }
+
+  get envInspectorRepository(): EnvInspectorRepository {
+    return this.resolve<EnvInspectorRepository>(ContainerTokens.EnvInspectorRepository);
+  }
+
+  get getEnvInspectorDemoUseCase(): GetEnvInspectorDemoUseCase {
+    return this.resolve<GetEnvInspectorDemoUseCase>(
+      ContainerTokens.GetEnvInspectorDemoUseCase,
     );
   }
 

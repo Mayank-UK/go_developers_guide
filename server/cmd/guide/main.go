@@ -411,6 +411,16 @@ func run() error {
 	// request.
 	mux.Handle("GET /api/demo/debug/stall", presentation.NewDebugStallHandler(logger))
 
+	// Topic 36's env inspector: THIS process's resolved config, derived
+	// at request time from the live cfg — every variable with its
+	// environment-vs-default attribution and its redacted-when-sensitive
+	// value — beside the twelve-factor scorecard as data and the
+	// ScenarioStore's CURRENT state as the live flag panel. The handler
+	// receives the real cfg + store at wiring time; credentials never
+	// reach the wire.
+	mux.Handle("GET /api/demo/env/inspector",
+		presentation.NewEnvInspectorHandler(cfg, scenarioStore, logger))
+
 	// The posts resource — the api-design topic's real API surface, and
 	// the substrate later topics reuse (authorization guards its ids,
 	// webhooks fire on its writes, the docs topics document its routes).
