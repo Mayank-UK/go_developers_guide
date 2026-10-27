@@ -70,6 +70,16 @@ const RedisPlaygroundDemo = lazy(() => import('./redis/playground_demo'));
 const CachingLabDemo = lazy(() => import('./caching/lab_demo'));
 const MessagingStreamDemo = lazy(() => import('./messaging/stream_demo'));
 const MessagingOutboxDemo = lazy(() => import('./messaging/outbox_demo'));
+// The authentication topic's seven stories share one wire shape, so the
+// client ships one shared view (auth/auth_story_view) with seven thin
+// named wrappers — one lazy entry each, same as every demo.
+const AuthSessionsDemo = lazy(() => import('./auth/sessions_demo'));
+const AuthAPIKeysDemo = lazy(() => import('./auth/api_keys_demo'));
+const AuthCompareDemo = lazy(() => import('./auth/compare_demo'));
+const AuthJWTDemo = lazy(() => import('./auth/jwt_demo'));
+const AuthOAuthDemo = lazy(() => import('./auth/oauth_demo'));
+const AuthHashingDemo = lazy(() => import('./auth/hashing_demo'));
+const AuthRefreshDemo = lazy(() => import('./auth/refresh_demo'));
 
 export const demoRegistry: DemoRegistry = {
   'go:runtime-types': RuntimeTypesDemo,
@@ -103,4 +113,11 @@ export const demoRegistry: DemoRegistry = {
   'caching:lab': CachingLabDemo,
   'msg:stream': MessagingStreamDemo,
   'msg:outbox': MessagingOutboxDemo,
+  'auth:sessions': AuthSessionsDemo,
+  'auth:api-keys': AuthAPIKeysDemo,
+  'auth:compare': AuthCompareDemo,
+  'auth:jwt': AuthJWTDemo,
+  'auth:oauth': AuthOAuthDemo,
+  'auth:hashing': AuthHashingDemo,
+  'auth:refresh': AuthRefreshDemo,
 };

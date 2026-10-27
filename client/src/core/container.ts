@@ -232,6 +232,23 @@ import {
   GetMessagingOutboxDemoUseCase,
   MESSAGING_OUTBOX_DEMO_USE_CASE,
 } from '../domain/demo/get-messaging-outbox-demo-usecase';
+// The authentication topic's seven story demos share one payload shape,
+// so the client pipeline is shared too: one model/port/use-case trio and
+// one api/repository pair, instantiated per demo endpoint path and
+// registered under seven tokens.
+import { AuthStoryApi } from '../data/demo/auth-story-api';
+import { AuthStoryRepositoryImpl } from '../data/demo/auth-story-repository-impl';
+import { AUTH_STORY_PATHS } from '../data/demo/auth-story-dto';
+import {
+  GetAuthStoryDemoUseCase,
+  AUTH_SESSIONS_DEMO_USE_CASE,
+  AUTH_API_KEYS_DEMO_USE_CASE,
+  AUTH_COMPARE_DEMO_USE_CASE,
+  AUTH_JWT_DEMO_USE_CASE,
+  AUTH_OAUTH_DEMO_USE_CASE,
+  AUTH_HASHING_DEMO_USE_CASE,
+  AUTH_REFRESH_DEMO_USE_CASE,
+} from '../domain/demo/get-auth-story-demo-usecase';
 
 /**
  * Service-locator container — this client's composition root, mirroring the
@@ -402,6 +419,15 @@ export const ContainerTokens = {
   MessagingOutboxRepository: Symbol('MessagingOutboxRepository'),
   // Same aliasing story as the headers demo (MESSAGING_OUTBOX_DEMO_USE_CASE).
   GetMessagingOutboxDemoUseCase: MESSAGING_OUTBOX_DEMO_USE_CASE,
+  // The auth story demos' tokens live in their own domain module; the
+  // aliases here keep ContainerTokens the single registry of identities.
+  GetAuthSessionsDemoUseCase: AUTH_SESSIONS_DEMO_USE_CASE,
+  GetAuthAPIKeysDemoUseCase: AUTH_API_KEYS_DEMO_USE_CASE,
+  GetAuthCompareDemoUseCase: AUTH_COMPARE_DEMO_USE_CASE,
+  GetAuthJWTDemoUseCase: AUTH_JWT_DEMO_USE_CASE,
+  GetAuthOAuthDemoUseCase: AUTH_OAUTH_DEMO_USE_CASE,
+  GetAuthHashingDemoUseCase: AUTH_HASHING_DEMO_USE_CASE,
+  GetAuthRefreshDemoUseCase: AUTH_REFRESH_DEMO_USE_CASE,
 } as const;
 
 class Container {
@@ -796,6 +822,22 @@ class Container {
       ContainerTokens.GetMessagingOutboxDemoUseCase,
       new GetMessagingOutboxDemoUseCase(this.messagingOutboxRepository),
     );
+
+    // The seven auth story pipelines: same shape, one adapter class
+    // parameterized by endpoint path, one register triple per demo.
+    const authStoryPipelines = [
+      [ContainerTokens.GetAuthSessionsDemoUseCase, AUTH_STORY_PATHS.sessions],
+      [ContainerTokens.GetAuthAPIKeysDemoUseCase, AUTH_STORY_PATHS.apiKeys],
+      [ContainerTokens.GetAuthCompareDemoUseCase, AUTH_STORY_PATHS.compare],
+      [ContainerTokens.GetAuthJWTDemoUseCase, AUTH_STORY_PATHS.jwt],
+      [ContainerTokens.GetAuthOAuthDemoUseCase, AUTH_STORY_PATHS.oauth],
+      [ContainerTokens.GetAuthHashingDemoUseCase, AUTH_STORY_PATHS.hashing],
+      [ContainerTokens.GetAuthRefreshDemoUseCase, AUTH_STORY_PATHS.refresh],
+    ] as const;
+    for (const [token, path] of authStoryPipelines) {
+      const repository = new AuthStoryRepositoryImpl(new AuthStoryApi(config, path));
+      this.register(token, new GetAuthStoryDemoUseCase(repository));
+    }
   }
 
   // ---- typed getters: the only resolution surface views/hooks use ----
@@ -1269,6 +1311,34 @@ class Container {
     return this.resolve<GetMessagingOutboxDemoUseCase>(
       ContainerTokens.GetMessagingOutboxDemoUseCase,
     );
+  }
+
+  get getAuthSessionsDemoUseCase(): GetAuthStoryDemoUseCase {
+    return this.resolve<GetAuthStoryDemoUseCase>(ContainerTokens.GetAuthSessionsDemoUseCase);
+  }
+
+  get getAuthAPIKeysDemoUseCase(): GetAuthStoryDemoUseCase {
+    return this.resolve<GetAuthStoryDemoUseCase>(ContainerTokens.GetAuthAPIKeysDemoUseCase);
+  }
+
+  get getAuthCompareDemoUseCase(): GetAuthStoryDemoUseCase {
+    return this.resolve<GetAuthStoryDemoUseCase>(ContainerTokens.GetAuthCompareDemoUseCase);
+  }
+
+  get getAuthJWTDemoUseCase(): GetAuthStoryDemoUseCase {
+    return this.resolve<GetAuthStoryDemoUseCase>(ContainerTokens.GetAuthJWTDemoUseCase);
+  }
+
+  get getAuthOAuthDemoUseCase(): GetAuthStoryDemoUseCase {
+    return this.resolve<GetAuthStoryDemoUseCase>(ContainerTokens.GetAuthOAuthDemoUseCase);
+  }
+
+  get getAuthHashingDemoUseCase(): GetAuthStoryDemoUseCase {
+    return this.resolve<GetAuthStoryDemoUseCase>(ContainerTokens.GetAuthHashingDemoUseCase);
+  }
+
+  get getAuthRefreshDemoUseCase(): GetAuthStoryDemoUseCase {
+    return this.resolve<GetAuthStoryDemoUseCase>(ContainerTokens.GetAuthRefreshDemoUseCase);
   }
 
   // ---- wiring helpers ----

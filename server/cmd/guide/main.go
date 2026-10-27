@@ -18,6 +18,7 @@ import (
 
 	"guide/internal/content"
 	"guide/internal/core"
+	"guide/internal/data/auth"
 	"guide/internal/data/cachinglab"
 	"guide/internal/data/db"
 	"guide/internal/data/messaging"
@@ -195,6 +196,25 @@ func run() error {
 		"GET /api/demo/msg/outbox",
 		presentation.NewMessagingOutboxHandler(messaging.NewOutboxStoryRunner(pool, redisClient), logger),
 	)
+
+	// Topic 23's authentication console: the shared substrate the seven
+	// auth demos walk — seeded users, in-memory stores, every engine —
+	// plus the auth middleware's guarded proof route. The console is
+	// process-local by design (the topic teaches the Redis trade-off),
+	// so nothing here can fail a boot or degrade another endpoint.
+	authConsole, err := auth.NewConsole()
+	if err != nil {
+		return fmt.Errorf("auth console: %w", err)
+	}
+	mux.Handle("GET /api/demo/auth/sessions", presentation.NewAuthSessionsHandler(authConsole, logger))
+	mux.Handle("GET /api/demo/auth/api-keys", presentation.NewAuthAPIKeysHandler(authConsole, logger))
+	mux.Handle("GET /api/demo/auth/compare", presentation.NewAuthCompareHandler(authConsole, logger))
+	mux.Handle("GET /api/demo/auth/jwt", presentation.NewAuthJWTHandler(authConsole, logger))
+	mux.Handle("GET /api/demo/auth/oauth", presentation.NewAuthOAuthHandler(authConsole, logger))
+	mux.Handle("GET /api/demo/auth/hashing", presentation.NewAuthHashingHandler(authConsole, logger))
+	mux.Handle("GET /api/demo/auth/refresh", presentation.NewAuthRefreshHandler(authConsole, logger))
+	mux.Handle("GET /api/demo/auth/whoami",
+		presentation.RequireIdentity(authConsole.Resolver, logger)(presentation.NewAuthWhoamiHandler(logger)))
 
 	// The posts resource — the api-design topic's real API surface, and
 	// the substrate later topics reuse (authorization guards its ids,

@@ -73,7 +73,13 @@ func TestAppInfoDemoServesThePayload(t *testing.T) {
 	}
 	// 12 = the deliberate-direct-requires count since the Phase 5 deps
 	// landed (grpc-go, gqlgen, pgx, …) — derived live, pinned here.
-	if decoded.Module.Path != "guide" || decoded.Module.DependencyCount != 16 {
+	// The count is binary-scoped: this package's test binary links the
+	// auth engines (argon2 rides along), so it sees one more module than
+	// the demos package's test binary — whose pinned 16 the
+	// go-http-fundamentals topic quotes verbatim. Both pins are live
+	// facts about their own binaries; the served payload describes the
+	// SERVER binary, which links the full graph.
+	if decoded.Module.Path != "guide" || decoded.Module.DependencyCount != 17 {
 		t.Errorf("module drifted: %+v", decoded.Module)
 	}
 	if decoded.Module.Version == "" || !strings.HasPrefix(decoded.Module.GoVersion, "go1.") {

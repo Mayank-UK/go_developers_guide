@@ -61,7 +61,8 @@ describe('DemoHost', () => {
     // simulator, docs link, graphql playground, grpc console), the Phase 6
     // data demos (schema explorer, uuid lab, the sql sextet, the orm probe,
     // mongo console, redis playground), and the Phase 7 state demos (the
-    // caching lab, the messaging stream + outbox pair).
+    // caching lab, the messaging stream + outbox pair, and the
+    // authentication topic's seven story demos).
     expect(Object.keys(demoRegistry)).toEqual([
       'go:runtime-types',
       'runtime:concurrency',
@@ -94,6 +95,13 @@ describe('DemoHost', () => {
       'caching:lab',
       'msg:stream',
       'msg:outbox',
+      'auth:sessions',
+      'auth:api-keys',
+      'auth:compare',
+      'auth:jwt',
+      'auth:oauth',
+      'auth:hashing',
+      'auth:refresh',
     ]);
   });
 });
