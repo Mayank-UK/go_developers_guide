@@ -68,6 +68,8 @@ const ORMProbeDemo = lazy(() => import('./db/orm_probe_demo'));
 const MongoConsoleDemo = lazy(() => import('./db/mongo_console_demo'));
 const RedisPlaygroundDemo = lazy(() => import('./redis/playground_demo'));
 const CachingLabDemo = lazy(() => import('./caching/lab_demo'));
+const MessagingStreamDemo = lazy(() => import('./messaging/stream_demo'));
+const MessagingOutboxDemo = lazy(() => import('./messaging/outbox_demo'));
 
 export const demoRegistry: DemoRegistry = {
   'go:runtime-types': RuntimeTypesDemo,
@@ -99,4 +101,6 @@ export const demoRegistry: DemoRegistry = {
   'db:mongo-console': MongoConsoleDemo,
   'redis:playground': RedisPlaygroundDemo,
   'caching:lab': CachingLabDemo,
+  'msg:stream': MessagingStreamDemo,
+  'msg:outbox': MessagingOutboxDemo,
 };

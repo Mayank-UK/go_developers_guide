@@ -20,6 +20,7 @@ import (
 	"guide/internal/core"
 	"guide/internal/data/cachinglab"
 	"guide/internal/data/db"
+	"guide/internal/data/messaging"
 	"guide/internal/data/mongodb"
 	"guide/internal/data/ormprobe"
 	postsdata "guide/internal/data/posts"
@@ -180,6 +181,20 @@ func run() error {
 	// deterministic enough to carry a strong ETag and answer a replayed
 	// If-None-Match with an honest 304.
 	mux.Handle("GET /api/demo/caching/lab", presentation.NewCachingLabHandler(cachinglab.New(), logger))
+
+	// Topic 22's messaging pair, both on the live stack the server already
+	// holds: the streams demo runs a real consumer-group choreography over
+	// Redis Streams, the outbox demo writes the outbox row and the business
+	// change in ONE PostgreSQL transaction and relays it into the stream —
+	// each degrading to the typed 503 when its backend is unreachable.
+	mux.Handle(
+		"GET /api/demo/msg/stream",
+		presentation.NewMessagingStreamHandler(messaging.NewStreamStoryRunner(redisClient), logger),
+	)
+	mux.Handle(
+		"GET /api/demo/msg/outbox",
+		presentation.NewMessagingOutboxHandler(messaging.NewOutboxStoryRunner(pool, redisClient), logger),
+	)
 
 	// The posts resource — the api-design topic's real API surface, and
 	// the substrate later topics reuse (authorization guards its ids,

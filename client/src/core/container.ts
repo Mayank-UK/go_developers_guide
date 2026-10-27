@@ -218,6 +218,20 @@ import {
   GetCachingLabDemoUseCase,
   CACHING_LAB_DEMO_USE_CASE,
 } from '../domain/demo/get-caching-lab-demo-usecase';
+import { MessagingStreamApi } from '../data/demo/messaging-stream-api';
+import { MessagingStreamRepositoryImpl } from '../data/demo/messaging-stream-repository-impl';
+import type { MessagingStreamRepository } from '../domain/demo/messaging-stream-repository';
+import {
+  GetMessagingStreamDemoUseCase,
+  MESSAGING_STREAM_DEMO_USE_CASE,
+} from '../domain/demo/get-messaging-stream-demo-usecase';
+import { MessagingOutboxApi } from '../data/demo/messaging-outbox-api';
+import { MessagingOutboxRepositoryImpl } from '../data/demo/messaging-outbox-repository-impl';
+import type { MessagingOutboxRepository } from '../domain/demo/messaging-outbox-repository';
+import {
+  GetMessagingOutboxDemoUseCase,
+  MESSAGING_OUTBOX_DEMO_USE_CASE,
+} from '../domain/demo/get-messaging-outbox-demo-usecase';
 
 /**
  * Service-locator container — this client's composition root, mirroring the
@@ -380,6 +394,14 @@ export const ContainerTokens = {
   CachingLabRepository: Symbol('CachingLabRepository'),
   // Same aliasing story as the headers demo (CACHING_LAB_DEMO_USE_CASE).
   GetCachingLabDemoUseCase: CACHING_LAB_DEMO_USE_CASE,
+  MessagingStreamApi: Symbol('MessagingStreamApi'),
+  MessagingStreamRepository: Symbol('MessagingStreamRepository'),
+  // Same aliasing story as the headers demo (MESSAGING_STREAM_DEMO_USE_CASE).
+  GetMessagingStreamDemoUseCase: MESSAGING_STREAM_DEMO_USE_CASE,
+  MessagingOutboxApi: Symbol('MessagingOutboxApi'),
+  MessagingOutboxRepository: Symbol('MessagingOutboxRepository'),
+  // Same aliasing story as the headers demo (MESSAGING_OUTBOX_DEMO_USE_CASE).
+  GetMessagingOutboxDemoUseCase: MESSAGING_OUTBOX_DEMO_USE_CASE,
 } as const;
 
 class Container {
@@ -753,6 +775,26 @@ class Container {
     this.register(
       ContainerTokens.GetCachingLabDemoUseCase,
       new GetCachingLabDemoUseCase(this.cachingLabRepository),
+    );
+
+    this.register(ContainerTokens.MessagingStreamApi, new MessagingStreamApi(config));
+    this.register(
+      ContainerTokens.MessagingStreamRepository,
+      new MessagingStreamRepositoryImpl(this.messagingStreamApi),
+    );
+    this.register(
+      ContainerTokens.GetMessagingStreamDemoUseCase,
+      new GetMessagingStreamDemoUseCase(this.messagingStreamRepository),
+    );
+
+    this.register(ContainerTokens.MessagingOutboxApi, new MessagingOutboxApi(config));
+    this.register(
+      ContainerTokens.MessagingOutboxRepository,
+      new MessagingOutboxRepositoryImpl(this.messagingOutboxApi),
+    );
+    this.register(
+      ContainerTokens.GetMessagingOutboxDemoUseCase,
+      new GetMessagingOutboxDemoUseCase(this.messagingOutboxRepository),
     );
   }
 
@@ -1198,6 +1240,34 @@ class Container {
   get getCachingLabDemoUseCase(): GetCachingLabDemoUseCase {
     return this.resolve<GetCachingLabDemoUseCase>(
       ContainerTokens.GetCachingLabDemoUseCase,
+    );
+  }
+
+  get messagingStreamApi(): MessagingStreamApi {
+    return this.resolve<MessagingStreamApi>(ContainerTokens.MessagingStreamApi);
+  }
+
+  get messagingStreamRepository(): MessagingStreamRepository {
+    return this.resolve<MessagingStreamRepository>(ContainerTokens.MessagingStreamRepository);
+  }
+
+  get getMessagingStreamDemoUseCase(): GetMessagingStreamDemoUseCase {
+    return this.resolve<GetMessagingStreamDemoUseCase>(
+      ContainerTokens.GetMessagingStreamDemoUseCase,
+    );
+  }
+
+  get messagingOutboxApi(): MessagingOutboxApi {
+    return this.resolve<MessagingOutboxApi>(ContainerTokens.MessagingOutboxApi);
+  }
+
+  get messagingOutboxRepository(): MessagingOutboxRepository {
+    return this.resolve<MessagingOutboxRepository>(ContainerTokens.MessagingOutboxRepository);
+  }
+
+  get getMessagingOutboxDemoUseCase(): GetMessagingOutboxDemoUseCase {
+    return this.resolve<GetMessagingOutboxDemoUseCase>(
+      ContainerTokens.GetMessagingOutboxDemoUseCase,
     );
   }
 

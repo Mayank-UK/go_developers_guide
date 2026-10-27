@@ -374,12 +374,16 @@ func NewProductionRegistry() (Registry, error) {
 	if err != nil {
 		return Registry{}, fmt.Errorf("build caching topic: %w", err)
 	}
+	messaging, err := messagingTopic()
+	if err != nil {
+		return Registry{}, fmt.Errorf("build messaging topic: %w", err)
+	}
 	return NewRegistry(
 		[]Topic{
 			goLanguage, goRuntime, httpWeb, goHTTPFundamentals, interfacesComposition,
 			goroutinesChannels, routing, middleware, requestResponse, validation, apiDesign,
 			apiDocumentation, graphql, webhooks, grpc, sqlSchema, databasesSQL, sqlcGorm,
-			mongodb, redis, caching,
+			mongodb, redis, caching, messaging,
 		},
 		groups,
 	)
