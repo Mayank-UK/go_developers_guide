@@ -173,3 +173,12 @@ Append-only archive for agentic_development.md (hook-exempt bookkeeping; archive
 - Real-machinery demos became the phase's signature: injectFailure walked live (30), govulncheck verdict served verbatim (31), the production Chain traced in-process with fake/live leaf swap (32), /metrics + /api/ready + pprof live (33), boot-cached real go-test-json (34), self-captured goroutine profiles parsed to source lines (35), redacted live config + flag panel (36).
 - Notes carried forward: govulncheck v1.9.0 sits standalone in the dev container's /go/bin (reinstall after container rebuild; Phase 12 reuses the demo's runner); debug-stall marker contract (renaming debugStallWedge breaks the quote finder); the root-layout jsdom load flake stays on the Phase 12 list.
 - NEXT: Phase 10 — 37 deployment (real deploy/k8s/, demo deploy:stack) · 38 performance · 39 reliability · 40 scaling.
+
+## 2026-10-28 — Phase 10 (Platform II) closed
+
+- Four topics, sequential solo agents, all committed: 37 77e0df2 · 38 9a9b12f · 39 a2128b2 · 40 c8f3c01. Guide: 40 topics / 55 demos / orders 1-40; pushed at close.
+- Resilience pattern recurred: BOTH new topics this session (39 + 40) were killed mid-run by transient API drops ("Cannot connect to API: write ERANGE") — same-agent SendMessage resumes landed both clean with partials intact (Phase 9 playbook, now 4-for-4 across the guide).
+- Real-machinery demos: 39's process-lifetime breaker console (threshold 3 / cooldown 2s / single half-open probe) driven by the shared ScenarioStore error/latency toggles, only time.Since-measured timings on the wire (TestReliabilityInventsNoTimings + payload pin); 40's replica fleet (3 mutex-guarded replicas, round-robin + sticky table + rolling-update swap) proving statelessness with measured counts (4/4/4; local session dies with its replica, shared-store session survives both swaps; byte-identical double fetch; TestScalingInventsNoThroughput).
+- Self-review catches worth remembering: 39's smoke caught missing json tags on breaker counters (camelCase wire pin added); 40's sweep caught its own wrong final-totals expectation (post-swap sticky miss is served BY the fresh replica → 5/3/8, not 4/4/4).
+- NEW FLAKES → Phase 12 list: TestRealtimeTickerStreamEndsWithItsRequest (pre-existing class) + TestReliabilityRetryBackoffIsBoundedAndJittered — wall-clock bounds fail under full-suite container load, pass isolated/package-rerun.
+- NEXT: Phase 11 capstones 41-43 (43 creates internal/domain/patterns/ saga + event store, TWO demos) → Phase 12 hardening.
