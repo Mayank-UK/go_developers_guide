@@ -726,13 +726,14 @@ var BestNotDones = []BestNotDoneRow{
 		},
 	},
 	{
-		ID:      "browser-e2e-deferred",
-		NotDone: "Browser E2E deferred, on purpose",
-		Reason: "Host-run Playwright suites are planned as their own hardening phase; until then " +
-			"user-facing changes are verified by scripted checks against the live stack — curl tours " +
-			"and payload assertions, not vibes. The gap is scheduled, not forgotten.",
+		ID:      "browser-e2e-kept-small",
+		NotDone: "Browser E2E kept small: one suite, not per-topic sprawl",
+		Reason: "One host-run Playwright suite exists — e2e/, seven spec files and eleven tests — " +
+			"pinning the wiring facts no in-process test can see: rendered pages, the Vite to Go " +
+			"proxy hop. Per-topic browser sprawl stays the not-do: scripted curl tours and payload " +
+			"assertions remain the per-change bridge, on purpose.",
 		Artifacts: []string{
-			"the planned e2e/ suite (hardening phase)",
+			"e2e/ — the host-run Playwright suite (7 spec files, 11 tests)",
 			"per-topic smoke logs under /tmp/verify-* (the standing bridge)",
 		},
 	},

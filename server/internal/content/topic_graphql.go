@@ -723,9 +723,9 @@ func graphqlTopic() (Topic, error) {
 					"prose to understand. One URL, one document grammar, one error list "+
 					"carrying the same codes the REST surface serves — and behind it, the "+
 					"same use cases, the same repository port, the same swap seam the "+
-					"databases topics will exercise. The next topic steps sideways to gRPC "+
-					"— contracts compiled instead of introspected — and the one after "+
-					"reverses the arrow entirely with webhooks. Three contract shapes, one "+
+					"databases topics will exercise. The next topic reverses the arrow "+
+					"entirely with webhooks — and the one after steps sideways to gRPC, "+
+					"contracts compiled instead of introspected. Three contract shapes, one "+
 					"domain: that is the lesson this group keeps teaching."),
 		),
 	}
