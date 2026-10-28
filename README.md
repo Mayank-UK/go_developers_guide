@@ -40,10 +40,10 @@ The dependency rule is `presentation → domain ← data`: handlers never import
 
 ## Running it
 
-The standard path is the VS Code devcontainer: open the repo → **Reopen in Container**. That starts the whole stack defined in [`.docker/docker-compose.yml`](.docker/docker-compose.yml): the `dev` Go toolchain container, the `client_dev` Vite container, and PostgreSQL 17 / Redis 7 / MongoDB 8. Without VS Code:
+The standard path is the VS Code devcontainer: open the repo → **Reopen in Container**. That starts the whole stack defined in [`.docker/docker-compose.yml`](.docker/docker-compose.yml): the `dev` Go toolchain container, the `client_dev` Vite container, and PostgreSQL 17 / Redis 7 / MongoDB 8. Image and tool pins follow a deliberate two-tier policy — exact where builds must reproduce, tag-level for mutable service bases ([`docs/pinning-policy.md`](docs/pinning-policy.md)). Without VS Code:
 
 ```bash
-docker volume create gdg-go gdg-gocache gdg-npm   # once, on a fresh machine (shared caches)
+for v in gdg-go gdg-gocache gdg-npm; do docker volume create "$v"; done   # once, on a fresh machine (shared caches)
 docker compose -f .docker/docker-compose.yml up -d
 ```
 
@@ -97,6 +97,7 @@ No hosted CI by family stance — local verification against the long-lived dev 
 ```bash
 docker exec go_developers_guide_dev bash -lc 'cd /workspaces/go_developers_guide/server && go build ./... && go vet ./... && go test ./...'
 docker exec go_developers_guide_client_dev bash -lc 'cd /app && npm test && npm run build'
+cd e2e && npx playwright test            # host-run e2e against the live stack (11 specs)
 ```
 
 The server suite runs with `-race`, gofmt is silent, real-PG tests spawn sibling containers through the mounted Docker socket (testcontainers-go, no DinD), and smoke checks curl the running stack. Image rebuilds happen only when Dockerfiles change.
@@ -125,4 +126,4 @@ deploy/                  prod compose + k8s manifests
 
 ## Status
 
-Curriculum complete — all 43 topics, 62 demos, and orders 1–43 live (build phases 0–11 closed). Next: the phase-12 hardening tail (host-run e2e, snippet re-quote audit, coverage gates) and the phase-13 senior-reviewer audit that drives the project to its 10/10 verdict.
+Curriculum complete — all 43 topics, 62 demos, and orders 1–43 live (build phases 0–11 closed). Phase 12 (hardening) is closed too: host-run Playwright e2e over the live stack (11 specs across 7 files, [`e2e/`](e2e)), a 74% total-coverage floor on the server suite (`tools/coverage/check.sh`, 76.2% actual), staticcheck pinned at v0.8.2 and clean, a clean govulncheck, a go.mod snapshot drift test, and a full snippet re-quote audit behind the zero-violation ratchet. What remains of phase 13 is remediation of the senior review's findings — no curriculum work is open.

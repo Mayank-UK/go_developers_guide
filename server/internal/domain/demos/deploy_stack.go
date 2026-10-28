@@ -778,7 +778,10 @@ func BuildDeployStackPayload(facts DeployStackFacts) (DeployStackPayload, error)
 			"rollout knob below was parsed at request time from the repo's " +
 			"committed deploy/ artifacts — the compose file with the guide's " +
 			"zero-dep YAML-subset reader, the Kubernetes manifests with " +
-			"encoding/json — and every fact names the file it came from",
+			"encoding/json — and every fact names the file it came from. " +
+			"Inside the prod image only server/ ships beside the binary, so " +
+			"the artifact walk finds nothing and this endpoint answers its " +
+			"honest typed 503 — a degradation pinned by tests, not an accident",
 		Compose:    deployComposeView(compose),
 		Kubernetes: make([]DeployManifestView, 0, len(manifests)),
 		SecretScan: deploySecretScanView(manifests),

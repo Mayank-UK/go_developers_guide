@@ -47,6 +47,8 @@ const wellFormed: RuntimeTypesDemoData = {
     errorType: '*json.UnmarshalTypeError',
     message: 'json: cannot unmarshal number into Go struct field TextBlock.id of type string',
   },
+  fieldsNote: 'The tag column is read at runtime by reflect.',
+  assertionsNote: 'The comma-ok row reports false instead of panicking.',
 };
 
 describe('runtimeTypesDtoFromJson', () => {
@@ -72,6 +74,8 @@ describe('runtimeTypesDtoFromJson', () => {
     ['missing zeroValues', { ...wellFormed, zeroValues: undefined }],
     ['missing enforcement', { ...wellFormed, enforcement: undefined }],
     ['missing boundary', { ...wellFormed, boundary: undefined }],
+    ['missing fieldsNote', { ...wellFormed, fieldsNote: undefined }],
+    ['missing assertionsNote', { ...wellFormed, assertionsNote: undefined }],
     ['inspections not an array', { ...wellFormed, inspections: 'nope' }],
     ['a non-object inspection row', { ...wellFormed, inspections: ['nope'] }],
     ['missing sizeBytes', { ...wellFormed, inspections: [{ ...wellFormed.inspections[0]!, sizeBytes: undefined }] }],

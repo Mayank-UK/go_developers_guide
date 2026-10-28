@@ -16,12 +16,20 @@ export interface AuthStoryFact {
   value: string;
 }
 
+/**
+ * The verdict vocabulary — a CLOSED union mirroring the server's four
+ * auth-story constants (AuthVerdictOK/Rejected/Alarm/Info in
+ * internal/domain/demos/auth_story.go). The client colors, never
+ * interprets; the DTO rejects anything outside the set.
+ */
+export type AuthStoryVerdict = 'ok' | 'rejected' | 'alarm' | 'info';
+
 /** One beat of a story: what was done, the sentence, the verdict color. */
 export interface AuthStoryBeat {
   beat: string;
   detail: string;
-  /** 'ok' | 'rejected' | 'alarm' | 'info' — the client colors, never interprets. */
-  verdict: string;
+  /** The verdict color — the client colors, never interprets. */
+  verdict: AuthStoryVerdict;
   facts: AuthStoryFact[];
 }
 

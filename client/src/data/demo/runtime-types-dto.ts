@@ -43,6 +43,10 @@ export function runtimeTypesDtoFromJson(body: unknown): RuntimeTypesDemoDto {
     zeroValues: requiredArray(body, 'zeroValues').map(zeroValueRowFromJson),
     enforcement: enforcementFromJson(body.enforcement),
     boundary: boundaryFromJson(body.boundary),
+    // The tables' teaching sentences — prose the server teaches, the
+    // client renders (never authors).
+    fieldsNote: requiredString(body, 'fieldsNote'),
+    assertionsNote: requiredString(body, 'assertionsNote'),
   };
 }
 

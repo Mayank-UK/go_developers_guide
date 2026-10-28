@@ -4,6 +4,13 @@
 // result onto the wire. This module is also the SUBJECT of the go-language
 // topic's runtime-types demo: the topic quotes it as real code, and the
 // demo reflects on the very objects it builds.
+//
+// TEACHING-EXCEPTION (layering): the family rule is presentation →
+// domain ← data, and this file lives in domain/demos while importing the
+// content registry — the exhibit reflects on the REAL content types the
+// server serves (Topic, Section, the block kinds), not copies. The same
+// exemption the family grants teaching-exhibit handlers, marked like
+// its siblings.
 package demos
 
 import (
@@ -29,6 +36,16 @@ func repeat(text string, times int) string {
 // repeat(3.0, 2) — the demo cannot run a rejected call by definition, so
 // the payload carries the compiler's words instead.
 const compilerVerdict = "cannot use 3.0 (untyped float constant 3) as string value in argument to repeat"
+
+// The two payload faces' teaching notes — the sentences that read the
+// tables below. The client renders prose, the server teaches it: these
+// live here (not hardcoded in the view) so the teaching rides the same
+// wire contract as the data it explains.
+const fieldsNote = "The tag column is read at runtime by reflect — it is where " +
+	"this API's camelCase wire names live, and how encoding/json finds them."
+
+const assertionsNote = "The comma-ok row reports false instead of panicking — " +
+	"the dynamic type is data the runtime carries, not a guess it commits to."
 
 // TypeRow is one value inspected through reflect: what the runtime knows
 // about a real guide object's type.
@@ -90,13 +107,17 @@ type BoundaryCheck struct {
 // RuntimeTypesPayload is the wire shape of GET /api/demo/go/runtime-types
 // (camelCase JSON) — the go-language topic's inline demo, adapted from the
 // fastapi guide's py:runtime-types to what "types at runtime" means in Go.
+// FieldsNote and AssertionsNote are the tables' teaching sentences, served
+// beside the rows they read (the client renders them, never authors them).
 type RuntimeTypesPayload struct {
-	Inspections []TypeRow      `json:"inspections"`
-	Fields      []FieldRow     `json:"fields"`
-	Assertions  []AssertionRow `json:"assertions"`
-	ZeroValues  []ZeroValueRow `json:"zeroValues"`
-	Enforcement EnforcementRun `json:"enforcement"`
-	Boundary    BoundaryCheck  `json:"boundary"`
+	Inspections    []TypeRow      `json:"inspections"`
+	Fields         []FieldRow     `json:"fields"`
+	Assertions     []AssertionRow `json:"assertions"`
+	ZeroValues     []ZeroValueRow `json:"zeroValues"`
+	Enforcement    EnforcementRun `json:"enforcement"`
+	Boundary       BoundaryCheck  `json:"boundary"`
+	FieldsNote     string         `json:"fieldsNote"`
+	AssertionsNote string         `json:"assertionsNote"`
 }
 
 // typeRow reflects one value. reflect.TypeOf's parameter is any — the
@@ -274,11 +295,13 @@ func boundary() BoundaryCheck {
 // the handler layer adds only transport.
 func BuildRuntimeTypesPayload() RuntimeTypesPayload {
 	return RuntimeTypesPayload{
-		Inspections: inspections(),
-		Fields:      fields(),
-		Assertions:  assertions(),
-		ZeroValues:  zeroValues(),
-		Enforcement: enforcement(),
-		Boundary:    boundary(),
+		Inspections:    inspections(),
+		Fields:         fields(),
+		Assertions:     assertions(),
+		ZeroValues:     zeroValues(),
+		Enforcement:    enforcement(),
+		Boundary:       boundary(),
+		FieldsNote:     fieldsNote,
+		AssertionsNote: assertionsNote,
 	}
 }

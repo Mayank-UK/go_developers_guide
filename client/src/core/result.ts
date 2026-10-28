@@ -3,8 +3,11 @@ import type { Failure } from './error-handling/failures';
 /**
  * Result<T> — the domain return type for anything that can fail in an
  * expected, recoverable way. Mirrors the react/express/spring guides'
- * `Result<T>` and the server's `core/result.py`: a discriminated union on `ok`
- * so switch/narrowing works ergonomically in TypeScript.
+ * `Result<T>`; the Go server's counterpart is its plain `(value, error)`
+ * returns shaped by `server/internal/core/errors.go`'s Kind taxonomy —
+ * the same taxonomy `core/error-handling/failures.ts` types for this
+ * side. A discriminated union on `ok` so switch/narrowing works
+ * ergonomically in TypeScript.
  *
  * - `Success` carries a value and an *optional* `warning` (a non-blocking
  *   Failure, e.g. "showed stale cache because the network failed").

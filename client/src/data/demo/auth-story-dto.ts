@@ -2,6 +2,7 @@ import type {
   AuthStoryBeat,
   AuthStoryDemoData,
   AuthStoryFact,
+  AuthStoryVerdict,
 } from '../../domain/demo/auth-story';
 import { isRecord, requiredArray, requiredString } from '../content/validate';
 
@@ -11,10 +12,22 @@ import { isRecord, requiredArray, requiredString } from '../content/validate';
  * ONLY the listed fields (whitelist) and throws on any shape violation,
  * which parseDto upgrades to an InvalidResponseException. Story prose
  * and previews are server-minted per run — validated as non-empty
- * strings, never pinned to literals.
+ * strings, never pinned to literals. The verdict vocabulary is the
+ * closed four-value union the server's auth-story constants define —
+ * unknown verdicts are shape violations, not new colors.
  */
 
 export type AuthStoryDemoDto = AuthStoryDemoData;
+
+const VERDICTS: readonly AuthStoryVerdict[] = ['ok', 'rejected', 'alarm', 'info'];
+
+function verdictFromJson(value: Record<string, unknown>, key: string): AuthStoryVerdict {
+  const verdict = requiredString(value, key);
+  if (!VERDICTS.includes(verdict as AuthStoryVerdict)) {
+    throw new Error(`expected one of ${VERDICTS.join('|')} at "${key}"`);
+  }
+  return verdict as AuthStoryVerdict;
+}
 
 function factFromJson(value: unknown): AuthStoryFact {
   if (!isRecord(value)) throw new Error('auth story fact must be an object');
@@ -30,7 +43,7 @@ function beatFromJson(value: unknown): AuthStoryBeat {
   return {
     beat: requiredString(value, 'beat'),
     detail: requiredString(value, 'detail'),
-    verdict: requiredString(value, 'verdict'),
+    verdict: verdictFromJson(value, 'verdict'),
     facts,
   };
 }

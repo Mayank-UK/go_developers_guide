@@ -77,7 +77,16 @@ export function RuntimeTypesDemo() {
     return <ErrorPanel subject="the runtime-types demo" failure={status.failure} onRetry={retry} />;
   }
 
-  const { inspections, fields, assertions, zeroValues, enforcement, boundary } = status.data;
+  const {
+    inspections,
+    fields,
+    assertions,
+    zeroValues,
+    enforcement,
+    boundary,
+    fieldsNote,
+    assertionsNote,
+  } = status.data;
 
   return (
     <div className="flex flex-col gap-md">
@@ -130,8 +139,7 @@ export function RuntimeTypesDemo() {
           </table>
         </div>
         <p className="text-body-sm text-on-surface-variant">
-          The tag column is read at runtime by reflect — it is where this API's
-          camelCase wire names live, and how encoding/json finds them.
+          {fieldsNote}
         </p>
       </section>
 
@@ -157,8 +165,7 @@ export function RuntimeTypesDemo() {
           </table>
         </div>
         <p className="text-body-sm text-on-surface-variant">
-          The comma-ok row reports false instead of panicking — the dynamic
-          type is data the runtime carries, not a guess it commits to.
+          {assertionsNote}
         </p>
       </section>
 

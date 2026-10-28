@@ -71,4 +71,10 @@ export interface RuntimeTypesDemoData {
   zeroValues: ZeroValueRow[];
   enforcement: EnforcementRun;
   boundary: BoundaryCheck;
+  /**
+   * The two tables' teaching sentences — server-taught prose riding the
+   * payload (the client renders it, never authors it).
+   */
+  fieldsNote: string;
+  assertionsNote: string;
 }

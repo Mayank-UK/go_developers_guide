@@ -143,6 +143,21 @@ func TestBoundaryIsTheJsonTypeRejection(t *testing.T) {
 	}
 }
 
+// The tables' teaching sentences are server-taught prose riding the
+// payload — the client renders them, never authors them. These tests pin
+// the contract so the prose cannot silently disappear from the wire.
+func TestTeachingNotesAreServedWithTheTables(t *testing.T) {
+	p := payload()
+	if !strings.Contains(p.FieldsNote, "read at runtime by reflect") ||
+		!strings.Contains(p.FieldsNote, "encoding/json") {
+		t.Errorf("fieldsNote drifted from the json-tag teaching: %q", p.FieldsNote)
+	}
+	if !strings.Contains(p.AssertionsNote, "false instead of panicking") ||
+		!strings.Contains(p.AssertionsNote, "dynamic type") {
+		t.Errorf("assertionsNote drifted from the comma-ok teaching: %q", p.AssertionsNote)
+	}
+}
+
 func TestPayloadIsPure(t *testing.T) {
 	first, second := BuildRuntimeTypesPayload(), BuildRuntimeTypesPayload()
 	if !reflect.DeepEqual(first, second) {

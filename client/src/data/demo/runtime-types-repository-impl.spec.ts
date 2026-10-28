@@ -65,6 +65,8 @@ const demoPayload = {
     errorType: '*json.UnmarshalTypeError',
     message: 'json: cannot unmarshal number into Go struct field TextBlock.id of type string',
   },
+  fieldsNote: 'The tag column is read at runtime by reflect.',
+  assertionsNote: 'The comma-ok row reports false instead of panicking.',
 };
 
 function makeRepository(): RuntimeTypesRepositoryImpl {

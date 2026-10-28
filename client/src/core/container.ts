@@ -422,7 +422,9 @@ import {
  * scenario toggle (scenario API → repository → get/patch use cases, behind
  * the root header's ScenarioPanel) rides the same shape. Later phases add
  * the per-topic demo pipelines the same way: one import quartet + token
- * pair + register block + getter per demo.
+ * pair + register block per demo. Resolution has two eras — views either
+ * read a typed getter below or (the standard, for later demos) resolve
+ * their domain module's own token; see the typed-getters section comment.
  *
  * `initialize` is idempotent — re-running it just re-registers. Call it once
  * at startup (main.tsx) or in a test's beforeAll.
@@ -1303,7 +1305,24 @@ class Container {
     );
   }
 
-  // ---- typed getters: the only resolution surface views/hooks use ----
+  // ---- typed getters ----
+  // Two resolution styles coexist, deliberately. The STANDARD for demo
+  // views is domain-token resolution: the demo's domain module exports its
+  // own use-case symbol (e.g. DEPLOY_STACK_DEMO_USE_CASE, aliased into
+  // ContainerTokens above), and the view resolves it with
+  // container.resolve(TOKEN) — those demos intentionally have NO getter
+  // here. Getters exist only where something actually reads one:
+  //   - this file's own wiring: initialize() reads the api/repository
+  //     getters below to construct each next layer;
+  //   - the shell views and the early demos wired before the token
+  //     convention landed (home/topic/scenario hooks, the posts CRUD
+  //     verbs, runtime-types, concurrency, context-cancellation,
+  //     race-detector);
+  //   - the wiring spec (container.spec.ts), which asserts the layered
+  //     construction through the getters for demos whose views don't.
+  // A getter nothing reads gets deleted (the phase-13 hygiene pass removed
+  // 27 such use-case getters) — do not re-add one for a token-resolving
+  // demo.
 
   get appConfig(): AppConfig {
     return this.resolve<AppConfig>(ContainerTokens.AppConfig);
@@ -1742,24 +1761,12 @@ class Container {
     return this.resolve<CachingLabRepository>(ContainerTokens.CachingLabRepository);
   }
 
-  get getCachingLabDemoUseCase(): GetCachingLabDemoUseCase {
-    return this.resolve<GetCachingLabDemoUseCase>(
-      ContainerTokens.GetCachingLabDemoUseCase,
-    );
-  }
-
   get messagingStreamApi(): MessagingStreamApi {
     return this.resolve<MessagingStreamApi>(ContainerTokens.MessagingStreamApi);
   }
 
   get messagingStreamRepository(): MessagingStreamRepository {
     return this.resolve<MessagingStreamRepository>(ContainerTokens.MessagingStreamRepository);
-  }
-
-  get getMessagingStreamDemoUseCase(): GetMessagingStreamDemoUseCase {
-    return this.resolve<GetMessagingStreamDemoUseCase>(
-      ContainerTokens.GetMessagingStreamDemoUseCase,
-    );
   }
 
   get messagingOutboxApi(): MessagingOutboxApi {
@@ -1770,52 +1777,12 @@ class Container {
     return this.resolve<MessagingOutboxRepository>(ContainerTokens.MessagingOutboxRepository);
   }
 
-  get getMessagingOutboxDemoUseCase(): GetMessagingOutboxDemoUseCase {
-    return this.resolve<GetMessagingOutboxDemoUseCase>(
-      ContainerTokens.GetMessagingOutboxDemoUseCase,
-    );
-  }
-
-  get getAuthSessionsDemoUseCase(): GetAuthStoryDemoUseCase {
-    return this.resolve<GetAuthStoryDemoUseCase>(ContainerTokens.GetAuthSessionsDemoUseCase);
-  }
-
-  get getAuthAPIKeysDemoUseCase(): GetAuthStoryDemoUseCase {
-    return this.resolve<GetAuthStoryDemoUseCase>(ContainerTokens.GetAuthAPIKeysDemoUseCase);
-  }
-
-  get getAuthCompareDemoUseCase(): GetAuthStoryDemoUseCase {
-    return this.resolve<GetAuthStoryDemoUseCase>(ContainerTokens.GetAuthCompareDemoUseCase);
-  }
-
-  get getAuthJWTDemoUseCase(): GetAuthStoryDemoUseCase {
-    return this.resolve<GetAuthStoryDemoUseCase>(ContainerTokens.GetAuthJWTDemoUseCase);
-  }
-
-  get getAuthOAuthDemoUseCase(): GetAuthStoryDemoUseCase {
-    return this.resolve<GetAuthStoryDemoUseCase>(ContainerTokens.GetAuthOAuthDemoUseCase);
-  }
-
-  get getAuthHashingDemoUseCase(): GetAuthStoryDemoUseCase {
-    return this.resolve<GetAuthStoryDemoUseCase>(ContainerTokens.GetAuthHashingDemoUseCase);
-  }
-
-  get getAuthRefreshDemoUseCase(): GetAuthStoryDemoUseCase {
-    return this.resolve<GetAuthStoryDemoUseCase>(ContainerTokens.GetAuthRefreshDemoUseCase);
-  }
-
   get jobsConsoleApi(): JobsConsoleApi {
     return this.resolve<JobsConsoleApi>(ContainerTokens.JobsConsoleApi);
   }
 
   get jobsConsoleRepository(): JobsConsoleRepository {
     return this.resolve<JobsConsoleRepository>(ContainerTokens.JobsConsoleRepository);
-  }
-
-  get getJobsConsoleDemoUseCase(): GetJobsConsoleDemoUseCase {
-    return this.resolve<GetJobsConsoleDemoUseCase>(
-      ContainerTokens.GetJobsConsoleDemoUseCase,
-    );
   }
 
   get errorsExplorerApi(): ErrorsExplorerApi {
@@ -1826,24 +1793,12 @@ class Container {
     return this.resolve<ErrorsExplorerRepository>(ContainerTokens.ErrorsExplorerRepository);
   }
 
-  get getErrorsExplorerDemoUseCase(): GetErrorsExplorerDemoUseCase {
-    return this.resolve<GetErrorsExplorerDemoUseCase>(
-      ContainerTokens.GetErrorsExplorerDemoUseCase,
-    );
-  }
-
   get depsManifestApi(): DepsManifestApi {
     return this.resolve<DepsManifestApi>(ContainerTokens.DepsManifestApi);
   }
 
   get depsManifestRepository(): DepsManifestRepository {
     return this.resolve<DepsManifestRepository>(ContainerTokens.DepsManifestRepository);
-  }
-
-  get getDepsManifestDemoUseCase(): GetDepsManifestDemoUseCase {
-    return this.resolve<GetDepsManifestDemoUseCase>(
-      ContainerTokens.GetDepsManifestDemoUseCase,
-    );
   }
 
   get archTracerApi(): ArchTracerApi {
@@ -1854,24 +1809,12 @@ class Container {
     return this.resolve<ArchTracerRepository>(ContainerTokens.ArchTracerRepository);
   }
 
-  get getArchTracerDemoUseCase(): GetArchTracerDemoUseCase {
-    return this.resolve<GetArchTracerDemoUseCase>(
-      ContainerTokens.GetArchTracerDemoUseCase,
-    );
-  }
-
   get obsViewerApi(): ObsViewerApi {
     return this.resolve<ObsViewerApi>(ContainerTokens.ObsViewerApi);
   }
 
   get obsViewerRepository(): ObsViewerRepository {
     return this.resolve<ObsViewerRepository>(ContainerTokens.ObsViewerRepository);
-  }
-
-  get getObsViewerDemoUseCase(): GetObsViewerDemoUseCase {
-    return this.resolve<GetObsViewerDemoUseCase>(
-      ContainerTokens.GetObsViewerDemoUseCase,
-    );
   }
 
   get obsTraceApi(): ObsTraceApi {
@@ -1882,24 +1825,12 @@ class Container {
     return this.resolve<ObsTraceRepository>(ContainerTokens.ObsTraceRepository);
   }
 
-  get getObsTraceDemoUseCase(): GetObsTraceDemoUseCase {
-    return this.resolve<GetObsTraceDemoUseCase>(
-      ContainerTokens.GetObsTraceDemoUseCase,
-    );
-  }
-
   get testingRunnerApi(): TestingRunnerApi {
     return this.resolve<TestingRunnerApi>(ContainerTokens.TestingRunnerApi);
   }
 
   get testingRunnerRepository(): TestingRunnerRepository {
     return this.resolve<TestingRunnerRepository>(ContainerTokens.TestingRunnerRepository);
-  }
-
-  get getTestingRunnerDemoUseCase(): GetTestingRunnerDemoUseCase {
-    return this.resolve<GetTestingRunnerDemoUseCase>(
-      ContainerTokens.GetTestingRunnerDemoUseCase,
-    );
   }
 
   get debugStallApi(): DebugStallApi {
@@ -1910,24 +1841,12 @@ class Container {
     return this.resolve<DebugStallRepository>(ContainerTokens.DebugStallRepository);
   }
 
-  get getDebugStallDemoUseCase(): GetDebugStallDemoUseCase {
-    return this.resolve<GetDebugStallDemoUseCase>(
-      ContainerTokens.GetDebugStallDemoUseCase,
-    );
-  }
-
   get envInspectorApi(): EnvInspectorApi {
     return this.resolve<EnvInspectorApi>(ContainerTokens.EnvInspectorApi);
   }
 
   get envInspectorRepository(): EnvInspectorRepository {
     return this.resolve<EnvInspectorRepository>(ContainerTokens.EnvInspectorRepository);
-  }
-
-  get getEnvInspectorDemoUseCase(): GetEnvInspectorDemoUseCase {
-    return this.resolve<GetEnvInspectorDemoUseCase>(
-      ContainerTokens.GetEnvInspectorDemoUseCase,
-    );
   }
 
   get deployStackApi(): DeployStackApi {
@@ -1938,24 +1857,12 @@ class Container {
     return this.resolve<DeployStackRepository>(ContainerTokens.DeployStackRepository);
   }
 
-  get getDeployStackDemoUseCase(): GetDeployStackDemoUseCase {
-    return this.resolve<GetDeployStackDemoUseCase>(
-      ContainerTokens.GetDeployStackDemoUseCase,
-    );
-  }
-
   get perfBenchApi(): PerfBenchApi {
     return this.resolve<PerfBenchApi>(ContainerTokens.PerfBenchApi);
   }
 
   get perfBenchRepository(): PerfBenchRepository {
     return this.resolve<PerfBenchRepository>(ContainerTokens.PerfBenchRepository);
-  }
-
-  get getPerfBenchDemoUseCase(): GetPerfBenchDemoUseCase {
-    return this.resolve<GetPerfBenchDemoUseCase>(
-      ContainerTokens.GetPerfBenchDemoUseCase,
-    );
   }
 
   get reliabilityBreakerApi(): ReliabilityBreakerApi {
@@ -1966,24 +1873,12 @@ class Container {
     return this.resolve<ReliabilityBreakerRepository>(ContainerTokens.ReliabilityBreakerRepository);
   }
 
-  get getReliabilityBreakerDemoUseCase(): GetReliabilityBreakerDemoUseCase {
-    return this.resolve<GetReliabilityBreakerDemoUseCase>(
-      ContainerTokens.GetReliabilityBreakerDemoUseCase,
-    );
-  }
-
   get scalingStatelessApi(): ScalingStatelessApi {
     return this.resolve<ScalingStatelessApi>(ContainerTokens.ScalingStatelessApi);
   }
 
   get scalingStatelessRepository(): ScalingStatelessRepository {
     return this.resolve<ScalingStatelessRepository>(ContainerTokens.ScalingStatelessRepository);
-  }
-
-  get getScalingStatelessDemoUseCase(): GetScalingStatelessDemoUseCase {
-    return this.resolve<GetScalingStatelessDemoUseCase>(
-      ContainerTokens.GetScalingStatelessDemoUseCase,
-    );
   }
 
   get bestChecklistApi(): BestChecklistApi {
@@ -1994,24 +1889,12 @@ class Container {
     return this.resolve<BestChecklistRepository>(ContainerTokens.BestChecklistRepository);
   }
 
-  get getBestChecklistDemoUseCase(): GetBestChecklistDemoUseCase {
-    return this.resolve<GetBestChecklistDemoUseCase>(
-      ContainerTokens.GetBestChecklistDemoUseCase,
-    );
-  }
-
   get thirdPartyHubApi(): ThirdPartyHubApi {
     return this.resolve<ThirdPartyHubApi>(ContainerTokens.ThirdPartyHubApi);
   }
 
   get thirdPartyHubRepository(): ThirdPartyHubRepository {
     return this.resolve<ThirdPartyHubRepository>(ContainerTokens.ThirdPartyHubRepository);
-  }
-
-  get getThirdPartyHubDemoUseCase(): GetThirdPartyHubDemoUseCase {
-    return this.resolve<GetThirdPartyHubDemoUseCase>(
-      ContainerTokens.GetThirdPartyHubDemoUseCase,
-    );
   }
 
   get archSagaApi(): ArchSagaApi {
@@ -2022,24 +1905,12 @@ class Container {
     return this.resolve<ArchSagaRepository>(ContainerTokens.ArchSagaRepository);
   }
 
-  get getArchSagaDemoUseCase(): GetArchSagaDemoUseCase {
-    return this.resolve<GetArchSagaDemoUseCase>(
-      ContainerTokens.GetArchSagaDemoUseCase,
-    );
-  }
-
   get archEventstoreApi(): ArchEventstoreApi {
     return this.resolve<ArchEventstoreApi>(ContainerTokens.ArchEventstoreApi);
   }
 
   get archEventstoreRepository(): ArchEventstoreRepository {
     return this.resolve<ArchEventstoreRepository>(ContainerTokens.ArchEventstoreRepository);
-  }
-
-  get getArchEventstoreDemoUseCase(): GetArchEventstoreDemoUseCase {
-    return this.resolve<GetArchEventstoreDemoUseCase>(
-      ContainerTokens.GetArchEventstoreDemoUseCase,
-    );
   }
 
   // ---- wiring helpers ----

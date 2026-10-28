@@ -20,12 +20,9 @@ import type { ContextCancellationDemoData, PropagationRow, WorkRow } from '../..
  * cancelled, nothing leaked.
  *
  * Dependency flow mirrors the views: the hook resolves the use case from
- * the container by default, failures arrive as typed Failures inside
- * Results, and `retry` re-runs the load. The container's wiring for this
- * demo (token + getter) lands with the wave's composition-root change;
- * until then the resolver below throws — unreachable in production,
- * because the demo registry (also composition-owned) has no entry for
- * this component yet. Specs inject the use case through the component's
+ * the container by default (the getter the composition root registers
+ * under), failures arrive as typed Failures inside Results, and `retry`
+ * re-runs the load. Specs inject the use case through the component's
  * optional prop instead of the container.
  */
 
@@ -35,26 +32,8 @@ type ContextCancellationDemoStatus =
   | { state: 'ready'; data: ContextCancellationDemoData }
   | { state: 'error'; failure: Failure };
 
-/**
- * The container seam: once container.ts gains the
- * GetContextCancellationDemoUseCase getter, this resolves through it with
- * no change here (and can be simplified to the family's plain
- * `container.getContextCancellationDemoUseCase` default).
- */
-function resolveContextCancellationDemoUseCase(): GetContextCancellationDemoUseCase {
-  const wired = (
-    container as typeof container & {
-      getContextCancellationDemoUseCase?: () => GetContextCancellationDemoUseCase;
-    }
-  ).getContextCancellationDemoUseCase;
-  if (!wired) {
-    throw new Error('GetContextCancellationDemoUseCase is not wired in the container yet');
-  }
-  return wired();
-}
-
 export function useContextCancellationDemo(
-  useCase: GetContextCancellationDemoUseCase = resolveContextCancellationDemoUseCase(),
+  useCase: GetContextCancellationDemoUseCase = container.getContextCancellationDemoUseCase,
 ): { status: ContextCancellationDemoStatus; retry: () => void } {
   const [attempt, setAttempt] = useState(0);
   const [status, setStatus] = useState<ContextCancellationDemoStatus>({ state: 'idle' });

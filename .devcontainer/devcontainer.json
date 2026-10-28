@@ -10,6 +10,12 @@
   "service": "dev",
   "runServices": ["dev", "client_dev", "postgres", "redis", "mongo"],
   "workspaceFolder": "/workspaces/go_developers_guide",
+  // Runs on the HOST before the container is created: compose declares the
+  // three external cache volumes (gdg-go, gdg-gocache, gdg-npm), which must
+  // already exist or a fresh machine's "Reopen in Container" hard-fails.
+  // One create per volume (the CLI takes a single name); idempotent, so
+  // re-running is a no-op.
+  "initializeCommand": "docker volume create gdg-go && docker volume create gdg-gocache && docker volume create gdg-npm",
   "shutdownAction": "stopCompose",
   "customizations": {
     "vscode": {

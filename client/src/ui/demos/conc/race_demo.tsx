@@ -18,12 +18,9 @@ import type { HygieneRow, RaceDetectorDemoData, SynchronizedRun } from '../../..
  * abandoned by select+default, with both goroutines joined first.
  *
  * Dependency flow mirrors the views: the hook resolves the use case from
- * the container by default, failures arrive as typed Failures inside
- * Results, and `retry` re-runs the load. The container's wiring for this
- * demo (token + getter) lands with the wave's composition-root change;
- * until then the resolver below throws — unreachable in production,
- * because the demo registry (also composition-owned) has no entry for
- * this component yet. Specs inject the use case through the component's
+ * the container by default (the getter the composition root registers
+ * under), failures arrive as typed Failures inside Results, and `retry`
+ * re-runs the load. Specs inject the use case through the component's
  * optional prop instead of the container.
  */
 
@@ -33,26 +30,8 @@ type RaceDetectorDemoStatus =
   | { state: 'ready'; data: RaceDetectorDemoData }
   | { state: 'error'; failure: Failure };
 
-/**
- * The container seam: once container.ts gains the
- * GetRaceDetectorDemoUseCase getter, this resolves through it with no
- * change here (and can be simplified to the family's plain
- * `container.getRaceDetectorDemoUseCase` default).
- */
-function resolveRaceDetectorDemoUseCase(): GetRaceDetectorDemoUseCase {
-  const wired = (
-    container as typeof container & {
-      getRaceDetectorDemoUseCase?: () => GetRaceDetectorDemoUseCase;
-    }
-  ).getRaceDetectorDemoUseCase;
-  if (!wired) {
-    throw new Error('GetRaceDetectorDemoUseCase is not wired in the container yet');
-  }
-  return wired();
-}
-
 export function useRaceDetectorDemo(
-  useCase: GetRaceDetectorDemoUseCase = resolveRaceDetectorDemoUseCase(),
+  useCase: GetRaceDetectorDemoUseCase = container.getRaceDetectorDemoUseCase,
 ): { status: RaceDetectorDemoStatus; retry: () => void } {
   const [attempt, setAttempt] = useState(0);
   const [status, setStatus] = useState<RaceDetectorDemoStatus>({ state: 'idle' });

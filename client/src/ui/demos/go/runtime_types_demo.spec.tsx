@@ -70,6 +70,12 @@ const fixture: RuntimeTypesDemoData = {
     errorType: '*json.UnmarshalTypeError',
     message: 'json: cannot unmarshal number into Go struct field TextBlock.id of type string',
   },
+  // The tables' teaching sentences ride the payload — the client renders
+  // them, the server authors them.
+  fieldsNote:
+    "The tag column is read at runtime by reflect — it is where this API's camelCase wire names live, and how encoding/json finds them.",
+  assertionsNote:
+    'The comma-ok row reports false instead of panicking — the dynamic type is data the runtime carries, not a guess it commits to.',
 };
 
 function stubUseCase(execute: () => Promise<Result<RuntimeTypesDemoData>>): void {
@@ -102,14 +108,26 @@ describe('RuntimeTypesDemo', () => {
     expect(screen.getByTestId('rt-inspections')).toHaveTextContent('func');
     expect(screen.getByTestId('rt-inspections')).toHaveTextContent('96');
 
-    // Fields: the walked struct with its runtime-readable json tags.
+    // Fields: the walked struct with its runtime-readable json tags, plus
+    // the server-taught sentence that reads the table (rendered from the
+    // payload, never hardcoded here).
     expect(screen.getByTestId('rt-fields')).toHaveTextContent('lead,omitempty');
     expect(screen.getByTestId('rt-fields')).toHaveTextContent('[]content.Block');
+    expect(screen.getByTestId('rt-fields')).toHaveTextContent(
+      'read at runtime by reflect',
+    );
+    expect(screen.getByTestId('rt-fields')).toHaveTextContent(
+      "how encoding/json finds them",
+    );
 
     // Assertions: matches resolve ids; the comma-ok miss reports false with
-    // no block id, and never crashes the render.
+    // no block id, and never crashes the render. Its teaching sentence is
+    // the payload's own (fieldsNote's sibling), served by the server.
     expect(screen.getByTestId('rt-assertions')).toHaveTextContent('matched');
     expect(screen.getByTestId('rt-assertions')).toHaveTextContent('ok=false');
+    expect(screen.getByTestId('rt-assertions')).toHaveTextContent(
+      'reports false instead of panicking',
+    );
 
     // Zero values: every declaration already at its zero.
     expect(screen.getByTestId('rt-zero-values')).toHaveTextContent('var present bool');

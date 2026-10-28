@@ -6,6 +6,11 @@
 # built-in nonroot user. Build context: repo root; server/go.mod +
 # server/go.sum are the required manifests.
 #
+# Deliberate deploy/-parity deviation: only server/ is COPYed (below), so
+# the runtime deploy-stack demo's LocateDeployDir walk finds no deploy/
+# artifacts beside the binary and the endpoint degrades to its honest typed
+# 503 — a behavior pinned by the server's tests, not an accident.
+#
 # server/ code arrives in Phase 0.B — this file is authored at 0.A and
 # built at 0.B close (reading-verified only until then).
 FROM golang:1.27.3-bookworm AS build
