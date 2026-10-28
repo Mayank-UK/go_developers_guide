@@ -71,8 +71,8 @@ func TestAppInfoDemoServesThePayload(t *testing.T) {
 	if err := json.Unmarshal(rec.Body.Bytes(), &decoded); err != nil {
 		t.Fatalf("body not the demo DTO shape: %v\n%s", err, rec.Body.String())
 	}
-	// 12 = the deliberate-direct-requires count since the Phase 5 deps
-	// landed (grpc-go, gqlgen, pgx, …) — derived live, pinned here.
+	// 19 = the linked-module count of THIS package's test binary —
+	// derived live, pinned here.
 	// The count is binary-scoped: this package's test binary links the
 	// auth engines (argon2 rides along), the security stack (x/time rides
 	// along), and the realtime handlers (coder/websocket rides along), so

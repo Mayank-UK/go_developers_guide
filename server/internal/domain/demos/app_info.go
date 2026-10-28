@@ -19,8 +19,10 @@ import (
 
 // ModuleInfo is who this binary is, exactly as debug.ReadBuildInfo reports
 // it: the module path from go.mod, the main module's version, the toolchain
-// that built it, and how many module dependencies it carries (the
-// deliberate direct requires go.mod advertises and this demo confirms).
+// that built it, and how many module dependencies the binary links (the
+// linked set, which differs from go.mod's require list — the dependency
+// topic teaches that manifest-versus-binary gap; each binary of this module
+// reports its own count).
 type ModuleInfo struct {
 	Path            string `json:"path"`
 	Version         string `json:"version"`

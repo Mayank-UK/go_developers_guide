@@ -34,11 +34,12 @@ func TestAppInfoModuleFactsMatchTheLiveBuildInfo(t *testing.T) {
 	if payload.Module.GoVersion != buildInfo.GoVersion || !strings.HasPrefix(payload.Module.GoVersion, "go1.") {
 		t.Errorf("go version = %q, want the live toolchain's go1.x string", payload.Module.GoVersion)
 	}
-	// 12 = the deliberate-direct-requires count since the Phase 5 deps
-	// landed (grpc-go, gqlgen, pgx, …); still pinned against the live
-	// build info so a manifest change fails here first.
+	// 16 = the linked-module count of THIS package's test binary (go.mod
+	// advertises 15 direct requires — the dependency topic teaches that
+	// manifest-versus-binary gap); pinned against the live build info so
+	// any link-graph change fails here first.
 	if payload.Module.DependencyCount != len(buildInfo.Deps) || payload.Module.DependencyCount != 16 {
-		t.Errorf("dependency count = %d, want 16 (the deliberate direct-requires count, confirmed live)", payload.Module.DependencyCount)
+		t.Errorf("dependency count = %d, want 16 (this test binary's linked-module count, confirmed live)", payload.Module.DependencyCount)
 	}
 	// go run, go test, and an untagged go build all report "(devel)"; a
 	// VCS-stamped release build reports its version. Either is honest —

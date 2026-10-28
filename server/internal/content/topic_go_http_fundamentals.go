@@ -201,15 +201,15 @@ func goHTTPFundamentalsTopic() (Topic, error) {
 					"}"),
 			demo("gohttp:app-info", "The running server, introduced by itself",
 				"Computed live from this very process: the module and toolchain the binary was built from, "+
-					"its dependency count (the manifest's deliberate direct requires, pinned against the live "+
-					"build info), the CPU "+
+					"its dependency count (the linked-module count of the binary that served you — the "+
+					"dependency topic's manifest-versus-binary lesson), the CPU "+
 					"facts the scheduler sees (NumCPU, GOMAXPROCS), the port/env/log-level the process "+
 					"actually booted with, and the toolchain's build settings sorted by key — honest under "+
 					"go run, go test, and a release build alike."),
 			text("an-beats-intro",
 				"The payload reads in four beats:"),
 			list("an-beats", false,
-				"Module — path, version, toolchain, dependency count: the go.mod facts as the running binary holds them; ``(devel)`` until a VCS-stamped release build says otherwise.",
+				"Module — path, version, toolchain, dependency count: the module facts as the running binary holds them (the linked set, not go.mod's require list); ``(devel)`` until a VCS-stamped release build says otherwise.",
 				"Runtime — NumCPU and GOMAXPROCS, the machine as the scheduler sees it; equal here, and topic 02 covers when they are not.",
 				"Environment — port, env, and log level the process actually holds: the LoadConfig result the handler injected at wiring time.",
 				"Build settings — the toolchain flags stamped at build (build mode, compiler, CGO, GOARCH/GOOS), sorted by key so the shape is deterministic."),
@@ -402,7 +402,7 @@ func goHTTPFundamentalsTopic() (Topic, error) {
 			text("dev-loop",
 				"The inner loop is two commands. ``go run ./cmd/guide`` compiles and starts the server — fast enough, routinely under a second for a module this size, that most Go developers restart rather than watch. ``go build ./cmd/guide`` produces the deployable binary when you want it. There is no transpile step, no bundler, no watchers required: edit, save, re-run. Two hygiene tools ride along in every loop: ``gofmt`` formats source canonically (there is exactly one way Go code looks, which ends style debates in code review), and ``go vet`` flags the suspect constructs the compiler will not — printf verb mismatches, unreachable code, shadowed returns."),
 			text("dev-verify",
-				"Verification is the full pipeline: ``go build ./...``, ``go vet ./...``, and ``go test -race ./...`` — the race detector is a first-class part of the standard invocation in this repo, not an occasional deep check. The family rule this guide keeps: every demo endpoint ships with a handler test through the real middleware chain, and every payload claim the prose makes is pinned by a builder test next to the code. The test guarding THIS topic's demo is a real example — it pins the module facts against the live ``ReadBuildInfo``, including the dependency count against the live manifest:"),
+				"Verification is the full pipeline: ``go build ./...``, ``go vet ./...``, and ``go test -race ./...`` — the race detector is a first-class part of the standard invocation in this repo, not an occasional deep check. The family rule this guide keeps: every demo endpoint ships with a handler test through the real middleware chain, and every payload claim the prose makes is pinned by a builder test next to the code. The test guarding THIS topic's demo is a real example — it pins the module facts against the live ``ReadBuildInfo``, including the dependency count against the binary's live link set:"),
 			code("dev-tests-code", "go",
 				"The test behind the demo: prose claims, pinned as executable facts.",
 				"server/internal/domain/demos/app_info_test.go",
@@ -414,7 +414,7 @@ func goHTTPFundamentalsTopic() (Topic, error) {
 					"    }\n"+
 					"// …\n"+
 					"    if payload.Module.DependencyCount != len(buildInfo.Deps) || payload.Module.DependencyCount != 16 {\n"+
-					"        t.Errorf(\"dependency count = %d, want 16 (the deliberate direct-requires count, confirmed live)\", payload.Module.DependencyCount)\n"+
+					"        t.Errorf(\"dependency count = %d, want 16 (this test binary's linked-module count, confirmed live)\", payload.Module.DependencyCount)\n"+
 					"    }"),
 			text("dev-devcontainer",
 				"This repo's environment is a devcontainer stack: compose keeps the server on :8100 beside PostgreSQL, Redis, and MongoDB; the client's Vite dev server on :5175 proxies ``/api`` to it. Verification runs inside the long-lived containers — no ephemeral churn — with named volumes caching the Go module and build caches so an exec'd ``go test`` is warm. The docker-exec command pair is the project's definition of done, and it is exactly what produced the green output behind this page: the stack you are reading this from is the stack that tested it."),
