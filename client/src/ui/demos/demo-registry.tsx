@@ -153,6 +153,13 @@ const ReliabilityBreakerDemo = lazy(() => import('./reliability/breaker_demo'));
 // deterministic, so the replay button re-runs an identical
 // choreography: the lesson replays, the numbers do not drift.
 const ScalingStatelessDemo = lazy(() => import('./scaling/stateless_demo'));
+// The best-practices topic's self-audit: a REAL boot-computed checklist —
+// live probes through the real handler chain, real tool runs (gofmt, the
+// snippet ratchet, a -race round), real file reads — served from the
+// snapshot with honest fails where a check cannot run and manual
+// verdicts where none can honestly judge; the repo's deliberate not-dos
+// ride the same payload.
+const BestChecklistDemo = lazy(() => import('./best/checklist_demo'));
 
 export const demoRegistry: DemoRegistry = {
   'go:runtime-types': RuntimeTypesDemo,
@@ -213,4 +220,5 @@ export const demoRegistry: DemoRegistry = {
   'perf:bench': PerfBenchDemo,
   'reliability:breaker': ReliabilityBreakerDemo,
   'scaling:stateless': ScalingStatelessDemo,
+  'best:checklist': BestChecklistDemo,
 };

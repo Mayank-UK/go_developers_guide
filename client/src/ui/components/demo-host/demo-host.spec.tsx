@@ -67,7 +67,8 @@ describe('DemoHost', () => {
     // errors explorer, deps manifest, arch tracer, the slog viewer,
     // the trace round-trip, the testing runner, the debug stall, the
     // env inspector, the deployment stack viewer, the perf bench, the
-    // reliability breaker, and the scaling statelessness round).
+    // reliability breaker, the scaling statelessness round, and the
+    // best-practices self-audit).
     expect(Object.keys(demoRegistry)).toEqual([
       'go:runtime-types',
       'runtime:concurrency',
@@ -127,6 +128,7 @@ describe('DemoHost', () => {
       'perf:bench',
       'reliability:breaker',
       'scaling:stateless',
+      'best:checklist',
     ]);
   });
 });

@@ -503,6 +503,19 @@ func run() error {
 	mux.Handle("PUT /api/posts/{id}", presentation.NewPostReplaceHandler(postsReplace, logger))
 	mux.Handle("DELETE /api/posts/{id}", presentation.NewPostDeleteHandler(postsDelete, logger))
 
+	// Topic 41's best-practices checklist: a REAL self-audit computed
+	// once at boot (single-flight like the testing runner and perf
+	// bench) — live probes through a private mux mounting the SAME
+	// health, scenario, and posts handlers behind the SAME production
+	// chain, bounded tool executions (gofmt -l, the snippet-ratchet
+	// suite, a -race run), and file reads under the module and repo
+	// directories. Every request serves the snapshot; a check that
+	// cannot run becomes an honest fail/manual row, never a 500.
+	bestChecklist := presentation.NewBestChecklistHandler(
+		cfg, scenarioStore, postsGet, postsCreate, depsModuleDir, logger)
+	bestChecklist.Start()
+	mux.Handle("GET /api/demo/best/checklist", bestChecklist)
+
 	// GraphQL rides the SAME posts use-case instances as the REST routes —
 	// one domain, two surfaces, one data-mode switch. The playground's
 	// scratch store stays separate and fake by design (a func, because the

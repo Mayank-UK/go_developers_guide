@@ -376,6 +376,13 @@ import {
   GetScalingStatelessDemoUseCase,
   SCALING_STATELESS_DEMO_USE_CASE,
 } from '../domain/demo/get-scaling-stateless-demo-usecase';
+import { BestChecklistApi } from '../data/demo/best-checklist-api';
+import { BestChecklistRepositoryImpl } from '../data/demo/best-checklist-repository-impl';
+import type { BestChecklistRepository } from '../domain/demo/best-checklist-repository';
+import {
+  GetBestChecklistDemoUseCase,
+  BEST_CHECKLIST_DEMO_USE_CASE,
+} from '../domain/demo/get-best-checklist-demo-usecase';
 
 /**
  * Service-locator container — this client's composition root, mirroring the
@@ -617,6 +624,10 @@ export const ContainerTokens = {
   ScalingStatelessRepository: Symbol('ScalingStatelessRepository'),
   // Same aliasing story as the auth stories (SCALING_STATELESS_DEMO_USE_CASE).
   GetScalingStatelessDemoUseCase: SCALING_STATELESS_DEMO_USE_CASE,
+  BestChecklistApi: Symbol('BestChecklistApi'),
+  BestChecklistRepository: Symbol('BestChecklistRepository'),
+  // Same aliasing story as the auth stories (BEST_CHECKLIST_DEMO_USE_CASE).
+  GetBestChecklistDemoUseCase: BEST_CHECKLIST_DEMO_USE_CASE,
 } as const;
 
 class Container {
@@ -1210,6 +1221,17 @@ class Container {
     this.register(
       ContainerTokens.GetScalingStatelessDemoUseCase,
       new GetScalingStatelessDemoUseCase(this.scalingStatelessRepository),
+    );
+
+    // Topic 41's best-practices self-audit — the same shape once more.
+    this.register(ContainerTokens.BestChecklistApi, new BestChecklistApi(config));
+    this.register(
+      ContainerTokens.BestChecklistRepository,
+      new BestChecklistRepositoryImpl(this.bestChecklistApi),
+    );
+    this.register(
+      ContainerTokens.GetBestChecklistDemoUseCase,
+      new GetBestChecklistDemoUseCase(this.bestChecklistRepository),
     );
   }
 
@@ -1893,6 +1915,20 @@ class Container {
   get getScalingStatelessDemoUseCase(): GetScalingStatelessDemoUseCase {
     return this.resolve<GetScalingStatelessDemoUseCase>(
       ContainerTokens.GetScalingStatelessDemoUseCase,
+    );
+  }
+
+  get bestChecklistApi(): BestChecklistApi {
+    return this.resolve<BestChecklistApi>(ContainerTokens.BestChecklistApi);
+  }
+
+  get bestChecklistRepository(): BestChecklistRepository {
+    return this.resolve<BestChecklistRepository>(ContainerTokens.BestChecklistRepository);
+  }
+
+  get getBestChecklistDemoUseCase(): GetBestChecklistDemoUseCase {
+    return this.resolve<GetBestChecklistDemoUseCase>(
+      ContainerTokens.GetBestChecklistDemoUseCase,
     );
   }
 

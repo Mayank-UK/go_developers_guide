@@ -450,6 +450,10 @@ func NewProductionRegistry() (Registry, error) {
 	if err != nil {
 		return Registry{}, fmt.Errorf("build scaling topic: %w", err)
 	}
+	bestPractices, err := bestPracticesTopic()
+	if err != nil {
+		return Registry{}, fmt.Errorf("build best-practices topic: %w", err)
+	}
 	return NewRegistry(
 		[]Topic{
 			goLanguage, goRuntime, httpWeb, goHTTPFundamentals, interfacesComposition,
@@ -458,7 +462,7 @@ func NewProductionRegistry() (Registry, error) {
 			mongodb, redis, caching, messaging, authentication, authorization, security,
 			filesMedia, internationalization, realtime, backgroundJobs, errorHandling,
 			dependencyManagement, architecture, observability, testingContent, debugging,
-			environments, deployment, performance, reliability, scaling,
+			environments, deployment, performance, reliability, scaling, bestPractices,
 		},
 		groups,
 	)
