@@ -66,7 +66,8 @@ describe('DemoHost', () => {
     // (files workbench, i18n negotiator, realtime pair, jobs console,
     // errors explorer, deps manifest, arch tracer, the slog viewer,
     // the trace round-trip, the testing runner, the debug stall, the
-    // env inspector, the deployment stack viewer, and the perf bench).
+    // env inspector, the deployment stack viewer, the perf bench, and
+    // the reliability breaker).
     expect(Object.keys(demoRegistry)).toEqual([
       'go:runtime-types',
       'runtime:concurrency',
@@ -124,6 +125,7 @@ describe('DemoHost', () => {
       'env:inspector',
       'deploy:stack',
       'perf:bench',
+      'reliability:breaker',
     ]);
   });
 });

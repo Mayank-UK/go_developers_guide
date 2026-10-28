@@ -447,6 +447,24 @@ func run() error {
 	perfBench.Start()
 	mux.Handle("GET /api/demo/perf/bench", perfBench)
 
+	// Topic 39's reliability breaker: a REAL process-lifetime circuit
+	// breaker (closed/open/half-open, failure threshold, cooldown,
+	// single-probe semantics) protecting a downstream call that honors
+	// the shared scenario store's failure injection and respects
+	// context deadlines. The breaker PERSISTS across requests, so
+	// PATCHing /api/demo/scenario trips it under error injection,
+	// converts stalls into deadline exceeded under latency, and lets
+	// the half-open probe close it once disarmed after the cooldown —
+	// with every served timing measured around the calls that just
+	// happened. The console build is deterministic, so a failure here
+	// is a programmer bug and fails boot like every other wiring.
+	reliabilityConsole, err := demos.NewReliabilityConsole(demos.DefaultReliabilityConfig(), scenarioStore)
+	if err != nil {
+		return fmt.Errorf("reliability console: %w", err)
+	}
+	mux.Handle("GET /api/demo/reliability/breaker",
+		presentation.NewReliabilityBreakerHandler(reliabilityConsole, logger))
+
 	// The posts resource — the api-design topic's real API surface, and
 	// the substrate later topics reuse (authorization guards its ids,
 	// webhooks fire on its writes, the docs topics document its routes).

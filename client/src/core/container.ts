@@ -362,6 +362,13 @@ import {
   GetPerfBenchDemoUseCase,
   PERF_BENCH_DEMO_USE_CASE,
 } from '../domain/demo/get-perf-bench-demo-usecase';
+import { ReliabilityBreakerApi } from '../data/demo/reliability-breaker-api';
+import { ReliabilityBreakerRepositoryImpl } from '../data/demo/reliability-breaker-repository-impl';
+import type { ReliabilityBreakerRepository } from '../domain/demo/reliability-breaker-repository';
+import {
+  GetReliabilityBreakerDemoUseCase,
+  RELIABILITY_BREAKER_DEMO_USE_CASE,
+} from '../domain/demo/get-reliability-breaker-demo-usecase';
 
 /**
  * Service-locator container — this client's composition root, mirroring the
@@ -595,6 +602,10 @@ export const ContainerTokens = {
   PerfBenchRepository: Symbol('PerfBenchRepository'),
   // Same aliasing story as the auth stories (PERF_BENCH_DEMO_USE_CASE).
   GetPerfBenchDemoUseCase: PERF_BENCH_DEMO_USE_CASE,
+  ReliabilityBreakerApi: Symbol('ReliabilityBreakerApi'),
+  ReliabilityBreakerRepository: Symbol('ReliabilityBreakerRepository'),
+  // Same aliasing story as the auth stories (RELIABILITY_BREAKER_DEMO_USE_CASE).
+  GetReliabilityBreakerDemoUseCase: RELIABILITY_BREAKER_DEMO_USE_CASE,
 } as const;
 
 class Container {
@@ -1166,6 +1177,17 @@ class Container {
     this.register(
       ContainerTokens.GetPerfBenchDemoUseCase,
       new GetPerfBenchDemoUseCase(this.perfBenchRepository),
+    );
+
+    // Topic 39's reliability breaker — the same shape once more.
+    this.register(ContainerTokens.ReliabilityBreakerApi, new ReliabilityBreakerApi(config));
+    this.register(
+      ContainerTokens.ReliabilityBreakerRepository,
+      new ReliabilityBreakerRepositoryImpl(this.reliabilityBreakerApi),
+    );
+    this.register(
+      ContainerTokens.GetReliabilityBreakerDemoUseCase,
+      new GetReliabilityBreakerDemoUseCase(this.reliabilityBreakerRepository),
     );
   }
 
@@ -1821,6 +1843,20 @@ class Container {
   get getPerfBenchDemoUseCase(): GetPerfBenchDemoUseCase {
     return this.resolve<GetPerfBenchDemoUseCase>(
       ContainerTokens.GetPerfBenchDemoUseCase,
+    );
+  }
+
+  get reliabilityBreakerApi(): ReliabilityBreakerApi {
+    return this.resolve<ReliabilityBreakerApi>(ContainerTokens.ReliabilityBreakerApi);
+  }
+
+  get reliabilityBreakerRepository(): ReliabilityBreakerRepository {
+    return this.resolve<ReliabilityBreakerRepository>(ContainerTokens.ReliabilityBreakerRepository);
+  }
+
+  get getReliabilityBreakerDemoUseCase(): GetReliabilityBreakerDemoUseCase {
+    return this.resolve<GetReliabilityBreakerDemoUseCase>(
+      ContainerTokens.GetReliabilityBreakerDemoUseCase,
     );
   }
 

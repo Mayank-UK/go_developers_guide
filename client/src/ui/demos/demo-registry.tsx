@@ -137,6 +137,14 @@ const DeployStackDemo = lazy(() => import('./deploy/stack_demo'));
 // benchtime, count, and age — both count samples side by side, never
 // averaged, beside the compiler's escape verdicts verbatim.
 const PerfBenchDemo = lazy(() => import('./perf/bench_demo'));
+// The reliability topic's breaker: a REAL process-lifetime circuit
+// breaker (closed/open/half-open, failure threshold, cooldown,
+// single-probe semantics) protecting a dependency that honors the
+// shared scenario panel's failure injection and respects context
+// deadlines — its walk and retry timelines served with measured
+// timings, its state persisting across requests so PATCHing the
+// scenario trips and recovers it live.
+const ReliabilityBreakerDemo = lazy(() => import('./reliability/breaker_demo'));
 
 export const demoRegistry: DemoRegistry = {
   'go:runtime-types': RuntimeTypesDemo,
@@ -195,4 +203,5 @@ export const demoRegistry: DemoRegistry = {
   'env:inspector': EnvInspectorDemo,
   'deploy:stack': DeployStackDemo,
   'perf:bench': PerfBenchDemo,
+  'reliability:breaker': ReliabilityBreakerDemo,
 };
