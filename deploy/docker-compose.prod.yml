@@ -1,0 +1,183 @@
+# Topic 37's deployment artifact — the FULL prod stack: the guide server
+# (distroless static binary built by .docker/server/Dockerfile.prod), the
+# nginx client that fronts it, and the three datastores, wired with the
+# disciplines the deployment topic teaches: every service that CAN
+# healthcheck does, start order is enforced by dependency CONDITIONS
+# (not list order), every container carries a resource hint, the
+# datastores never leave the internal network (family prod stance: no
+# published ports), and the one true secret — the database password —
+# rides a required-variable rail that refuses `docker compose up` until
+# it is exported into the environment that runs compose. It is never
+# committed here and never baked into an image; compose interpolates it
+# into the DSN and the postgres password at START time only.
+#
+# The leaner .docker/docker-compose.prod.yml is the Phase 0.A bootstrap
+# stack; THIS file is the deployment topic's full artifact, parsed live
+# by the deploy:stack demo (GET /api/demo/deploy/stack).
+#
+# Validate: POSTGRES_PASSWORD=placeholder docker compose -f
+# deploy/docker-compose.prod.yml config
+name: go_developers_guide_deploy
+
+services:
+  server:
+    build:
+      context: ./../
+      dockerfile: ./.docker/server/Dockerfile.prod
+    image: gdg_server_prod
+    container_name: go_developers_guide_server_prod
+    restart: unless-stopped
+    environment:
+      GDG_ENV: prod
+      GDG_LOG_LEVEL: info
+      GDG_REDIS_ADDR: redis:6379
+      GDG_MONGO_URI: mongodb://mongo:27017
+      # The one interpolated secret on the stack: compose injects the
+      # exported POSTGRES_PASSWORD here (and into postgres below) at
+      # start time — the committed file carries only the RAIL.
+      GDG_DATABASE_URL: postgres://guide:${POSTGRES_PASSWORD:?export POSTGRES_PASSWORD before compose up}@postgres:5432/guide?sslmode=disable
+    ports:
+      - "8100:8100"
+    networks:
+      - app_internal
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+    # No Docker healthcheck on the server, ON PURPOSE: the runtime image
+    # is distroless — no shell, no wget, nothing to exec but the binary
+    # itself — so process-level probing belongs to the PLATFORM: the
+    # k8s manifests' kubelet-driven HTTP GET probes, or the client's
+    # check below, which proves the serving path end to end through the
+    # proxy.
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 256M
+        reservations:
+          cpus: "0.25"
+          memory: 64M
+
+  client:
+    build:
+      context: ./../
+      dockerfile: ./.docker/client/Dockerfile.prod
+    image: gdg_client_prod
+    container_name: go_developers_guide_client_prod
+    restart: unless-stopped
+    ports:
+      - "8101:80"
+    networks:
+      - app_internal
+    depends_on:
+      server:
+        condition: service_started
+    healthcheck:
+      # The full-stack check: nginx proxies /api/ to the server, so a
+      # 200 here proves client AND server AND the proxy path between
+      # them — the same /api/health the k8s liveness probe GETs.
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 64M
+        reservations:
+          cpus: "0.1"
+          memory: 32M
+
+  # The datastore trio: same pinned engine versions as the dev stack
+  # (the dev/prod parity discipline from the environments topic), same
+  # healthchecks, plus the resource hints a shared host deserves.
+  postgres:
+    image: postgres:17
+    container_name: go_developers_guide_postgres_prod
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: guide
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?export POSTGRES_PASSWORD before compose up}
+      POSTGRES_DB: guide
+    volumes:
+      - gdg-pg-data-prod:/var/lib/postgresql/data
+    networks:
+      - app_internal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U guide -d guide"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+        reservations:
+          cpus: "0.25"
+          memory: 128M
+
+  redis:
+    image: redis:7-alpine
+    container_name: go_developers_guide_redis_prod
+    restart: unless-stopped
+    volumes:
+      - gdg-redis-data-prod:/data
+    networks:
+      - app_internal
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 128M
+        reservations:
+          cpus: "0.1"
+          memory: 32M
+
+  mongo:
+    image: mongo:8
+    container_name: go_developers_guide_mongo_prod
+    restart: unless-stopped
+    volumes:
+      - gdg-mongo-data-prod:/data/db
+    networks:
+      - app_internal
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand({ ping: 1 }).ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+        reservations:
+          cpus: "0.25"
+          memory: 128M
+
+volumes:
+  gdg-pg-data-prod:
+  gdg-redis-data-prod:
+  gdg-mongo-data-prod:
+
+networks:
+  # Plain project-scoped internal network: the client's
+  # `proxy_pass http://server:8100` and the server's datastore URLs
+  # resolve here — nothing under this network is published except the
+  # two front doors (8100 API, 8101 client).
+  app_internal: {}

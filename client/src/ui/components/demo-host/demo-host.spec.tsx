@@ -122,6 +122,7 @@ describe('DemoHost', () => {
       'testing:runner',
       'debug:stall',
       'env:inspector',
+      'deploy:stack',
     ]);
   });
 });

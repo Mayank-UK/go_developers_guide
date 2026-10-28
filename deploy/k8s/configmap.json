@@ -1,0 +1,23 @@
+{
+  "apiVersion": "v1",
+  "kind": "ConfigMap",
+  "metadata": {
+    "name": "guide-config",
+    "namespace": "go-developers-guide",
+    "labels": {
+      "app.kubernetes.io/name": "go-developers-guide",
+      "app.kubernetes.io/component": "server"
+    },
+    "annotations": {
+      "guide.go/scope": "Non-secret runtime config only, mirroring core.LoadConfig's GDG_* contract. Everything here may safely appear in logs, describe output, and the deploy:stack demo. The one credential-bearing value - GDG_DATABASE_URL - lives in guide-secret, never here."
+    }
+  },
+  "data": {
+    "GDG_ENV": "prod",
+    "GDG_PORT": "8100",
+    "GDG_LOG_LEVEL": "info",
+    "GRPC_ADDR": ":8102",
+    "GDG_REDIS_ADDR": "redis:6379",
+    "GDG_MONGO_URI": "mongodb://mongo:27017"
+  }
+}

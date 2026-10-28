@@ -348,6 +348,13 @@ import {
   GetEnvInspectorDemoUseCase,
   ENV_INSPECTOR_DEMO_USE_CASE,
 } from '../domain/demo/get-env-inspector-demo-usecase';
+import { DeployStackApi } from '../data/demo/deploy-stack-api';
+import { DeployStackRepositoryImpl } from '../data/demo/deploy-stack-repository-impl';
+import type { DeployStackRepository } from '../domain/demo/deploy-stack-repository';
+import {
+  GetDeployStackDemoUseCase,
+  DEPLOY_STACK_DEMO_USE_CASE,
+} from '../domain/demo/get-deploy-stack-demo-usecase';
 
 /**
  * Service-locator container — this client's composition root, mirroring the
@@ -573,6 +580,10 @@ export const ContainerTokens = {
   EnvInspectorRepository: Symbol('EnvInspectorRepository'),
   // Same aliasing story as the auth stories (ENV_INSPECTOR_DEMO_USE_CASE).
   GetEnvInspectorDemoUseCase: ENV_INSPECTOR_DEMO_USE_CASE,
+  DeployStackApi: Symbol('DeployStackApi'),
+  DeployStackRepository: Symbol('DeployStackRepository'),
+  // Same aliasing story as the auth stories (DEPLOY_STACK_DEMO_USE_CASE).
+  GetDeployStackDemoUseCase: DEPLOY_STACK_DEMO_USE_CASE,
 } as const;
 
 class Container {
@@ -1122,6 +1133,17 @@ class Container {
     this.register(
       ContainerTokens.GetEnvInspectorDemoUseCase,
       new GetEnvInspectorDemoUseCase(this.envInspectorRepository),
+    );
+
+    // Topic 37's deployment stack viewer — the same shape once more.
+    this.register(ContainerTokens.DeployStackApi, new DeployStackApi(config));
+    this.register(
+      ContainerTokens.DeployStackRepository,
+      new DeployStackRepositoryImpl(this.deployStackApi),
+    );
+    this.register(
+      ContainerTokens.GetDeployStackDemoUseCase,
+      new GetDeployStackDemoUseCase(this.deployStackRepository),
     );
   }
 
@@ -1749,6 +1771,20 @@ class Container {
   get getEnvInspectorDemoUseCase(): GetEnvInspectorDemoUseCase {
     return this.resolve<GetEnvInspectorDemoUseCase>(
       ContainerTokens.GetEnvInspectorDemoUseCase,
+    );
+  }
+
+  get deployStackApi(): DeployStackApi {
+    return this.resolve<DeployStackApi>(ContainerTokens.DeployStackApi);
+  }
+
+  get deployStackRepository(): DeployStackRepository {
+    return this.resolve<DeployStackRepository>(ContainerTokens.DeployStackRepository);
+  }
+
+  get getDeployStackDemoUseCase(): GetDeployStackDemoUseCase {
+    return this.resolve<GetDeployStackDemoUseCase>(
+      ContainerTokens.GetDeployStackDemoUseCase,
     );
   }
 

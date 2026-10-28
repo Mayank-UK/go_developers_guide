@@ -421,6 +421,18 @@ func run() error {
 	mux.Handle("GET /api/demo/env/inspector",
 		presentation.NewEnvInspectorHandler(cfg, scenarioStore, logger))
 
+	// Topic 37's deployment stack viewer: the repo's REAL deployment
+	// artifacts parsed at request time. The composition root resolves
+	// the deploy/ directory when the repo sits beside the process (the
+	// dev container); the distroless prod image ships no repo, so the
+	// handler then serves the honest typed 503 instead of guessing.
+	deployDir := ""
+	if wd, wdErr := os.Getwd(); wdErr == nil {
+		deployDir = demos.LocateDeployDir(wd)
+	}
+	mux.Handle("GET /api/demo/deploy/stack",
+		presentation.NewDeployStackHandler(deployDir, logger))
+
 	// The posts resource — the api-design topic's real API surface, and
 	// the substrate later topics reuse (authorization guards its ids,
 	// webhooks fire on its writes, the docs topics document its routes).

@@ -349,9 +349,9 @@ func TestProductionRegistryIsValid(t *testing.T) {
 	if strings.Join(gotGroups, ",") != strings.Join(wantGroups, ",") {
 		t.Errorf("production groups = %v, want %v (ordered)", gotGroups, wantGroups)
 	}
-	if count := len(registry.Summaries()); count != 36 {
+	if count := len(registry.Summaries()); count != 37 {
 		t.Errorf(
-			"production registry has %d topics, want 36 (go-language, go-runtime, http-web, go-http-fundamentals, interfaces-and-composition, goroutines-and-channels, routing, middleware, request-response, validation, api-design, api-documentation, graphql, webhooks, grpc, sql-schema, databases-sql, sqlc-gorm, mongodb, redis, caching, messaging, authentication, authorization, security, files-media, internationalization, realtime, background-jobs, error-handling, dependency-management, architecture, observability, testing, debugging, environments)",
+			"production registry has %d topics, want 37 (go-language, go-runtime, http-web, go-http-fundamentals, interfaces-and-composition, goroutines-and-channels, routing, middleware, request-response, validation, api-design, api-documentation, graphql, webhooks, grpc, sql-schema, databases-sql, sqlc-gorm, mongodb, redis, caching, messaging, authentication, authorization, security, files-media, internationalization, realtime, background-jobs, error-handling, dependency-management, architecture, observability, testing, debugging, environments, deployment)",
 			count,
 		)
 	}

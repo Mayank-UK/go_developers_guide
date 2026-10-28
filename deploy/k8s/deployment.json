@@ -1,0 +1,123 @@
+{
+  "apiVersion": "apps/v1",
+  "kind": "Deployment",
+  "metadata": {
+    "name": "guide",
+    "namespace": "go-developers-guide",
+    "labels": {
+      "app.kubernetes.io/name": "go-developers-guide",
+      "app.kubernetes.io/component": "server"
+    },
+    "annotations": {
+      "guide.go/image": "The same image the prod compose builds as gdg_server_prod (distroless static binary). A real cluster pushes that image to its own registry and rewrites this field to the registry path + an immutable tag."
+    }
+  },
+  "spec": {
+    "replicas": 2,
+    "minReadySeconds": 5,
+    "strategy": {
+      "type": "RollingUpdate",
+      "rollingUpdate": {
+        "maxSurge": 1,
+        "maxUnavailable": 0
+      }
+    },
+    "selector": {
+      "matchLabels": {
+        "app.kubernetes.io/name": "go-developers-guide",
+        "app.kubernetes.io/component": "server"
+      }
+    },
+    "template": {
+      "metadata": {
+        "labels": {
+          "app.kubernetes.io/name": "go-developers-guide",
+          "app.kubernetes.io/component": "server"
+        }
+      },
+      "spec": {
+        "terminationGracePeriodSeconds": 30,
+        "containers": [
+          {
+            "name": "guide",
+            "image": "gdg_server_prod:local",
+            "imagePullPolicy": "IfNotPresent",
+            "ports": [
+              {
+                "name": "http",
+                "containerPort": 8100
+              },
+              {
+                "name": "grpc",
+                "containerPort": 8102
+              }
+            ],
+            "envFrom": [
+              {
+                "configMapRef": {
+                  "name": "guide-config"
+                }
+              },
+              {
+                "secretRef": {
+                  "name": "guide-secret"
+                }
+              }
+            ],
+            "resources": {
+              "requests": {
+                "cpu": "100m",
+                "memory": "64Mi"
+              },
+              "limits": {
+                "cpu": "500m",
+                "memory": "256Mi"
+              }
+            },
+            "livenessProbe": {
+              "httpGet": {
+                "path": "/api/health",
+                "port": "http"
+              },
+              "initialDelaySeconds": 5,
+              "periodSeconds": 15,
+              "timeoutSeconds": 2,
+              "failureThreshold": 3
+            },
+            "readinessProbe": {
+              "httpGet": {
+                "path": "/api/ready",
+                "port": "http"
+              },
+              "initialDelaySeconds": 10,
+              "periodSeconds": 10,
+              "timeoutSeconds": 2,
+              "failureThreshold": 3
+            },
+            "securityContext": {
+              "runAsNonRoot": true,
+              "runAsUser": 65532,
+              "allowPrivilegeEscalation": false,
+              "readOnlyRootFilesystem": true,
+              "capabilities": {
+                "drop": ["ALL"]
+              }
+            },
+            "volumeMounts": [
+              {
+                "name": "tmp",
+                "mountPath": "/tmp"
+              }
+            ]
+          }
+        ],
+        "volumes": [
+          {
+            "name": "tmp",
+            "emptyDir": {}
+          }
+        ]
+      }
+    }
+  }
+}

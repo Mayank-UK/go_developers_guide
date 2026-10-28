@@ -124,6 +124,12 @@ const DebugStallDemo = lazy(() => import('./debug/stall_demo'));
 // table-tested policy, the twelve-factor scorecard, and the
 // ScenarioStore's current state as the live flag panel.
 const EnvInspectorDemo = lazy(() => import('./env/inspector_demo'));
+// The deployment topic's stack viewer: the repo's real deploy/
+// artifacts — the prod compose file and every k8s manifest — parsed
+// live by the server and served with per-artifact provenance: services
+// and their rails, the probe contract against the real endpoints, the
+// rollout knobs, and the placeholder-only secret scan.
+const DeployStackDemo = lazy(() => import('./deploy/stack_demo'));
 
 export const demoRegistry: DemoRegistry = {
   'go:runtime-types': RuntimeTypesDemo,
@@ -180,4 +186,5 @@ export const demoRegistry: DemoRegistry = {
   'testing:runner': TestingRunnerDemo,
   'debug:stall': DebugStallDemo,
   'env:inspector': EnvInspectorDemo,
+  'deploy:stack': DeployStackDemo,
 };
