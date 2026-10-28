@@ -433,6 +433,20 @@ func run() error {
 	mux.Handle("GET /api/demo/deploy/stack",
 		presentation.NewDeployStackHandler(deployDir, logger))
 
+	// Topic 38's performance bench: this repo's own curated benchmarks
+	// (gzip levels × payload sizes, JSON buffered-marshal versus
+	// streaming encode, the in-memory repository's List) executed ONCE
+	// at boot in the background — single-flight like the testing
+	// runner, bounded by a hard timeout that kills the whole process
+	// group — beside a real `go build -gcflags=-m` over the
+	// presentation package whose escape verdicts ride the payload
+	// verbatim. Every number is parsed from the run with its command,
+	// benchtime, count, and age; a missing toolchain or tree degrades
+	// to the typed 503.
+	perfBench := presentation.NewPerfBenchHandler(depsModuleDir, logger)
+	perfBench.Start()
+	mux.Handle("GET /api/demo/perf/bench", perfBench)
+
 	// The posts resource — the api-design topic's real API surface, and
 	// the substrate later topics reuse (authorization guards its ids,
 	// webhooks fire on its writes, the docs topics document its routes).

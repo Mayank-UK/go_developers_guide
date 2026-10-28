@@ -355,6 +355,13 @@ import {
   GetDeployStackDemoUseCase,
   DEPLOY_STACK_DEMO_USE_CASE,
 } from '../domain/demo/get-deploy-stack-demo-usecase';
+import { PerfBenchApi } from '../data/demo/perf-bench-api';
+import { PerfBenchRepositoryImpl } from '../data/demo/perf-bench-repository-impl';
+import type { PerfBenchRepository } from '../domain/demo/perf-bench-repository';
+import {
+  GetPerfBenchDemoUseCase,
+  PERF_BENCH_DEMO_USE_CASE,
+} from '../domain/demo/get-perf-bench-demo-usecase';
 
 /**
  * Service-locator container — this client's composition root, mirroring the
@@ -584,6 +591,10 @@ export const ContainerTokens = {
   DeployStackRepository: Symbol('DeployStackRepository'),
   // Same aliasing story as the auth stories (DEPLOY_STACK_DEMO_USE_CASE).
   GetDeployStackDemoUseCase: DEPLOY_STACK_DEMO_USE_CASE,
+  PerfBenchApi: Symbol('PerfBenchApi'),
+  PerfBenchRepository: Symbol('PerfBenchRepository'),
+  // Same aliasing story as the auth stories (PERF_BENCH_DEMO_USE_CASE).
+  GetPerfBenchDemoUseCase: PERF_BENCH_DEMO_USE_CASE,
 } as const;
 
 class Container {
@@ -1144,6 +1155,17 @@ class Container {
     this.register(
       ContainerTokens.GetDeployStackDemoUseCase,
       new GetDeployStackDemoUseCase(this.deployStackRepository),
+    );
+
+    // Topic 38's performance bench — the same shape once more.
+    this.register(ContainerTokens.PerfBenchApi, new PerfBenchApi(config));
+    this.register(
+      ContainerTokens.PerfBenchRepository,
+      new PerfBenchRepositoryImpl(this.perfBenchApi),
+    );
+    this.register(
+      ContainerTokens.GetPerfBenchDemoUseCase,
+      new GetPerfBenchDemoUseCase(this.perfBenchRepository),
     );
   }
 
@@ -1785,6 +1807,20 @@ class Container {
   get getDeployStackDemoUseCase(): GetDeployStackDemoUseCase {
     return this.resolve<GetDeployStackDemoUseCase>(
       ContainerTokens.GetDeployStackDemoUseCase,
+    );
+  }
+
+  get perfBenchApi(): PerfBenchApi {
+    return this.resolve<PerfBenchApi>(ContainerTokens.PerfBenchApi);
+  }
+
+  get perfBenchRepository(): PerfBenchRepository {
+    return this.resolve<PerfBenchRepository>(ContainerTokens.PerfBenchRepository);
+  }
+
+  get getPerfBenchDemoUseCase(): GetPerfBenchDemoUseCase {
+    return this.resolve<GetPerfBenchDemoUseCase>(
+      ContainerTokens.GetPerfBenchDemoUseCase,
     );
   }
 

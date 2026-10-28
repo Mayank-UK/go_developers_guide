@@ -62,11 +62,11 @@ describe('DemoHost', () => {
     // data demos (schema explorer, uuid lab, the sql sextet, the orm probe,
     // mongo console, redis playground), the Phase 7 state demos (the
     // caching lab, the messaging stream + outbox pair, and the
-    // authentication topic's seven story demos), and the Phase 8-9 sets
+    // authentication topic's seven story demos), and the Phase 8-10 sets
     // (files workbench, i18n negotiator, realtime pair, jobs console,
     // errors explorer, deps manifest, arch tracer, the slog viewer,
-    // the trace round-trip, the testing runner, the debug stall, and
-    // the env inspector).
+    // the trace round-trip, the testing runner, the debug stall, the
+    // env inspector, the deployment stack viewer, and the perf bench).
     expect(Object.keys(demoRegistry)).toEqual([
       'go:runtime-types',
       'runtime:concurrency',
@@ -123,6 +123,7 @@ describe('DemoHost', () => {
       'debug:stall',
       'env:inspector',
       'deploy:stack',
+      'perf:bench',
     ]);
   });
 });

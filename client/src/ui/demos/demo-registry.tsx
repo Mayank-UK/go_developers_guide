@@ -130,6 +130,13 @@ const EnvInspectorDemo = lazy(() => import('./env/inspector_demo'));
 // and their rails, the probe contract against the real endpoints, the
 // rollout knobs, and the placeholder-only secret scan.
 const DeployStackDemo = lazy(() => import('./deploy/stack_demo'));
+// The performance topic's bench: this repo's own curated benchmarks
+// (gzip levels × sizes, JSON marshal versus streaming encode, the
+// in-memory repository's List) executed once at boot under a hard
+// process-group-killing timeout, served with the exact command,
+// benchtime, count, and age — both count samples side by side, never
+// averaged, beside the compiler's escape verdicts verbatim.
+const PerfBenchDemo = lazy(() => import('./perf/bench_demo'));
 
 export const demoRegistry: DemoRegistry = {
   'go:runtime-types': RuntimeTypesDemo,
@@ -187,4 +194,5 @@ export const demoRegistry: DemoRegistry = {
   'debug:stall': DebugStallDemo,
   'env:inspector': EnvInspectorDemo,
   'deploy:stack': DeployStackDemo,
+  'perf:bench': PerfBenchDemo,
 };
