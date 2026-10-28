@@ -427,8 +427,10 @@ func apiDesignTopic() (Topic, error) {
 				"Read the create handler and count the jobs it does NOT have: no rule checking, no storage "+
 					"knowledge, no status arithmetic beyond its own two answers, no error formatting. It "+
 					"parses, delegates, and shapes — the THIN handler discipline the architecture topic "+
-					"will generalize. Every failure path is one line, ``core.WriteError``, and that one "+
-					"line is why every error on every route wears the same envelope. The success path is "+
+					"will generalize. Every failure path is one line — ``writePostsError``, the central "+
+					"error writer behind a thin wrapper that maps the domain's validation issue list "+
+					"onto the wire's ``{field, rule, got}`` rows — and that one line is why every "+
+					"error on every route wears the same envelope. The success path is "+
 					"four lines, and one of them is the contract detail beginners forget — the "+
 					"``Location`` header that turns a 201 from \"it worked\" into \"here is where it "+
 					"lives\":"),
@@ -438,12 +440,12 @@ func apiDesignTopic() (Topic, error) {
 				"func (h *PostsCreateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {\n"+
 					"    draft, err := decodePostDraft(w, r)\n"+
 					"    if err != nil {\n"+
-					"        core.WriteError(w, r, err, h.logger)\n"+
+					"        writePostsError(w, r, err, h.logger)\n"+
 					"        return\n"+
 					"    }\n"+
 					"    post, err := h.create.Execute(r.Context(), draft)\n"+
 					"    if err != nil {\n"+
-					"        core.WriteError(w, r, err, h.logger)\n"+
+					"        writePostsError(w, r, err, h.logger)\n"+
 					"        return\n"+
 					"    }\n"+
 					"    w.Header().Set(\"Location\", \"/api/posts/\"+post.ID)\n"+

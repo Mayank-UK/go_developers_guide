@@ -384,11 +384,14 @@ func BuildArchTracerPayload(facts ArchTracerFacts) ArchTracerPayload {
 				"zero production hits today), review enforces the rule, and the guide's " +
 				"one deliberate exemption is marked in the file that uses it",
 			Honest: "this repo's actual state: no production presentation file imports the " +
-				"data layer — the only marked teaching-exception in the guide is " +
-				"internal/domain/demos/grpc_console.go, a domain exhibit that constructs " +
-				"an in-process gRPC stack and says so in its header. Tests import adapters " +
-				"freely (posts_test.go wires the in-memory fake): the rule bounds " +
-				"production code paths, not test wiring",
+				"data layer — the guide's marked teaching-exceptions all live in " +
+				"internal/domain/demos/, exhibits whose subject is a whole stack " +
+				"(grpc_console.go builds an in-process gRPC server over the data " +
+				"adapter; graphql_playground.go drives the GraphQL engine; " +
+				"interface_matrix.go and runtime_types.go reflect on the content " +
+				"registry's types), each saying so in its header. Tests import " +
+				"adapters freely (posts_test.go wires the in-memory fake): the rule " +
+				"bounds production code paths, not test wiring",
 		},
 		Reasoning: "One request, four layers, every hop measured where it ran: middleware → " +
 			"thin handler → use case → the adapter the scenario picked. The timeline is the " +

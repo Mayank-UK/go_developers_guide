@@ -16,7 +16,8 @@ import (
 // own import block). Then the dependency rule itself (presentation →
 // domain ← data, ports owned by the domain, adapters proving
 // satisfaction at compile time, DTOs never leaking past a repository,
-// and the one marked teaching-exception the guide carries). Thin
+// and the marked teaching-exceptions the guide carries — one per
+// stack-subject exhibit, each saying so in its header). Thin
 // handlers next (parse/validate → one use case → map — the posts
 // handler against a demo handler, same discipline at two sizes). The
 // composition root (main.go's constructor injection — Go's DI, no
@@ -146,7 +147,7 @@ func architectureTopic() (Topic, error) {
 					"	newID func() (string, error)\n"+
 					"}"),
 			text("arch-rule-dtos-and-exception",
-				"Two corollaries complete the rule. FIRST, DTOs NEVER LEAK PAST A REPOSITORY: the wire shapes (``postResponse``, its camelCase tags, its materialized ``[]`` for empty tags) are defined and mapped in the presentation layer, and the data layer's rows become DOMAIN values before they cross back over the port — which is why ``PostPage`` speaks of pages and totals, never of SQL rows or BSON documents. A DTO leaking inward would weld the domain to one transport's spelling. SECOND, the marked exception: a guide whose SUBJECT is whole stacks occasionally needs an exhibit that constructs one in-process — the gRPC console demo builds a real gRPC server over a fresh in-memory repository, and because that file lives in ``domain/demos`` while touching a data adapter, its header carries an explicit TEACHING-EXCEPTION comment saying so. That is the honest way to break a rule you teach: loudly, in writing, exactly once — the violation panel of this topic's demo greps the production tree to show the count is zero everywhere else. What the rule FORBIDS outright is the silent version: a presentation handler importing ``guide/internal/data`` for convenience, which the next section shows at its cheapest and the demo panel shows at its worst."),
+				"Two corollaries complete the rule. FIRST, DTOs NEVER LEAK PAST A REPOSITORY: the wire shapes (``postResponse``, its camelCase tags, its materialized ``[]`` for empty tags) are defined and mapped in the presentation layer, and the data layer's rows become DOMAIN values before they cross back over the port — which is why ``PostPage`` speaks of pages and totals, never of SQL rows or BSON documents. A DTO leaking inward would weld the domain to one transport's spelling. SECOND, the marked exceptions: a guide whose SUBJECT is whole stacks occasionally needs an exhibit that constructs one in-process — the gRPC console demo builds a real gRPC server over a fresh in-memory repository, and because that file lives in ``domain/demos`` while touching a data adapter, its header carries an explicit TEACHING-EXCEPTION comment saying so (the sibling exhibits that import their own subject stacks — the GraphQL engine, the content registry's types — carry the same marker for the same reason). That is the honest way to break a rule you teach: loudly, in writing, exactly once for the data rule — the violation panel of this topic's demo greps the production tree to show the count is zero everywhere else. What the rule FORBIDS outright is the silent version: a presentation handler importing ``guide/internal/data`` for convenience, which the next section shows at its cheapest and the demo panel shows at its worst."),
 		),
 		// ── 4. Thin handlers ───────────────────────────────────────
 		section("thin-handlers", "Thin handlers: parse, validate, delegate, map",
@@ -165,12 +166,12 @@ func architectureTopic() (Topic, error) {
 					"		query.Get(\"sort\"),\n"+
 					"	)\n"+
 					"	if err != nil {\n"+
-					"		core.WriteError(w, r, err, h.logger)\n"+
+					"		writePostsError(w, r, err, h.logger)\n"+
 					"		return\n"+
 					"	}\n"+
 					"	page, err := h.list.Execute(r.Context(), normalized)\n"+
 					"	if err != nil {\n"+
-					"		core.WriteError(w, r, err, h.logger)\n"+
+					"		writePostsError(w, r, err, h.logger)\n"+
 					"		return\n"+
 					"	}\n"+
 					"	writeJSON(w, http.StatusOK, newPostPageResponse(page))\n"+
@@ -306,7 +307,7 @@ func architectureTopic() (Topic, error) {
 					"	mux.Handle(\"GET /api/demo/arch/tracer\",\n"+
 					"		presentation.NewArchTracerHandler(scenarioStore, archList, archSink, logger))"),
 			text("arch-tracer-counterexample",
-				"The demo's second panel is the rule's negative space: what a VIOLATION would look like. The snippet below lives as a STRING CONSTANT inside the tracer's builder — data the payload carries, never code the module compiles — and the topic quotes it with the builder file as its snippet source precisely so the quotation discipline holds even for anti-code. Read it as a cost inventory: the handler owns SQL and a pool (two data-layer jobs), paging and sort logic (domain jobs), a raw ``http.Error`` 500 with a text body (an envelope the client's error pipeline cannot parse), and — the part that never shows up in a diff — it establishes a second store dialect that every FUTURE handler must either duplicate or import around. The production tree carries none of this: the guide's single rule exemption is the marked gRPC exhibit named in the dependency-rule section, and the violation panel says so from the repo's actual state, not from aspiration:"),
+				"The demo's second panel is the rule's negative space: what a VIOLATION would look like. The snippet below lives as a STRING CONSTANT inside the tracer's builder — data the payload carries, never code the module compiles — and the topic quotes it with the builder file as its snippet source precisely so the quotation discipline holds even for anti-code. Read it as a cost inventory: the handler owns SQL and a pool (two data-layer jobs), paging and sort logic (domain jobs), a raw ``http.Error`` 500 with a text body (an envelope the client's error pipeline cannot parse), and — the part that never shows up in a diff — it establishes a second store dialect that every FUTURE handler must either duplicate or import around. The production tree carries none of this: the guide's single data-layer exemption is the marked gRPC exhibit named in the dependency-rule section, and the violation panel says so from the repo's actual state, not from aspiration:"),
 			code("arch-tracer-violation", "go",
 				"The counterexample, quoted from the string constant that carries it — a handler importing the data layer. This is what the rule forbids; it is not code this repo builds.",
 				"server/internal/domain/demos/arch_tracer.go",
@@ -359,9 +360,9 @@ func architectureTopic() (Topic, error) {
 					"#   (no output: zero production handlers import the data layer)\n"+
 					"grep -rln 'guide/internal/presentation' internal/domain/ internal/data/\n"+
 					"#   (no output: nothing points INTO the edge)\n"+
-					"grep -rn 'TEACHING-EXCEPTION' internal/ | head -3   # the one marked exemption"),
+					"grep -rln 'TEACHING-EXCEPTION' internal/domain/demos/   # the marked exhibits, one header each"),
 			text("term-arch-coda",
-				"Read the tour as the topic's thesis in shell form. The tracer GET is the layer map EXECUTED — files and symbols you just ``ls``-ed, appearing as hops with durations attached, flipping their leaf on a scenario PATCH without any layer above noticing. The greps are the dependency rule's enforcement story told honestly: no framework police, just an import graph that is trivially inspectable, a convention stated in one sentence, and a review culture that keeps the count at zero — with the single marked exemption greppable by name. That is Go architecture at this scale: ``internal/`` plus five prefixes, one rule with two arrows, a ``main`` that wires the world in dependency order, one error taxonomy with one writer, a client that mirrors the whole shape — and, when you want to prove any of it, a composition root that lets you wrap a recorder around the seams and watch the rule run."),
+				"Read the tour as the topic's thesis in shell form. The tracer GET is the layer map EXECUTED — files and symbols you just ``ls``-ed, appearing as hops with durations attached, flipping their leaf on a scenario PATCH without any layer above noticing. The greps are the dependency rule's enforcement story told honestly: no framework police, just an import graph that is trivially inspectable, a convention stated in one sentence, and a review culture that keeps the count at zero — with every marked exemption greppable by name. That is Go architecture at this scale: ``internal/`` plus five prefixes, one rule with two arrows, a ``main`` that wires the world in dependency order, one error taxonomy with one writer, a client that mirrors the whole shape — and, when you want to prove any of it, a composition root that lets you wrap a recorder around the seams and watch the rule run."),
 		),
 	}
 

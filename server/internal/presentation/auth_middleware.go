@@ -75,6 +75,16 @@ func RequireIdentity(resolver domauth.CredentialResolver, logger *slog.Logger) M
 				return
 			}
 			if err != nil {
+				// The 401 body stays uniform — the caller must not learn
+				// which half failed — but the operator must: a forged token
+				// and a key-store outage answer the same envelope, so the
+				// resolver's reason goes to the log at warn with the
+				// request's id and shape.
+				logger.Warn("auth: credential did not verify",
+					"requestId", core.RequestIDFromContext(r.Context()),
+					"method", r.Method,
+					"path", r.URL.Path,
+					slog.Any("error", err))
 				core.WriteError(w, r, core.Unauthorized("not authenticated — the presented credential did not verify"), logger)
 				return
 			}

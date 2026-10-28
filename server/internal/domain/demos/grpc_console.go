@@ -11,8 +11,10 @@
 // grants teaching-exhibit handlers. The demo IS the exhibit: its subject
 // is a whole in-process gRPC stack, and zero-input purity (same call, same
 // payload; the handler stays thin) is preserved by building the stack
-// inside the builder. It is marked, and it is the only such import in
-// this package.
+// inside the builder. It is marked, and it is the package's only
+// data-layer import — the sibling exhibits whose subject is a stack of
+// their own (the GraphQL engine, the content types) carry the same
+// marker for their imports.
 //
 // Determinism rules: fixed exhibit inputs only; error CODES are recorded
 // as data (codes.NotFound, codes.DeadlineExceeded — never timing text);

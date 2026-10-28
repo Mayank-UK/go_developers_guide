@@ -409,7 +409,9 @@ func graphqlTopic() (Topic, error) {
 					"``*core.Error`` values (kind + message + structured details) — the same "+
 					"values the REST error writer turns into 404 and 422 envelopes — so the "+
 					"graph's mapping is one function translating kind to ``extensions.code`` "+
-					"and carrying ``details`` verbatim. One taxonomy, two presentations:"),
+					"and carrying ``details`` through this layer's own wire shape (the domain's "+
+					"issue entity has no JSON tags; each edge owns its spelling). One taxonomy, "+
+					"two presentations:"),
 			code("err-map-code", "go",
 				"The whole translation: typed taxonomy error → GraphQL error with extensions.",
 				"server/internal/graph/errors.go",
@@ -423,7 +425,7 @@ func graphqlTopic() (Topic, error) {
 					"\t}\n"+
 					"\textensions := map[string]any{\"code\": string(typed.Kind)}\n"+
 					"\tif typed.Details != nil {\n"+
-					"\t\textensions[\"details\"] = typed.Details\n"+
+					"\t\textensions[\"details\"] = wireDetails(typed.Details)\n"+
 					"\t}\n"+
 					"\treturn &gqlerror.Error{\n"+
 					"\t\tMessage:    typed.Message,\n"+

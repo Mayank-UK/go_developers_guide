@@ -402,8 +402,7 @@ func thirdPartyTopic() (Topic, error) {
 					"\t\tif err != nil {\n"+
 					"\t\t\treturn fmt.Errorf(\"digest task %s: %w\", taskIDFrom(ctx), err)\n"+
 					"\t\t}\n"+
-					"\t\trecordDemoEvent(ctx, client, payload, demos.JobsTaskDigest, retryCountFrom(ctx)+1, demos.JobsOutcomeSucceeded)\n"+
-					"\t\treturn nil\n"+
+					"\t\treturn recordDemoEvent(ctx, client, payload, demos.JobsTaskDigest, retryCountFrom(ctx)+1, demos.JobsOutcomeSucceeded)\n"+
 					"\t}\n"+
 					"}"),
 			text("tp-recap-promise",

@@ -263,16 +263,18 @@ func advancedArchitectureTopic() (Topic, error) {
 					"\t\tr.recordLocked(i, step.Name, SagaPhaseForward, SagaStepExecuted, \"\")\n"+
 					"\t}"),
 			text("ax-sg-undo-pitch",
-				"The undo pass is where the two decisions live that separate a real saga runner from a textbook's. Compensation runs on `context.WithoutCancel` — the cancellation that stopped the forward work must not stop the CLEANUP it triggered, while the context's values (request ids, trace ids — topic 33's propagation) still flow to the compensating actions. And the walk visits only the executed prefix, in reverse, because the step that failed never completed and so has nothing to undo:"),
+				"The undo pass is where the two decisions live that separate a real saga runner from a textbook's. Compensation runs on `context.WithoutCancel` — the cancellation that stopped the forward work must not stop the CLEANUP it triggered, while the context's values (request ids, trace ids — topic 33's propagation) still flow to the compensating actions. And the walk visits only the executed prefix, in reverse, because the step that failed never completed and so has nothing to undo. One locking decision rides along: the mutex guards the LEDGER, never the user-supplied callbacks — each step is claimed under the lock, the compensating action runs with the lock released (an undo may take as long as its work takes, or re-enter the runner's public doors), and the outcome is recorded back under it:"),
 			code("ax-sg-undo-quote", "go",
-				"The undo pass: reverse over the executed prefix, on a cancellation-stripped context — and a step with no antidote is recorded, never skipped silently.",
+				"The undo pass: reverse over the executed prefix, on a cancellation-stripped context — claims and short lock holds mean a user callback never blocks readers, and a step with no antidote is recorded, never skipped silently.",
 				"server/internal/domain/patterns/saga.go",
-				"func (r *SagaRunner) undoPassLocked(ctx context.Context) []SagaStepResult {\n"+
+				"func (r *SagaRunner) undoPass(ctx context.Context) []SagaStepResult {\n"+
 					"\tundoCtx := context.WithoutCancel(ctx)\n"+
 					"\trecorded := []SagaStepResult{}\n"+
 					"\tfor i := len(r.steps) - 1; i >= 0; i-- {\n"+
 					"\t\tstep := r.steps[i]\n"+
+					"\t\tr.mu.Lock()\n"+
 					"\t\tif !r.executed[i] {\n"+
+					"\t\t\tr.mu.Unlock()\n"+
 					"\t\t\tcontinue // never executed (failed, skipped, or never reached): nothing to undo\n"+
 					"\t\t}\n"+
 					"// …\n"+
@@ -280,12 +282,19 @@ func advancedArchitectureTopic() (Topic, error) {
 					"\t\t\tr.compensated[i] = true\n"+
 					"\t\t\trow := r.recordLocked(i, step.Name, SagaPhaseCompensate, SagaStepNothingToUndo,\n"+
 					"\t\t\t\t\"the step declared no compensating action — an externalized fact, placed last on purpose\")\n"+
+					"\t\t\tr.mu.Unlock()\n"+
 					"\t\t\trecorded = append(recorded, row)\n"+
 					"\t\t\tcontinue\n"+
 					"\t\t}\n"+
 					"// …\n"+
+					"\t\terr := step.Compensate(undoCtx)\n"+
+					"\n"+
+					"\t\tr.mu.Lock()\n"+
+					"\t\tr.undoing[i] = false\n"+
+					"// …\n"+
 					"\t\tr.compensated[i] = true\n"+
 					"\t\trow := r.recordLocked(i, step.Name, SagaPhaseCompensate, SagaStepCompensated, \"\")\n"+
+					"\t\tr.mu.Unlock()\n"+
 					"\t\trecorded = append(recorded, row)\n"+
 					"\t}\n"+
 					"\treturn recorded\n"+
@@ -305,9 +314,7 @@ func advancedArchitectureTopic() (Topic, error) {
 					"// operator may safely compensate with the very context that died.\n"+
 					"// Compensating a saga whose Run never happened records nothing.\n"+
 					"func (r *SagaRunner) Compensate(ctx context.Context) []SagaStepResult {\n"+
-					"\tr.mu.Lock()\n"+
-					"\tdefer r.mu.Unlock()\n"+
-					"\treturn r.undoPassLocked(ctx)\n"+
+					"\treturn r.undoPass(ctx)\n"+
 					"}"),
 			text("ax-sg-error-pitch",
 				"And when a run stops, WHAT stopped it travels as a typed error, not a string: the trigger wraps the underlying failure with the failing step's identity, so a caller can branch on errors.Is for its own sentinels (and for context.Canceled / DeadlineExceeded, topic 6's cancellation vocabulary) and errors.As for the step's index and name — the same errors-as-values discipline topic 30 built the envelope around, now spanning a whole transaction:"),

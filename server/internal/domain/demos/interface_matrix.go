@@ -6,6 +6,13 @@
 // order matters, and the compile-time `var _ Iface = Type{}` proofs that
 // pin the same facts at build time. The topic quotes this file; pure and
 // deterministic by construction: same call, same payload, zero inputs.
+//
+// TEACHING-EXCEPTION (layering): the family rule is presentation →
+// domain ← data, and this file lives in domain/demos while importing the
+// content registry — the matrix's exhibit subjects are the REAL guide
+// types this server serves (content.Block, content.TextBlock, …),
+// satisfied live via reflect, never copies. The same exemption the
+// family grants teaching-exhibit handlers, marked like its siblings.
 package demos
 
 import (

@@ -652,9 +652,13 @@ func run() error {
 	// the same signal path that drains the HTTP server below.
 	go rtFeed.Run(ctx)
 
-	// The jobs worker serves the demos queue until the same cancellation;
-	// Start blocks until the broker answers, so a dead redis fails boot
-	// honestly instead of stranding the console demo.
+	// The jobs worker serves the demos queue until the same cancellation.
+	// Start is non-blocking (the runner's pollers dial redis on their own
+	// goroutines), so a dead redis does NOT fail boot: the worker logs and
+	// retries its broker connection in the background, and the outage
+	// surfaces where the queue is actually used — the console demo's
+	// enqueue fails its request with the broker's own error, and pending
+	// tasks drain once the broker returns.
 	if err := jobsWorker.Start(ctx); err != nil {
 		return fmt.Errorf("jobs worker start: %w", err)
 	}

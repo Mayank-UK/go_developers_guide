@@ -86,14 +86,18 @@ func TestDraftValidateCollectsEveryIssue(t *testing.T) {
 	if issues[0].Field != "title" || issues[1].Field != "body" {
 		t.Errorf("issue fields = %q/%q, want title then body", issues[0].Field, issues[1].Field)
 	}
-	// Issues are JSON-structured for the envelope's details.
+	// The entity carries no wire spelling: JSON tags are a transport
+	// concern owned by the edges (the REST handlers' issueResponse and
+	// the GraphQL mapper shape {field, rule, got}), so the domain
+	// marshals its own Go field names — the pin that keeps a key rename
+	// out of this package.
 	raw, err := json.Marshal(issues)
 	if err != nil {
 		t.Fatalf("marshal issues: %v", err)
 	}
-	for _, key := range []string{`"field"`, `"rule"`, `"got"`} {
+	for _, key := range []string{`"Field"`, `"Rule"`, `"Got"`} {
 		if !strings.Contains(string(raw), key) {
-			t.Errorf("issue wire shape lacks %s: %s", key, raw)
+			t.Errorf("issue entity lost its %s field: %s", key, raw)
 		}
 	}
 }

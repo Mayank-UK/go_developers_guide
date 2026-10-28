@@ -51,11 +51,15 @@ type Draft struct {
 // Issue is one validation finding, structured for the error envelope's
 // details: which field, which rule, what the server actually got. A client
 // renders these per field without parsing prose — the same discipline the
-// validation topic's arena teaches.
+// validation topic's arena teaches. The entity carries no JSON tags on
+// purpose: each transport's edge owns the wire spelling (the REST
+// handlers and the GraphQL mapper both shape it into {field, rule, got}),
+// so changing a JSON key is a presentation change, never a domain
+// rewrite.
 type Issue struct {
-	Field string `json:"field"`
-	Rule  string `json:"rule"`
-	Got   string `json:"got"`
+	Field string
+	Rule  string
+	Got   string
 }
 
 // NormalizeDraft trims the title and body and normalizes every tag

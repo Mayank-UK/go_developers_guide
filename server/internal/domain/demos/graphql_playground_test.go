@@ -121,9 +121,18 @@ func TestGraphQLPlaygroundErrorsCarryTheTaxonomyCodes(t *testing.T) {
 	if len(violation.Errors) != 1 || violation.Errors[0].Extensions["code"] != "validation_failed" {
 		t.Fatalf("validation run errors = %+v, want one entry coded validation_failed", violation.Errors)
 	}
-	details, ok := violation.Errors[0].Extensions["details"].([]posts.Issue)
-	if !ok || len(details) == 0 {
-		t.Errorf("validation extensions.details = %v, want the issue list riding along", violation.Errors[0].Extensions)
+	// The details ride as the graph edge's own wire rows: the domain's
+	// Issue entity carries no JSON tags, so MapError shapes it — pin the
+	// {field, rule, got} keys through a JSON round-trip rather than a
+	// concrete Go type.
+	encoded, err := json.Marshal(violation.Errors[0].Extensions["details"])
+	if err != nil {
+		t.Fatalf("marshal details: %v", err)
+	}
+	for _, key := range []string{`"field"`, `"rule"`, `"got"`} {
+		if !strings.Contains(string(encoded), key) {
+			t.Errorf("validation extensions.details = %s, lacks %s — the issue list must ride along in the edge's wire shape", encoded, key)
+		}
 	}
 
 	// Clean runs carry an empty errors list — [], never null.

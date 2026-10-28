@@ -8,6 +8,13 @@
 // and the N+1-versus-dataloader experiment with its port-call counts.
 // Deterministic by construction: fixed seeds, fixed ids, no timestamps in
 // any selected field.
+//
+// TEACHING-EXCEPTION (layering): the family rule is presentation →
+// domain ← data, and this file lives in domain/demos while importing the
+// GraphQL stack whole — engine, generated executor, loader, resolvers —
+// because the demo's subject IS that stack, driven through the same
+// execution path the HTTP endpoint serves. The same exemption the
+// family grants teaching-exhibit handlers, marked like its siblings.
 package demos
 
 import (

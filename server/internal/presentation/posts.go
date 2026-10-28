@@ -168,12 +168,12 @@ func (h *PostsListHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		query.Get("sort"),
 	)
 	if err != nil {
-		core.WriteError(w, r, err, h.logger)
+		writePostsError(w, r, err, h.logger)
 		return
 	}
 	page, err := h.list.Execute(r.Context(), normalized)
 	if err != nil {
-		core.WriteError(w, r, err, h.logger)
+		writePostsError(w, r, err, h.logger)
 		return
 	}
 	writeJSON(w, http.StatusOK, newPostPageResponse(page))
@@ -195,12 +195,12 @@ func NewPostsCreateHandler(create *posts.CreatePostUseCase, logger *slog.Logger)
 func (h *PostsCreateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	draft, err := decodePostDraft(w, r)
 	if err != nil {
-		core.WriteError(w, r, err, h.logger)
+		writePostsError(w, r, err, h.logger)
 		return
 	}
 	post, err := h.create.Execute(r.Context(), draft)
 	if err != nil {
-		core.WriteError(w, r, err, h.logger)
+		writePostsError(w, r, err, h.logger)
 		return
 	}
 	w.Header().Set("Location", "/api/posts/"+post.ID)
@@ -246,12 +246,12 @@ func NewPostReplaceHandler(replace *posts.ReplacePostUseCase, logger *slog.Logge
 func (h *PostReplaceHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	draft, err := decodePostDraft(w, r)
 	if err != nil {
-		core.WriteError(w, r, err, h.logger)
+		writePostsError(w, r, err, h.logger)
 		return
 	}
 	post, err := h.replace.Execute(r.Context(), r.PathValue("id"), draft)
 	if err != nil {
-		core.WriteError(w, r, err, h.logger)
+		writePostsError(w, r, err, h.logger)
 		return
 	}
 	writeJSON(w, http.StatusOK, newPostResponse(post))
@@ -277,4 +277,39 @@ func (h *PostDeleteHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
+}
+
+// issueResponse is the wire shape of one validation finding — the
+// {field, rule, got} keys the error envelope's details carry. The
+// domain's posts.Issue deliberately has no JSON tags: the entity names
+// the finding, and the edge that renders it owns its spelling, the same
+// seam postResponse draws for the success body.
+type issueResponse struct {
+	Field string `json:"field"`
+	Rule  string `json:"rule"`
+	Got   string `json:"got"`
+}
+
+// writePostsError is the posts handlers' error door: the central writer
+// with one translation in front of it — a 422 whose details carry the
+// domain's issue list is mapped onto issueResponse rows here, so the
+// domain stays wire-free while the envelope keeps its contract shape.
+// Every other error (decoder reasons, misses, internals) passes through
+// untouched.
+func writePostsError(w http.ResponseWriter, r *http.Request, err error, logger *slog.Logger) {
+	var typed *core.Error
+	if errors.As(err, &typed) {
+		if issues, ok := typed.Details.([]posts.Issue); ok {
+			rows := make([]issueResponse, 0, len(issues))
+			for _, issue := range issues {
+				rows = append(rows, issueResponse{
+					Field: issue.Field,
+					Rule:  issue.Rule,
+					Got:   issue.Got,
+				})
+			}
+			typed.Details = rows
+		}
+	}
+	core.WriteError(w, r, err, logger)
 }

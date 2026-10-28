@@ -68,11 +68,15 @@ func flakyHandler(client *goredis.Client) func(context.Context, *asynq.Task) err
 			return err
 		}
 		if attempt <= demos.JobsFlakyFailFirst {
-			recordDemoEvent(ctx, client, payload, demos.JobsTaskFlaky, attempt, demos.JobsOutcomeFailed)
+			if err := recordDemoEvent(ctx, client, payload, demos.JobsTaskFlaky, attempt, demos.JobsOutcomeFailed); err != nil {
+				return err
+			}
 			return fmt.Errorf("flaky task %s: attempt %d of %d failed (a flaky upstream, by design)",
 				payload.TaskID, attempt, demos.JobsFlakyFailFirst+1)
 		}
-		recordDemoEvent(ctx, client, payload, demos.JobsTaskFlaky, attempt, demos.JobsOutcomeSucceeded)
+		if err := recordDemoEvent(ctx, client, payload, demos.JobsTaskFlaky, attempt, demos.JobsOutcomeSucceeded); err != nil {
+			return err
+		}
 		return nil
 	}
 }
@@ -90,7 +94,9 @@ func poisonHandler(client *goredis.Client) func(context.Context, *asynq.Task) er
 			return fmt.Errorf("poison task %s: %w", taskIDFrom(ctx), err)
 		}
 		attempt := retryCountFrom(ctx) + 1
-		recordDemoEvent(ctx, client, payload, demos.JobsTaskPoison, attempt, demos.JobsOutcomeFailed)
+		if err := recordDemoEvent(ctx, client, payload, demos.JobsTaskPoison, attempt, demos.JobsOutcomeFailed); err != nil {
+			return err
+		}
 		return fmt.Errorf("poison task %s: upstream answered 500 for attempt %d — retrying cannot fix this",
 			payload.TaskID, attempt)
 	}
@@ -107,8 +113,7 @@ func digestHandler(client *goredis.Client) func(context.Context, *asynq.Task) er
 		if err != nil {
 			return fmt.Errorf("digest task %s: %w", taskIDFrom(ctx), err)
 		}
-		recordDemoEvent(ctx, client, payload, demos.JobsTaskDigest, retryCountFrom(ctx)+1, demos.JobsOutcomeSucceeded)
-		return nil
+		return recordDemoEvent(ctx, client, payload, demos.JobsTaskDigest, retryCountFrom(ctx)+1, demos.JobsOutcomeSucceeded)
 	}
 }
 
@@ -122,8 +127,7 @@ func tickHandler(client *goredis.Client) func(context.Context, *asynq.Task) erro
 		if err != nil {
 			return fmt.Errorf("tick task %s: %w", taskIDFrom(ctx), err)
 		}
-		recordDemoEvent(ctx, client, payload, demos.JobsTaskTick, 1, demos.JobsOutcomeSucceeded)
-		return nil
+		return recordDemoEvent(ctx, client, payload, demos.JobsTaskTick, 1, demos.JobsOutcomeSucceeded)
 	}
 }
 
@@ -164,12 +168,17 @@ func retryCountFrom(ctx context.Context) int {
 }
 
 // recordDemoEvent appends one invocation record to the run's ledger
-// (RPUSH + TTL). A ledger write that fails fails the handler loudly: an
-// event the story cannot read back is a story that cannot be told
-// honestly, and silently dropping rows would let the payload claim a
-// timeline that did not happen. Panics are for programmer bugs per this
-// guide's convention — a reachable Redis answered every earlier beat.
-func recordDemoEvent(ctx context.Context, client *goredis.Client, payload demos.JobsDemoPayload, taskType string, attempt int, outcome string) {
+// (RPUSH + TTL) and answers the write's error so the handler can fail
+// the delivery with it. An event the story cannot read back is a story
+// that cannot be told honestly, and silently dropping rows would let the
+// payload claim a timeline that did not happen — so a failed write fails
+// the handler, and asynq's retry ladder redelivers the task: the attempt
+// counter counts the redelivery honestly and the ledger gains the event
+// on the next pass. A Redis blip is an operational failure, not a
+// programmer bug — the error return is the convention-true shape (a
+// panic here would crash a worker over an outage the broker already
+// knows how to retry).
+func recordDemoEvent(ctx context.Context, client *goredis.Client, payload demos.JobsDemoPayload, taskType string, attempt int, outcome string) error {
 	event := demos.JobsDemoEvent{
 		TaskID:  payload.TaskID,
 		Type:    taskType,
@@ -179,15 +188,16 @@ func recordDemoEvent(ctx context.Context, client *goredis.Client, payload demos.
 	}
 	encoded, err := demos.MarshalJobsDemoEvent(event)
 	if err != nil {
-		panic(fmt.Sprintf("jobs demo: marshal ledger event: %v", err))
+		return fmt.Errorf("jobs demo: marshal ledger event: %w", err)
 	}
 	key := eventsKey(payload.Run)
 	if err := client.RPush(ctx, key, encoded).Err(); err != nil {
-		panic(fmt.Sprintf("jobs demo: RPUSH %s: %v", key, err))
+		return fmt.Errorf("jobs demo: RPUSH %s: %w", key, err)
 	}
 	if err := client.Expire(ctx, key, demos.JobsDemoEventTTL).Err(); err != nil {
-		panic(fmt.Sprintf("jobs demo: EXPIRE %s: %v", key, err))
+		return fmt.Errorf("jobs demo: EXPIRE %s: %w", key, err)
 	}
+	return nil
 }
 
 // eventsKey is the run's ledger key.

@@ -223,11 +223,15 @@ func backgroundJobsTopic() (Topic, error) {
 					"			return err\n"+
 					"		}\n"+
 					"		if attempt <= demos.JobsFlakyFailFirst {\n"+
-					"			recordDemoEvent(ctx, client, payload, demos.JobsTaskFlaky, attempt, demos.JobsOutcomeFailed)\n"+
+					"			if err := recordDemoEvent(ctx, client, payload, demos.JobsTaskFlaky, attempt, demos.JobsOutcomeFailed); err != nil {\n"+
+					"				return err\n"+
+					"			}\n"+
 					"			return fmt.Errorf(\"flaky task %s: attempt %d of %d failed (a flaky upstream, by design)\",\n"+
 					"				payload.TaskID, attempt, demos.JobsFlakyFailFirst+1)\n"+
 					"		}\n"+
-					"		recordDemoEvent(ctx, client, payload, demos.JobsTaskFlaky, attempt, demos.JobsOutcomeSucceeded)\n"+
+					"		if err := recordDemoEvent(ctx, client, payload, demos.JobsTaskFlaky, attempt, demos.JobsOutcomeSucceeded); err != nil {\n"+
+					"			return err\n"+
+					"		}\n"+
 					"		return nil"),
 			text("rt-idempotent",
 				"One property the ladder FORCES onto every handler, stated once because it is the queue's law: at-least-once delivery means idempotent handlers. A worker can crash between finishing the work and reporting success — the broker re-delivers, and the task runs again. A claim can race a lease expiry — it runs again. The flaky handler shows the honest pattern: its attempt counter is an INCR on a redis key named for the task's stable id, so the second delivery of the same task counts itself as the next attempt instead of starting the ladder over; the counter IS the ``have we met before'' state. Real handlers go further — a send-email task stamps ``already sent for this event id'' before it hits SMTP, a billing task keys its writes by the event id so re-running is a no-op. Design every handler as if it will run twice, because on its worst day it will."),
@@ -313,8 +317,7 @@ func backgroundJobsTopic() (Topic, error) {
 					"		if err != nil {\n"+
 					"			return fmt.Errorf(\"digest task %s: %w\", taskIDFrom(ctx), err)\n"+
 					"		}\n"+
-					"		recordDemoEvent(ctx, client, payload, demos.JobsTaskDigest, retryCountFrom(ctx)+1, demos.JobsOutcomeSucceeded)\n"+
-					"		return nil\n"+
+					"		return recordDemoEvent(ctx, client, payload, demos.JobsTaskDigest, retryCountFrom(ctx)+1, demos.JobsOutcomeSucceeded)\n"+
 					"	}\n"+
 					"}"),
 			text("email-payload",
