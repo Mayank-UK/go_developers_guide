@@ -465,6 +465,49 @@ func run() error {
 	mux.Handle("GET /api/demo/reliability/breaker",
 		presentation.NewReliabilityBreakerHandler(reliabilityConsole, logger))
 
+	// The shared demo reset (guide infrastructure, not a curriculum
+	// topic): one POST returns every stateful demo area to its
+	// constructed state — the scenario store back to fake/none through
+	// its own update API, and the process-lifetime breaker above back
+	// to closed with zero counters and an empty history. The report is
+	// honest per-area rows plus the areas deliberately never touched
+	// (the store-backed substrates — destructive resets are out of
+	// scope). Curl-only by the family's design: no client panel rides
+	// it; the terminal companions own the affordance.
+	fakeMode, noFailure := core.DataModeFake, core.FailureNone
+	demoResetter, err := demos.NewDemoResetter(
+		demos.DemoResetParticipant{
+			Area:  "scenario",
+			Label: "Scenario store",
+			Action: func() (string, error) {
+				state, err := scenarioStore.Update(core.ScenarioPatch{
+					DataMode:      &fakeMode,
+					InjectFailure: &noFailure,
+				})
+				if err != nil {
+					return "", err
+				}
+				return fmt.Sprintf("scenario returned to dataMode=%s, injectFailure=%s — the constructed baseline",
+					state.DataMode, state.InjectFailure), nil
+			},
+		},
+		demos.DemoResetParticipant{
+			Area:  "reliability",
+			Label: "Process-lifetime breaker",
+			Action: func() (string, error) {
+				reliabilityConsole.Reset()
+				snapshot := reliabilityConsole.BreakerObservation(time.Now())
+				return fmt.Sprintf("breaker back to %s — counters zeroed, transition history cleared",
+					snapshot.State), nil
+			},
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("demo resetter: %w", err)
+	}
+	mux.Handle("POST "+demos.DemoResetPath,
+		presentation.NewDemoResetHandler(demoResetter, logger))
+
 	// Topic 40's scaling round: REAL fleet machinery — three in-process
 	// replicas behind a round-robin balancer with an affinity table,
 	// plus the shared store standing for externalized state. Each

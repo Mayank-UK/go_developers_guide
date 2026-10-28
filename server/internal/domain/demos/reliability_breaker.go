@@ -299,6 +299,25 @@ func (b *ReliabilityBreaker) Snapshot(now time.Time) ReliabilityBreakerSnapshot 
 	}
 }
 
+// Reset returns the breaker to its constructed state: closed, zero
+// counters, no failure streak, no probe in flight, and an EMPTY
+// transition history — the shared demo reset (POST /api/demo/reset)
+// calls this so a reader can replay the trip-and-recover arc from its
+// beginning. The reset is deliberately not itself a transition: the
+// breaker observes nothing, exactly as at construction. Idempotent by
+// construction — resetting a fresh breaker changes nothing observable.
+func (b *ReliabilityBreaker) Reset() {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+
+	b.state = ReliabilityBreakerClosed
+	b.consecutiveFails = 0
+	b.probeInFlight = false
+	b.counters = ReliabilityBreakerCounters{}
+	b.transitions = nil
+	b.stateChangedAt = b.now()
+}
+
 // recordTransition moves the breaker to next and rings the change.
 // The caller holds the mutex; when next is open, the cooldown clock
 // restarts here.
@@ -445,6 +464,16 @@ func (c *ReliabilityConsole) BreakerObservation(now time.Time) ReliabilityBreake
 		ReliabilityBreakerSnapshot: c.breaker.Snapshot(now),
 		Config:                     c.cfg,
 	}
+}
+
+// Reset returns the console's process-lifetime machinery — the
+// persistent breaker — to its constructed state, under the breaker's
+// own mutex (a reset racing a walk interleaves safely: every field
+// access is guarded). The config and the shared scenario store are
+// wiring, not residue — they stay exactly as the composition root
+// built them.
+func (c *ReliabilityConsole) Reset() {
+	c.breaker.Reset()
 }
 
 // callDownstream performs one protected call. The dependency honors
