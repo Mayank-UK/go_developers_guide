@@ -446,6 +446,10 @@ func NewProductionRegistry() (Registry, error) {
 	if err != nil {
 		return Registry{}, fmt.Errorf("build reliability topic: %w", err)
 	}
+	scaling, err := scalingTopic()
+	if err != nil {
+		return Registry{}, fmt.Errorf("build scaling topic: %w", err)
+	}
 	return NewRegistry(
 		[]Topic{
 			goLanguage, goRuntime, httpWeb, goHTTPFundamentals, interfacesComposition,
@@ -454,7 +458,7 @@ func NewProductionRegistry() (Registry, error) {
 			mongodb, redis, caching, messaging, authentication, authorization, security,
 			filesMedia, internationalization, realtime, backgroundJobs, errorHandling,
 			dependencyManagement, architecture, observability, testingContent, debugging,
-			environments, deployment, performance, reliability,
+			environments, deployment, performance, reliability, scaling,
 		},
 		groups,
 	)

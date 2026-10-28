@@ -465,6 +465,19 @@ func run() error {
 	mux.Handle("GET /api/demo/reliability/breaker",
 		presentation.NewReliabilityBreakerHandler(reliabilityConsole, logger))
 
+	// Topic 40's scaling round: REAL fleet machinery — three in-process
+	// replicas behind a round-robin balancer with an affinity table,
+	// plus the shared store standing for externalized state. Each
+	// request rebuilds the fleet and walks one session through both
+	// placements: replica-local memory breaks at the first cross-replica
+	// hop and again at the first rolling-update swap; the shared store
+	// survives everything. Every count on the wire (per-replica served
+	// totals, swap before-counts, the accumulated counter) is measured
+	// by the machinery itself, and the round reads no clock and no
+	// random source — the endpoint is deterministic by construction.
+	mux.Handle("GET /api/demo/scaling/stateless",
+		presentation.NewScalingStatelessHandler(logger))
+
 	// The posts resource — the api-design topic's real API surface, and
 	// the substrate later topics reuse (authorization guards its ids,
 	// webhooks fire on its writes, the docs topics document its routes).

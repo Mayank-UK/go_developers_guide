@@ -145,6 +145,14 @@ const PerfBenchDemo = lazy(() => import('./perf/bench_demo'));
 // timings, its state persisting across requests so PATCHing the
 // scenario trips and recovers it live.
 const ReliabilityBreakerDemo = lazy(() => import('./reliability/breaker_demo'));
+// The scaling topic's statelessness round: three in-process replicas
+// behind a real round-robin balancer with an affinity table, plus the
+// shared store standing for externalized state — one session walked
+// through both placements with every number measured (distribution
+// rows, swap before-counts, the accumulated counter). The round is
+// deterministic, so the replay button re-runs an identical
+// choreography: the lesson replays, the numbers do not drift.
+const ScalingStatelessDemo = lazy(() => import('./scaling/stateless_demo'));
 
 export const demoRegistry: DemoRegistry = {
   'go:runtime-types': RuntimeTypesDemo,
@@ -204,4 +212,5 @@ export const demoRegistry: DemoRegistry = {
   'deploy:stack': DeployStackDemo,
   'perf:bench': PerfBenchDemo,
   'reliability:breaker': ReliabilityBreakerDemo,
+  'scaling:stateless': ScalingStatelessDemo,
 };

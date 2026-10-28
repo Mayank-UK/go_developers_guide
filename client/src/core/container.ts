@@ -369,6 +369,13 @@ import {
   GetReliabilityBreakerDemoUseCase,
   RELIABILITY_BREAKER_DEMO_USE_CASE,
 } from '../domain/demo/get-reliability-breaker-demo-usecase';
+import { ScalingStatelessApi } from '../data/demo/scaling-stateless-api';
+import { ScalingStatelessRepositoryImpl } from '../data/demo/scaling-stateless-repository-impl';
+import type { ScalingStatelessRepository } from '../domain/demo/scaling-stateless-repository';
+import {
+  GetScalingStatelessDemoUseCase,
+  SCALING_STATELESS_DEMO_USE_CASE,
+} from '../domain/demo/get-scaling-stateless-demo-usecase';
 
 /**
  * Service-locator container — this client's composition root, mirroring the
@@ -606,6 +613,10 @@ export const ContainerTokens = {
   ReliabilityBreakerRepository: Symbol('ReliabilityBreakerRepository'),
   // Same aliasing story as the auth stories (RELIABILITY_BREAKER_DEMO_USE_CASE).
   GetReliabilityBreakerDemoUseCase: RELIABILITY_BREAKER_DEMO_USE_CASE,
+  ScalingStatelessApi: Symbol('ScalingStatelessApi'),
+  ScalingStatelessRepository: Symbol('ScalingStatelessRepository'),
+  // Same aliasing story as the auth stories (SCALING_STATELESS_DEMO_USE_CASE).
+  GetScalingStatelessDemoUseCase: SCALING_STATELESS_DEMO_USE_CASE,
 } as const;
 
 class Container {
@@ -1188,6 +1199,17 @@ class Container {
     this.register(
       ContainerTokens.GetReliabilityBreakerDemoUseCase,
       new GetReliabilityBreakerDemoUseCase(this.reliabilityBreakerRepository),
+    );
+
+    // Topic 40's scaling statelessness round — the same shape once more.
+    this.register(ContainerTokens.ScalingStatelessApi, new ScalingStatelessApi(config));
+    this.register(
+      ContainerTokens.ScalingStatelessRepository,
+      new ScalingStatelessRepositoryImpl(this.scalingStatelessApi),
+    );
+    this.register(
+      ContainerTokens.GetScalingStatelessDemoUseCase,
+      new GetScalingStatelessDemoUseCase(this.scalingStatelessRepository),
     );
   }
 
@@ -1857,6 +1879,20 @@ class Container {
   get getReliabilityBreakerDemoUseCase(): GetReliabilityBreakerDemoUseCase {
     return this.resolve<GetReliabilityBreakerDemoUseCase>(
       ContainerTokens.GetReliabilityBreakerDemoUseCase,
+    );
+  }
+
+  get scalingStatelessApi(): ScalingStatelessApi {
+    return this.resolve<ScalingStatelessApi>(ContainerTokens.ScalingStatelessApi);
+  }
+
+  get scalingStatelessRepository(): ScalingStatelessRepository {
+    return this.resolve<ScalingStatelessRepository>(ContainerTokens.ScalingStatelessRepository);
+  }
+
+  get getScalingStatelessDemoUseCase(): GetScalingStatelessDemoUseCase {
+    return this.resolve<GetScalingStatelessDemoUseCase>(
+      ContainerTokens.GetScalingStatelessDemoUseCase,
     );
   }
 
