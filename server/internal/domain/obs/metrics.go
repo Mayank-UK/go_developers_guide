@@ -235,14 +235,6 @@ func DefaultDurationBuckets() []float64 {
 func (r *MetricsRegistry) Write(w io.Writer) error {
 	r.mu.Lock()
 	names := append([]string(nil), r.names...)
-	counters := make([]string, 0, len(r.counters))
-	histograms := make([]string, 0, len(r.histograms))
-	for name := range r.counters {
-		counters = append(counters, name)
-	}
-	for name := range r.histograms {
-		histograms = append(histograms, name)
-	}
 	r.mu.Unlock()
 
 	var buf strings.Builder

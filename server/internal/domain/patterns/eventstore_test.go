@@ -222,6 +222,9 @@ func TestEventStoreStreamReturnsDefensiveCopies(t *testing.T) {
 	got[0].Type = "FORGED"
 	got[0].Payload = `{"qty":999}`
 	got = append(got, EventRecord{StreamID: "ledger-1", Version: 2, Type: "FORGED"})
+	if len(got) != 2 {
+		t.Fatalf("forged copy length = %d, want 2 (the caller's copy did extend)", len(got))
+	}
 
 	again, err := store.Stream(ctx, "ledger-1")
 	if err != nil {

@@ -113,6 +113,7 @@ type InterfaceMatrixPayload struct {
 // arrives with it.
 type taggedReader struct {
 	*strings.Reader
+	//lint:ignore U1000 the tag is quoted verbatim by topic 05's embed-promotion snippet; removing or using it is a master-routed re-quote, not a silent edit
 	tag string
 }
 

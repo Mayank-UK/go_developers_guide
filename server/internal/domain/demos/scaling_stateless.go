@@ -791,10 +791,8 @@ func BuildScalingStatelessPayload(facts ScalingStatelessFacts) ScalingStatelessP
 	}
 
 	counterRows := make([]ScalingCounterRowView, 0, len(facts.Counter.Rows))
-	counterParts := make([]string, 0, len(facts.Counter.Rows))
 	for _, row := range facts.Counter.Rows {
 		counterRows = append(counterRows, ScalingCounterRowView{ReplicaID: row.ReplicaID, Increments: row.Increments})
-		counterParts = append(counterParts, fmt.Sprintf("%s %d", row.ReplicaID, row.Increments))
 	}
 
 	firstSwap := ScalingSwapFact{}

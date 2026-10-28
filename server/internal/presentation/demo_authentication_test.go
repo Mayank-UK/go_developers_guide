@@ -99,7 +99,6 @@ func (f fakeAuthStoryRunners) RunAuthRefreshStory(context.Context) (demos.AuthRe
 // fakeCredentialResolver records which carrier was asked and answers
 // per its fields.
 type fakeCredentialResolver struct {
-	via        string
 	identity   domauth.Identity
 	err        error
 	sawSession bool

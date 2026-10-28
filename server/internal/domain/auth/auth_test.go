@@ -2,8 +2,6 @@ package auth
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"sync"
 	"time"
 )
@@ -223,13 +221,3 @@ func newTestEngines() (fakeDirectory, *SessionService, *ApiKeyService, *TokenSer
 }
 
 var testNow = time.Date(2026, 10, 27, 12, 0, 0, 0, time.UTC)
-
-// fmtErrors renders a wrapped-error chain for assertions.
-func fmtErrors(err error) string {
-	if err == nil {
-		return "<nil>"
-	}
-	return fmt.Sprintf("%v | is-invalid-credentials=%v is-not-authenticated=%v is-invalid-grant=%v is-invalid-refresh=%v",
-		err, errors.Is(err, ErrInvalidCredentials), errors.Is(err, ErrNotAuthenticated),
-		errors.Is(err, ErrInvalidGrant), errors.Is(err, ErrInvalidRefresh))
-}

@@ -2,7 +2,8 @@
 // OpenAPI contract as DATA, parsed from the actual spec file at call time.
 // Every fact on this card (title, version, servers, the path inventory,
 // the schema inventory) is DERIVED from server/api/openapi.yaml via
-// go:embed, never hand-copied, so the demo cannot drift from the
+// the go:embed directive (never hand-copied), so the demo cannot drift
+// from the
 // document; the drift rows summarize what the spec-drift test enforces;
 // and the raw spec text rides along so the view can show the very bytes
 // the route serves. Deterministic by construction — no clock, no

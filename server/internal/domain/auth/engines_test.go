@@ -138,7 +138,7 @@ func TestSessionTamperedAndForgedAndExpiredValuesAllRefused(t *testing.T) {
 	if err != nil {
 		t.Fatalf("login: %v", err)
 	}
-	tampered := flipLastChar(login.Cookie.Value)
+	tampered := flipSealedChar(login.Cookie.Value)
 	if _, err := sessions.Inspect(t.Context(), tampered, testNow); !errors.Is(err, ErrNotAuthenticated) {
 		t.Errorf("tampered cookie = %v, want ErrNotAuthenticated", err)
 	}
@@ -174,15 +174,19 @@ func TestSessionLogoutDeletesRowAndIsIdempotent(t *testing.T) {
 	}
 }
 
-// flipLastChar changes the last character of a sealed value while
-// keeping it in the base64url alphabet — one-character tamper.
-func flipLastChar(s string) string {
+// flipSealedChar changes a character of a sealed value while keeping it
+// in the base64url alphabet — one-character tamper. The SECOND-to-last
+// character, never the last: a base64 final character carries ignored
+// low-order bits, so a last-character swap can decode to byte-identical
+// output (the MAC then still verifies — a 1-in-4 flake), while any
+// interior character always changes the decoded bytes.
+func flipSealedChar(s string) string {
 	runes := []byte(s)
-	last := runes[len(runes)-1]
-	if last == 'A' {
-		runes[len(runes)-1] = 'B'
+	i := len(runes) - 2
+	if runes[i] == 'A' {
+		runes[i] = 'B'
 	} else {
-		runes[len(runes)-1] = 'A'
+		runes[i] = 'A'
 	}
 	return string(runes)
 }

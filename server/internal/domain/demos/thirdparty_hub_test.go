@@ -289,7 +289,7 @@ func TestThirdPartyHubSignatureAndEventVerification(t *testing.T) {
 		t.Error("a signature claimed for a different address must fail")
 	}
 
-	event, had := newThirdPartySandboxPayments().LastEvent()
+	_, had := newThirdPartySandboxPayments().LastEvent()
 	if had {
 		t.Fatal("a fresh processor has no event")
 	}
@@ -298,7 +298,7 @@ func TestThirdPartyHubSignatureAndEventVerification(t *testing.T) {
 		IdempotencyKey: "k", AmountCents: 4200, Currency: "USD", CardToken: thirdPartyCardOK}); err != nil {
 		t.Fatalf("charge: %v", err)
 	}
-	event, had = processor.LastEvent()
+	event, had := processor.LastEvent()
 	if !had {
 		t.Fatal("a successful charge must emit an event")
 	}

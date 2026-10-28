@@ -401,7 +401,7 @@ func TestRealtimeChatBroadcastsToEveryMemberIncludingTheSender(t *testing.T) {
 	if echo.Body != "hello room" || heard.Body != "hello room" {
 		t.Errorf("chat line = %q / %q", echo.Body, heard.Body)
 	}
-	if echo.Seq != heard.Seq || echo.From != echo.From {
+	if echo.Seq != heard.Seq || echo.From != heard.From {
 		t.Errorf("the room's one broadcast must be identical everywhere: %+v vs %+v", echo, heard)
 	}
 	if echo.From != "guest-1" || heard.From != "guest-1" {

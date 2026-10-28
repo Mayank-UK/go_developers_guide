@@ -293,7 +293,7 @@ func BuildI18nNegotiatorPayload(run I18nNegotiatorRun) I18nStoryPayload {
 		},
 		{
 			Beat: "locale formats", Verdict: I18nVerdictOK,
-			Detail: fmt.Sprintf("the number 1234567.89, an 1899-minor-unit price, the date of the story instant, and its clock — rendered by each locale's conventions: grouping separator, decimal separator, currency symbol placement and digits, month names, 12- vs 24-hour. Four locales, one value each, zero float money (the currency path is integer minor units end to end)."),
+			Detail: "the number 1234567.89, an 1899-minor-unit price, the date of the story instant, and its clock — rendered by each locale's conventions: grouping separator, decimal separator, currency symbol placement and digits, month names, 12- vs 24-hour. Four locales, one value each, zero float money (the currency path is integer minor units end to end).",
 			Facts:  formatFacts,
 		},
 		{

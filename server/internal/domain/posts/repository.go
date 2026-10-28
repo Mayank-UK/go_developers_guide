@@ -2,7 +2,6 @@ package posts
 
 import (
 	"context"
-	"time"
 )
 
 // The repository port — the seam this domain is consumed through and the
@@ -91,11 +90,3 @@ type PostsRepository interface {
 	// there now).
 	Delete(ctx context.Context, id string) error
 }
-
-// stampClock is the seam adapters use for time — injected so tests can be
-// deterministic and the production adapter can simply pass time.Now.
-type stampClock func() time.Time
-
-// utcNow is the production clock: every post timestamp is stored as a UTC
-// instant.
-func utcNow() time.Time { return time.Now().UTC() }

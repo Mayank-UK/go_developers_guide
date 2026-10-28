@@ -133,9 +133,3 @@ func (s *memoryAccessLogStore) Append(_ context.Context, entry domsecurity.Acces
 func (s *memoryAccessLogStore) List(_ context.Context) ([]domsecurity.AccessLogEntry, error) {
 	return append([]domsecurity.AccessLogEntry(nil), s.entries...), nil
 }
-
-// newStoryPII builds a fresh PII service over freshly seeded stores —
-// the erasure story must be destructive only to its own copies.
-func (c *Console) newStoryPII() *domsecurity.PIIService {
-	return domsecurity.NewPIIService(newMemorySubjectStore(seedSubjects()), &memoryAccessLogStore{})
-}

@@ -25,10 +25,9 @@ const (
 	// uuidCanonicalLength is the canonical 8-4-4-4-12 form: 32 hex digits
 	// + 4 hyphens.
 	uuidCanonicalLength = 36
-	// seqMask masks rand_a: 12 bits this guide uses as an
-	// intra-millisecond counter (RFC 9562's "counter method" monotonicity).
-	seqMask = 0x0FFF
-	// seqMax is the last 12-bit counter value.
+	// seqMax is the last 12-bit counter value — the mask of rand_a's
+	// intra-millisecond counter bits (RFC 9562's "counter method"
+	// monotonicity).
 	seqMax = 0x0FFF
 	// version7 is the nibble that names the version in every UUID.
 	version7 = 0x7

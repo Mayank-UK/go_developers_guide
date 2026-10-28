@@ -101,6 +101,13 @@ docker exec go_developers_guide_client_dev bash -lc 'cd /app && npm test && npm 
 
 The server suite runs with `-race`, gofmt is silent, real-PG tests spawn sibling containers through the mounted Docker socket (testcontainers-go, no DinD), and smoke checks curl the running stack. Image rebuilds happen only when Dockerfiles change.
 
+Two deeper local checks ride beside the standard suite — a coverage gate and staticcheck:
+
+```bash
+docker exec go_developers_guide_dev bash -lc 'cd /workspaces/go_developers_guide/server && tools/coverage/check.sh'   # total statement coverage floor (see server/tools/coverage/THRESHOLD.md)
+docker exec go_developers_guide_dev bash -lc 'cd /workspaces/go_developers_guide/server && staticcheck ./...'          # pinned via server/staticcheck.conf; install once: go install honnef.co/go/tools/cmd/staticcheck@v0.8.2
+```
+
 ## Project layout
 
 ```
