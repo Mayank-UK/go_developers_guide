@@ -363,14 +363,35 @@ func TestReliabilityWalkRecoversAfterCooldown(t *testing.T) {
 }
 
 // TestReliabilityRetryBackoffIsBoundedAndJittered pins the series'
-// shape under error injection: every attempt fails, the waits grow by
-// the doubling rung, jitter stays inside its bound, and the series is
-// BOUNDED — it ends with the error surfaced, never looping forever.
+// shape under error injection: every attempt fails, the computed waits
+// grow by the doubling rung with jitter inside its bound (pinned
+// deterministically on reliabilityBackoff itself — the schedule is a
+// pure function, so no wall clock is needed to prove its shape), the
+// measured rows on the wire carry real waits of that schedule's scale,
+// and the series is BOUNDED — it ends with the error surfaced, never
+// looping forever.
 func TestReliabilityRetryBackoffIsBoundedAndJittered(t *testing.T) {
 	cfg := reliabilityTestConfig()
 	console, err := NewReliabilityConsole(cfg, newReliabilityTestStore(t, core.FailureError))
 	if err != nil {
 		t.Fatalf("console: %v", err)
+	}
+
+	// The schedule, pinned deterministically: every sample of every rung
+	// lands inside [rung, rung+jitter], and the rungs double per attempt.
+	for attempt := 1; attempt <= cfg.RetryAttempts; attempt++ {
+		rung := cfg.RetryBaseDelay << (attempt - 1)
+		for sample := 0; sample < 64; sample++ {
+			wait := reliabilityBackoff(cfg, attempt)
+			if wait < rung || wait > rung+cfg.RetryJitter {
+				t.Errorf("attempt %d backoff sample = %s, want inside [%s, %s]",
+					attempt, wait, rung, rung+cfg.RetryJitter)
+			}
+		}
+		if attempt > 1 && rung != 2*(cfg.RetryBaseDelay<<(attempt-2)) {
+			t.Errorf("attempt %d rung = %s, want the doubling of the previous rung",
+				attempt, rung)
+		}
 	}
 
 	run := console.RetrySeries(context.Background())
@@ -385,14 +406,20 @@ func TestReliabilityRetryBackoffIsBoundedAndJittered(t *testing.T) {
 			t.Errorf("row %d outcome = %q, want the injected error", i+1, row.Outcome)
 		}
 		rung := cfg.RetryBaseDelay << i
-		if row.Backoff == 0 && i < len(run.Rows)-1 {
-			t.Errorf("row %d must carry its measured backoff", i+1)
-		}
-		if row.Backoff > 0 {
-			max := rung + cfg.RetryJitter + 2*time.Millisecond
-			if row.Backoff < rung-2*time.Millisecond || row.Backoff > max {
-				t.Errorf("row %d backoff = %s, want rung %s + jitter inside [%s, %s]",
-					i+1, row.Backoff, rung, rung, max)
+		if i < len(run.Rows)-1 {
+			// The measured wait: timers never fire early, so a wait below
+			// its rung means the schedule was skipped — load can only
+			// inflate a measurement, never shrink it below the rung.
+			if row.Backoff < rung {
+				t.Errorf("row %d backoff = %s, want at least its rung %s", i+1, row.Backoff, rung)
+			}
+			// Upper bound: a generous multiple of the configured rung+jitter.
+			// Container-load timer overshoot (observed ~5x) is tolerated,
+			// while a mis-scaled live wait — wrong units, a constant wired
+			// in place of the rung — lands far beyond it; the tight per-rung
+			// and jitter bounds are pinned deterministically above.
+			if limit := rung + cfg.RetryJitter + 250*time.Millisecond; row.Backoff > limit {
+				t.Errorf("row %d backoff = %s, want the schedule's scale inside %s", i+1, row.Backoff, limit)
 			}
 		}
 	}

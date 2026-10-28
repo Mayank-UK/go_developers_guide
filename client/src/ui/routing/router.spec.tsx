@@ -13,6 +13,11 @@ import { stubApiFetch } from '../../test/fetch_stub';
  * home view behind the single Suspense boundary) through an equivalent memory
  * router: the unknown-route degradation and the lazy home view both prove the
  * shell wiring, not just the view components.
+ *
+ * The content views are lazy chunks behind Suspense; under full-suite jsdom
+ * load a fork's first pull of a view's module graph can exceed findBy's
+ * default 1s, so awaits gated on a lazy view's first paint carry an explicit
+ * generous timeout — identical assertions, patient under load.
  */
 
 beforeAll(() => {
@@ -55,7 +60,7 @@ describe('routing', () => {
 
     // The chunk resolves; then the home hero takes over from the fallback.
     expect(
-      await screen.findByRole('heading', { level: 1, name: 'Go Developers Guide' }),
+      await screen.findByRole('heading', { level: 1, name: 'Go Developers Guide' }, { timeout: 5000 }),
     ).toBeInTheDocument();
     expect(await screen.findByTestId('curriculum-landing-soon')).toBeInTheDocument();
   });
@@ -80,7 +85,7 @@ describe('routing', () => {
     renderAt(topicPath('go-http-fundamentals'));
 
     expect(
-      await screen.findByRole('heading', { level: 1, name: 'Go HTTP Fundamentals' }),
+      await screen.findByRole('heading', { level: 1, name: 'Go HTTP Fundamentals' }, { timeout: 5000 }),
     ).toBeInTheDocument();
     expect(screen.getByText('The body.')).toBeInTheDocument();
   });

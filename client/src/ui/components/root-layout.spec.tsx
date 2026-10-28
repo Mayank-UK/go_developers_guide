@@ -15,6 +15,11 @@ import { stubApiFetch } from '../../test/fetch_stub';
  * absent on home (the navigation hub — nothing to walk back to), present on
  * every other route (topic pages and the unknown-route fallback), and a click
  * walks history back to where the user came from.
+ *
+ * The content views are lazy chunks behind Suspense; under full-suite jsdom
+ * load a fork's first pull of a view's module graph can exceed findBy's
+ * default 1s, so awaits gated on a lazy view's first paint carry an explicit
+ * generous timeout — identical assertions, patient under load.
  */
 
 beforeAll(() => {
@@ -76,7 +81,7 @@ describe('root layout header back button', () => {
     renderAt(RoutePaths.Home);
 
     expect(
-      await screen.findByRole('heading', { level: 1, name: 'Go Developers Guide' }),
+      await screen.findByRole('heading', { level: 1, name: 'Go Developers Guide' }, { timeout: 5000 }),
     ).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Go back' })).not.toBeInTheDocument();
   });
@@ -87,7 +92,7 @@ describe('root layout header back button', () => {
     renderAt(topicPath('go-language'));
 
     expect(
-      await screen.findByRole('heading', { level: 1, name: 'Go Language' }),
+      await screen.findByRole('heading', { level: 1, name: 'Go Language' }, { timeout: 5000 }),
     ).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Go back' })).toBeInTheDocument();
   });
@@ -112,6 +117,9 @@ describe('root layout header back button', () => {
 
     renderAt(RoutePaths.Home);
 
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'Go Developers Guide' }, { timeout: 5000 }),
+    ).toBeInTheDocument();
     expect(await screen.findByTestId('scenario-panel')).toBeInTheDocument();
     expect(screen.getByLabelText('Data mode')).toBeInTheDocument();
     expect(screen.getByLabelText('Inject failure')).toBeInTheDocument();
@@ -129,16 +137,16 @@ describe('root layout header back button', () => {
     renderAt(RoutePaths.Home);
 
     // Home → topic via the topic card, creating the history entry to walk back through.
-    fireEvent.click(await screen.findByRole('link', { name: /go language/i }));
+    fireEvent.click(await screen.findByRole('link', { name: /go language/i }, { timeout: 5000 }));
     expect(
-      await screen.findByRole('heading', { level: 1, name: 'Go Language' }),
+      await screen.findByRole('heading', { level: 1, name: 'Go Language' }, { timeout: 5000 }),
     ).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Go back' }));
 
     // navigate(-1) returns to home — the hub heading is back and the arrow hides again.
     expect(
-      await screen.findByRole('heading', { level: 1, name: 'Go Developers Guide' }),
+      await screen.findByRole('heading', { level: 1, name: 'Go Developers Guide' }, { timeout: 5000 }),
     ).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Go back' })).not.toBeInTheDocument();
   });

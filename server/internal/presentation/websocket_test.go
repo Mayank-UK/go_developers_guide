@@ -133,9 +133,29 @@ func tickFrame(t *testing.T, seq int64) string {
 	return realtime.FormatEvent(seq, "tick", string(encoded))
 }
 
+// waitForRoomCount blocks until the feed's room holds exactly n
+// subscribers. The handler flushes its retry frame BEFORE joining the
+// room, so a tick driven on the flush alone races the join — gating on
+// the registered subscription makes tick-then-read deterministic.
+func waitForRoomCount(t *testing.T, feed *realtime.TickerFeed, n int) {
+	t.Helper()
+	deadline := time.Now().Add(10 * time.Second)
+	for {
+		if got := feed.Hub().RoomCount(feed.Room()); got == n {
+			return
+		}
+		if time.Now().After(deadline) {
+			t.Fatalf("room count = %d, want %d — the subscription never registered",
+				feed.Hub().RoomCount(feed.Room()), n)
+		}
+		time.Sleep(time.Millisecond)
+	}
+}
+
 func TestRealtimeTickerStreamServesHeadersRetryAndByteExactFrames(t *testing.T) {
 	server, feed := newTickerStreamServer(t, time.Minute) // no keepalives mid-test
 	resp, _ := openStream(t, server, "")
+	waitForRoomCount(t, feed, 1)
 
 	if resp.StatusCode != http.StatusOK {
 		t.Fatalf("status = %d", resp.StatusCode)
@@ -224,6 +244,7 @@ func TestRealtimeTickerStreamKeepalivesAnIdleConnection(t *testing.T) {
 func TestRealtimeTickerStreamEndsWithItsRequest(t *testing.T) {
 	server, feed := newTickerStreamServer(t, time.Minute)
 	resp, cancel := openStream(t, server, "")
+	waitForRoomCount(t, feed, 1)
 	feed.TickOnce()
 	readSSEFrames(t, resp.Body, 2) // retry + tick 1: subscribed and live
 
@@ -231,7 +252,12 @@ func TestRealtimeTickerStreamEndsWithItsRequest(t *testing.T) {
 		t.Fatalf("room count while streaming = %d, want 1", got)
 	}
 	cancel() // the client hangs up (Ctrl-C on the curl tour)
-	deadline := time.Now().Add(3 * time.Second)
+	// The property is structural — the room reaches zero when the request
+	// ends — so the bound only fails a REAL leak (a subscriber that never
+	// leaves). 10s is the generous wall-clock window for the handler
+	// goroutine to observe the hangup under full-suite container load; a
+	// leak misses it by orders of magnitude either way.
+	deadline := time.Now().Add(10 * time.Second)
 	for feed.Hub().RoomCount(feed.Room()) != 0 {
 		if time.Now().After(deadline) {
 			t.Fatalf("subscriber leaked after hangup: %d still in the room", feed.Hub().RoomCount(feed.Room()))
