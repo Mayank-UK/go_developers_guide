@@ -36,13 +36,20 @@ const loaderWindow = 5 * time.Millisecond
 type PostsLoader struct {
 	fetch  BatchFetch
 	window time.Duration
+	// batchLimit is the closed-batch switch: zero (the default) dispatches
+	// on the window; positive dispatches the instant exactly batchLimit
+	// Load calls are pending — the count, not the clock, draws the batch
+	// boundary.
+	batchLimit int
 
 	mu      sync.Mutex
 	waiters map[string][]chan result
 	order   []string
 	started bool
+	pending int
 
 	wake chan struct{}
+	full chan struct{}
 }
 
 // result is one Load's answer, delivered on the waiter's channel.
@@ -51,15 +58,41 @@ type result struct {
 	err  error
 }
 
+// Option configures a loader at construction; NewPostsLoader applies
+// them left to right.
+type Option func(*PostsLoader)
+
+// WithClosedBatch switches dispatch from timing to COUNT: the batch fires
+// the instant exactly `loads` Load calls are pending, and the coalescing
+// window NEVER fires it early. That is the contract a known fan-out wants
+// — the issuer knows how many sibling lookups ride one batch — and the one
+// a pinned, byte-identical experiment needs: no amount of machine load can
+// split the batch, and no window latency is paid. The caller owes the
+// loader exactly that many Loads (or a context cancellation to unwind the
+// wait): fewer leave the batch pending; any beyond the count overflow into
+// a second batch cycle.
+func WithClosedBatch(loads int) Option {
+	return func(l *PostsLoader) {
+		if loads > 0 {
+			l.batchLimit = loads
+		}
+	}
+}
+
 // NewPostsLoader builds a loader over the batch seam. The context is
 // captured on first Load and carries cancellation into the batch fetch.
-func NewPostsLoader(fetch BatchFetch) *PostsLoader {
-	return &PostsLoader{
+func NewPostsLoader(fetch BatchFetch, opts ...Option) *PostsLoader {
+	l := &PostsLoader{
 		fetch:   fetch,
 		window:  loaderWindow,
 		waiters: make(map[string][]chan result),
 		wake:    make(chan struct{}, 1),
+		full:    make(chan struct{}, 1),
 	}
+	for _, opt := range opts {
+		opt(l)
+	}
+	return l
 }
 
 // Load registers an id and blocks until its batch resolves — a future,
@@ -78,6 +111,8 @@ func (l *PostsLoader) Load(ctx context.Context, id string) (posts.Post, error) {
 		l.order = append(l.order, id)
 	}
 	l.waiters[id] = append(l.waiters[id], ch)
+	l.pending++
+	batchFull := l.batchLimit > 0 && l.pending >= l.batchLimit
 	// Spawn the single dispatcher under the same lock that guards the
 	// waiters: either this Load sees started=false and spawns it, or a
 	// previous dispatcher is still alive to serve this waiter — the
@@ -94,6 +129,14 @@ func (l *PostsLoader) Load(ctx context.Context, id string) (posts.Post, error) {
 	case l.wake <- struct{}{}:
 	default:
 	}
+	if batchFull {
+		// Closed batch filled: tell the dispatcher to fire NOW — the
+		// count, not the clock, drew this batch's boundary.
+		select {
+		case l.full <- struct{}{}:
+		default:
+		}
+	}
 
 	select {
 	case got := <-ch:
@@ -107,7 +150,9 @@ func (l *PostsLoader) Load(ctx context.Context, id string) (posts.Post, error) {
 // dispatchLoop is the loader's one background goroutine: after every nudge
 // it waits out the coalescing window, fires the batch when the window
 // closes with work pending, and retires one window after the last dispatch
-// — no goroutine leak, no shutdown API to forget to call.
+// — no goroutine leak, no shutdown API to forget to call. In closed-batch
+// mode the count fires the batch instead, and the window keeps only its
+// retirement duty.
 func (l *PostsLoader) dispatchLoop(ctx context.Context) {
 	idle := time.NewTimer(l.window)
 	defer idle.Stop()
@@ -120,9 +165,21 @@ func (l *PostsLoader) dispatchLoop(ctx context.Context) {
 				drainTimer(idle)
 			}
 			idle.Reset(l.window)
+		case <-l.full:
+			// Closed batch filled: fire at once. The re-armed timer is
+			// liveness only — it retires the dispatcher one quiet window
+			// after its work is done.
+			l.fire(ctx)
+			idle.Reset(l.window)
 		case <-idle.C:
 			if l.retireIfQuiet() {
 				return
+			}
+			if l.batchLimit > 0 {
+				// Closed batch: the timer is liveness, not a trigger —
+				// it must never fire a batch early; only the count does.
+				idle.Reset(l.window)
+				continue
 			}
 			l.fire(ctx)
 			idle.Reset(l.window)
@@ -157,6 +214,7 @@ func (l *PostsLoader) fire(ctx context.Context) {
 	waiters := l.waiters
 	l.order = nil
 	l.waiters = make(map[string][]chan result)
+	l.pending = 0
 	l.mu.Unlock()
 
 	fetched, err := l.fetch(ctx, ids)
@@ -185,6 +243,7 @@ func (l *PostsLoader) failAll(cause error) {
 	waiters := l.waiters
 	l.order = nil
 	l.waiters = make(map[string][]chan result)
+	l.pending = 0
 	l.mu.Unlock()
 
 	for _, queue := range waiters {

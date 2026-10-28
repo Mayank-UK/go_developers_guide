@@ -355,10 +355,18 @@ func loaderExperiment(newScratch func() posts.PostsRepository) GraphQLLoaderExpe
 	// Loader: the same ids, each requested twice, all concurrently — the
 	// way sibling field resolvers would.
 	loaderRepo := loader.NewCountingRepository(newScratch())
-	batchLoader := loader.NewPostsLoader(loader.PortBatch(loaderRepo))
 	loads := make([]string, 0, len(ids)*2)
 	loads = append(loads, ids...)
 	loads = append(loads, ids...)
+	// Closed batch: this payload is pinned byte-identical across builds,
+	// so the batch boundary is the COUNT (all 2N loads), not a coalescing
+	// window that machine load could close mid-flight and split — the 2N
+	// loads cross the port exactly once, every build, however the test
+	// runner schedules them.
+	batchLoader := loader.NewPostsLoader(
+		loader.PortBatch(loaderRepo),
+		loader.WithClosedBatch(len(loads)),
+	)
 	resolved := make([]bool, len(loads))
 	var wg sync.WaitGroup
 	for i, id := range loads {

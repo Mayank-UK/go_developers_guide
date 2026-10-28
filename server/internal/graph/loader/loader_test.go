@@ -6,6 +6,7 @@ import (
 	"sync"
 	"sync/atomic"
 	"testing"
+	"time"
 
 	"guide/internal/core"
 	postsdata "guide/internal/data/posts"
@@ -106,6 +107,41 @@ func TestNaiveVersusLoaderPortCalls(t *testing.T) {
 	}
 	if loaderCounts.List != 1 || loaderCounts.Total() != 1 {
 		t.Errorf("loader counts = %+v (total %d), want the single batched list", loaderCounts, loaderCounts.Total())
+	}
+}
+
+// TestClosedBatchFiresOnCountNotClock pins the deterministic mode: with the
+// batch boundary set by COUNT, slowly-issued loads — gaps far wider than
+// the coalescing window — still cross the seam exactly once. The window
+// may retire a quiet dispatcher, but in closed-batch mode it can never
+// fire a batch early; only the count does. The staggering is the proof:
+// under window dispatch these gaps would cost six fetches, so the count
+// landing on 1 either way makes the assertion bimodal, not flaky.
+func TestClosedBatchFiresOnCountNotClock(t *testing.T) {
+	repo := postsdata.NewInMemoryRepository()
+	var fetches atomic.Int64
+	closedLoader := NewPostsLoader(func(ctx context.Context, ids []string) (map[string]posts.Post, error) {
+		fetches.Add(1)
+		return PortBatch(repo)(ctx, ids)
+	}, WithClosedBatch(6))
+
+	ids := []string{"p-1", "p-2", "p-3", "p-4", "p-5", "p-6"}
+	var wg sync.WaitGroup
+	for i, id := range ids {
+		wg.Add(1)
+		go func(i int, id string) {
+			defer wg.Done()
+			// Each load lands well after the previous one's window closed.
+			time.Sleep(time.Duration(i) * 25 * time.Millisecond)
+			if _, err := closedLoader.Load(context.Background(), id); err != nil {
+				t.Errorf("Load(%q): %v", id, err)
+			}
+		}(i, id)
+	}
+	wg.Wait()
+
+	if got := fetches.Load(); got != 1 {
+		t.Fatalf("batch fetches = %d, want exactly 1: a closed batch fires on the count, never on the clock", got)
 	}
 }
 
