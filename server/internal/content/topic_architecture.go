@@ -358,8 +358,9 @@ func architectureTopic() (Topic, error) {
 					"# the dependency rule, checkable in two greps\n"+
 					"grep -rn 'guide/internal/data' internal/presentation/*.go | grep -v _test\n"+
 					"#   (no output: zero production handlers import the data layer)\n"+
-					"grep -rln 'guide/internal/presentation' internal/domain/ internal/data/\n"+
-					"#   (no output: nothing points INTO the edge)\n"+
+					"grep -rnE '^[[:space:]]*([[:alnum:]]+[[:space:]]+)?\"guide/internal/presentation\"' internal/domain/ internal/data/\n"+
+					"#   (no output: no IMPORT line points into the edge — anchored to the import\n"+
+					"#    shape, because the runner demos name the package in string literals)\n"+
 					"grep -rln 'TEACHING-EXCEPTION' internal/domain/demos/   # the marked exhibits, one header each"),
 			text("term-arch-coda",
 				"Read the tour as the topic's thesis in shell form. The tracer GET is the layer map EXECUTED — files and symbols you just ``ls``-ed, appearing as hops with durations attached, flipping their leaf on a scenario PATCH without any layer above noticing. The greps are the dependency rule's enforcement story told honestly: no framework police, just an import graph that is trivially inspectable, a convention stated in one sentence, and a review culture that keeps the count at zero — with every marked exemption greppable by name. That is Go architecture at this scale: ``internal/`` plus five prefixes, one rule with two arrows, a ``main`` that wires the world in dependency order, one error taxonomy with one writer, a client that mirrors the whole shape — and, when you want to prove any of it, a composition root that lets you wrap a recorder around the seams and watch the rule run."),
