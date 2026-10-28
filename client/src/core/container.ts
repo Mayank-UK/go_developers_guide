@@ -383,6 +383,13 @@ import {
   GetBestChecklistDemoUseCase,
   BEST_CHECKLIST_DEMO_USE_CASE,
 } from '../domain/demo/get-best-checklist-demo-usecase';
+import { ThirdPartyHubApi } from '../data/demo/thirdparty-hub-api';
+import { ThirdPartyHubRepositoryImpl } from '../data/demo/thirdparty-hub-repository-impl';
+import type { ThirdPartyHubRepository } from '../domain/demo/thirdparty-hub-repository';
+import {
+  GetThirdPartyHubDemoUseCase,
+  THIRD_PARTY_HUB_DEMO_USE_CASE,
+} from '../domain/demo/get-thirdparty-hub-demo-usecase';
 
 /**
  * Service-locator container — this client's composition root, mirroring the
@@ -628,6 +635,10 @@ export const ContainerTokens = {
   BestChecklistRepository: Symbol('BestChecklistRepository'),
   // Same aliasing story as the auth stories (BEST_CHECKLIST_DEMO_USE_CASE).
   GetBestChecklistDemoUseCase: BEST_CHECKLIST_DEMO_USE_CASE,
+  ThirdPartyHubApi: Symbol('ThirdPartyHubApi'),
+  ThirdPartyHubRepository: Symbol('ThirdPartyHubRepository'),
+  // Same aliasing story as the auth stories (THIRD_PARTY_HUB_DEMO_USE_CASE).
+  GetThirdPartyHubDemoUseCase: THIRD_PARTY_HUB_DEMO_USE_CASE,
 } as const;
 
 class Container {
@@ -1232,6 +1243,17 @@ class Container {
     this.register(
       ContainerTokens.GetBestChecklistDemoUseCase,
       new GetBestChecklistDemoUseCase(this.bestChecklistRepository),
+    );
+
+    // Topic 42's third-party adapter-surface hub — the same shape once more.
+    this.register(ContainerTokens.ThirdPartyHubApi, new ThirdPartyHubApi(config));
+    this.register(
+      ContainerTokens.ThirdPartyHubRepository,
+      new ThirdPartyHubRepositoryImpl(this.thirdPartyHubApi),
+    );
+    this.register(
+      ContainerTokens.GetThirdPartyHubDemoUseCase,
+      new GetThirdPartyHubDemoUseCase(this.thirdPartyHubRepository),
     );
   }
 
@@ -1929,6 +1951,20 @@ class Container {
   get getBestChecklistDemoUseCase(): GetBestChecklistDemoUseCase {
     return this.resolve<GetBestChecklistDemoUseCase>(
       ContainerTokens.GetBestChecklistDemoUseCase,
+    );
+  }
+
+  get thirdPartyHubApi(): ThirdPartyHubApi {
+    return this.resolve<ThirdPartyHubApi>(ContainerTokens.ThirdPartyHubApi);
+  }
+
+  get thirdPartyHubRepository(): ThirdPartyHubRepository {
+    return this.resolve<ThirdPartyHubRepository>(ContainerTokens.ThirdPartyHubRepository);
+  }
+
+  get getThirdPartyHubDemoUseCase(): GetThirdPartyHubDemoUseCase {
+    return this.resolve<GetThirdPartyHubDemoUseCase>(
+      ContainerTokens.GetThirdPartyHubDemoUseCase,
     );
   }
 

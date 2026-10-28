@@ -160,6 +160,17 @@ const ScalingStatelessDemo = lazy(() => import('./scaling/stateless_demo'));
 // verdicts where none can honestly judge; the repo's deliberate not-dos
 // ride the same payload.
 const BestChecklistDemo = lazy(() => import('./best/checklist_demo'));
+// The third-party topic's adapter-surface hub: three vendor ports
+// (mailer, payments, object storage) each driven through a fixed
+// script against a deterministic sandbox adapter — signing,
+// idempotency keys, quota accounting, error-taxonomy mapping —
+// beside its credential-gated live skeleton's honest refusal, the
+// DI switch's current position with per-vendor wiring rows, and the
+// vendor-error taxonomy map with HTTP statuses derived through the
+// server's real core.HTTPStatusFor; no vendor network call is ever
+// made, and the sandbox runs are deterministic, so replay re-serves
+// identical vendor panels.
+const ThirdPartyHubDemo = lazy(() => import('./thirdparty/hub_demo'));
 
 export const demoRegistry: DemoRegistry = {
   'go:runtime-types': RuntimeTypesDemo,
@@ -221,4 +232,5 @@ export const demoRegistry: DemoRegistry = {
   'reliability:breaker': ReliabilityBreakerDemo,
   'scaling:stateless': ScalingStatelessDemo,
   'best:checklist': BestChecklistDemo,
+  'thirdparty:hub': ThirdPartyHubDemo,
 };

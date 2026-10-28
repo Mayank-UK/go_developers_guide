@@ -454,6 +454,10 @@ func NewProductionRegistry() (Registry, error) {
 	if err != nil {
 		return Registry{}, fmt.Errorf("build best-practices topic: %w", err)
 	}
+	thirdParty, err := thirdPartyTopic()
+	if err != nil {
+		return Registry{}, fmt.Errorf("build third-party topic: %w", err)
+	}
 	return NewRegistry(
 		[]Topic{
 			goLanguage, goRuntime, httpWeb, goHTTPFundamentals, interfacesComposition,
@@ -463,6 +467,7 @@ func NewProductionRegistry() (Registry, error) {
 			filesMedia, internationalization, realtime, backgroundJobs, errorHandling,
 			dependencyManagement, architecture, observability, testingContent, debugging,
 			environments, deployment, performance, reliability, scaling, bestPractices,
+			thirdParty,
 		},
 		groups,
 	)

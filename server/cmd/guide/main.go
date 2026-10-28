@@ -516,6 +516,17 @@ func run() error {
 	bestChecklist.Start()
 	mux.Handle("GET /api/demo/best/checklist", bestChecklist)
 
+	// Topic 42's third-party hub: three vendor ports (mailer, payments,
+	// object storage), each with a deterministic sandbox and a
+	// credential-gated live skeleton, switched fake/live by the SHARED
+	// scenario store — the same runtime swap the posts surface uses. The
+	// handler is stateless: every request drives fresh sandboxes through
+	// fixed scripts at a fixed exhibit clock (byte-identical bodies per
+	// scenario state), resolves vendor credentials by env var NAME only,
+	// and makes no vendor network call.
+	mux.Handle("GET /api/demo/thirdparty/hub",
+		presentation.NewThirdPartyHubHandler(scenarioStore, logger))
+
 	// GraphQL rides the SAME posts use-case instances as the REST routes —
 	// one domain, two surfaces, one data-mode switch. The playground's
 	// scratch store stays separate and fake by design (a func, because the
