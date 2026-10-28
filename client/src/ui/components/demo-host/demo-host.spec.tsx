@@ -68,8 +68,9 @@ describe('DemoHost', () => {
     // the trace round-trip, the testing runner, the debug stall, the
     // env inspector, the deployment stack viewer, the perf bench, the
     // reliability breaker, the scaling statelessness round, the
-    // best-practices self-audit, and the third-party adapter-surface
-    // hub).
+    // best-practices self-audit, the third-party adapter-surface hub,
+    // and the advanced-architecture pair — the saga compensation ledger
+    // and the event-store stream lifecycle).
     expect(Object.keys(demoRegistry)).toEqual([
       'go:runtime-types',
       'runtime:concurrency',
@@ -131,6 +132,8 @@ describe('DemoHost', () => {
       'scaling:stateless',
       'best:checklist',
       'thirdparty:hub',
+      'arch:saga',
+      'arch:eventstore',
     ]);
   });
 });

@@ -390,6 +390,20 @@ import {
   GetThirdPartyHubDemoUseCase,
   THIRD_PARTY_HUB_DEMO_USE_CASE,
 } from '../domain/demo/get-thirdparty-hub-demo-usecase';
+import { ArchSagaApi } from '../data/demo/arch-saga-api';
+import { ArchSagaRepositoryImpl } from '../data/demo/arch-saga-repository-impl';
+import type { ArchSagaRepository } from '../domain/demo/arch-saga-repository';
+import {
+  GetArchSagaDemoUseCase,
+  ARCH_SAGA_DEMO_USE_CASE,
+} from '../domain/demo/get-arch-saga-demo-usecase';
+import { ArchEventstoreApi } from '../data/demo/arch-eventstore-api';
+import { ArchEventstoreRepositoryImpl } from '../data/demo/arch-eventstore-repository-impl';
+import type { ArchEventstoreRepository } from '../domain/demo/arch-eventstore-repository';
+import {
+  GetArchEventstoreDemoUseCase,
+  ARCH_EVENTSTORE_DEMO_USE_CASE,
+} from '../domain/demo/get-arch-eventstore-demo-usecase';
 
 /**
  * Service-locator container — this client's composition root, mirroring the
@@ -639,6 +653,14 @@ export const ContainerTokens = {
   ThirdPartyHubRepository: Symbol('ThirdPartyHubRepository'),
   // Same aliasing story as the auth stories (THIRD_PARTY_HUB_DEMO_USE_CASE).
   GetThirdPartyHubDemoUseCase: THIRD_PARTY_HUB_DEMO_USE_CASE,
+  ArchSagaApi: Symbol('ArchSagaApi'),
+  ArchSagaRepository: Symbol('ArchSagaRepository'),
+  // Same aliasing story as the auth stories (ARCH_SAGA_DEMO_USE_CASE).
+  GetArchSagaDemoUseCase: ARCH_SAGA_DEMO_USE_CASE,
+  ArchEventstoreApi: Symbol('ArchEventstoreApi'),
+  ArchEventstoreRepository: Symbol('ArchEventstoreRepository'),
+  // Same aliasing story as the auth stories (ARCH_EVENTSTORE_DEMO_USE_CASE).
+  GetArchEventstoreDemoUseCase: ARCH_EVENTSTORE_DEMO_USE_CASE,
 } as const;
 
 class Container {
@@ -1254,6 +1276,30 @@ class Container {
     this.register(
       ContainerTokens.GetThirdPartyHubDemoUseCase,
       new GetThirdPartyHubDemoUseCase(this.thirdPartyHubRepository),
+    );
+
+    // Topic 43's advanced-architecture pair — the same shape twice more:
+    // the saga's compensation ledger and the event store's stream
+    // lifecycle, both stateless server-side (the runs are pure functions
+    // of fixed scripts), so replay is safe by the machinery's own
+    // determinism.
+    this.register(ContainerTokens.ArchSagaApi, new ArchSagaApi(config));
+    this.register(
+      ContainerTokens.ArchSagaRepository,
+      new ArchSagaRepositoryImpl(this.archSagaApi),
+    );
+    this.register(
+      ContainerTokens.GetArchSagaDemoUseCase,
+      new GetArchSagaDemoUseCase(this.archSagaRepository),
+    );
+    this.register(ContainerTokens.ArchEventstoreApi, new ArchEventstoreApi(config));
+    this.register(
+      ContainerTokens.ArchEventstoreRepository,
+      new ArchEventstoreRepositoryImpl(this.archEventstoreApi),
+    );
+    this.register(
+      ContainerTokens.GetArchEventstoreDemoUseCase,
+      new GetArchEventstoreDemoUseCase(this.archEventstoreRepository),
     );
   }
 
@@ -1965,6 +2011,34 @@ class Container {
   get getThirdPartyHubDemoUseCase(): GetThirdPartyHubDemoUseCase {
     return this.resolve<GetThirdPartyHubDemoUseCase>(
       ContainerTokens.GetThirdPartyHubDemoUseCase,
+    );
+  }
+
+  get archSagaApi(): ArchSagaApi {
+    return this.resolve<ArchSagaApi>(ContainerTokens.ArchSagaApi);
+  }
+
+  get archSagaRepository(): ArchSagaRepository {
+    return this.resolve<ArchSagaRepository>(ContainerTokens.ArchSagaRepository);
+  }
+
+  get getArchSagaDemoUseCase(): GetArchSagaDemoUseCase {
+    return this.resolve<GetArchSagaDemoUseCase>(
+      ContainerTokens.GetArchSagaDemoUseCase,
+    );
+  }
+
+  get archEventstoreApi(): ArchEventstoreApi {
+    return this.resolve<ArchEventstoreApi>(ContainerTokens.ArchEventstoreApi);
+  }
+
+  get archEventstoreRepository(): ArchEventstoreRepository {
+    return this.resolve<ArchEventstoreRepository>(ContainerTokens.ArchEventstoreRepository);
+  }
+
+  get getArchEventstoreDemoUseCase(): GetArchEventstoreDemoUseCase {
+    return this.resolve<GetArchEventstoreDemoUseCase>(
+      ContainerTokens.GetArchEventstoreDemoUseCase,
     );
   }
 

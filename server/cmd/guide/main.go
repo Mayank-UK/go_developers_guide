@@ -527,6 +527,24 @@ func run() error {
 	mux.Handle("GET /api/demo/thirdparty/hub",
 		presentation.NewThirdPartyHubHandler(scenarioStore, logger))
 
+	// Topic 43's architecture capstone, first half: the saga — the REAL
+	// compensation machinery from internal/domain/patterns driven through
+	// three observed runs of a fixed order-fulfillment script (success,
+	// injected failure with its idempotent re-compensation replay, and a
+	// mid-saga cancellation whose undo pass survives the dead context).
+	// Stateless by construction — no clock, no randomness — so two GETs
+	// serve byte-identical bodies.
+	mux.Handle("GET "+demos.ArchSagaPath, presentation.NewArchSagaHandler(logger))
+
+	// Topic 43's architecture capstone, second half: the event store —
+	// one inventory stream driven through the command path event
+	// sourcing prescribes (rebuild by replay, decide against the
+	// projection, append naming the version the decision was made
+	// against), a typed optimistic-concurrency conflict with its
+	// recovery, and deterministic rebuild proofs at a fixed exhibit
+	// clock. Stateless like the saga half: byte-identical per GET.
+	mux.Handle("GET "+demos.ArchEventstorePath, presentation.NewArchEventstoreHandler(logger))
+
 	// GraphQL rides the SAME posts use-case instances as the REST routes —
 	// one domain, two surfaces, one data-mode switch. The playground's
 	// scratch store stays separate and fake by design (a func, because the

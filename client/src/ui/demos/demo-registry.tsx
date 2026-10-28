@@ -171,6 +171,18 @@ const BestChecklistDemo = lazy(() => import('./best/checklist_demo'));
 // made, and the sandbox runs are deterministic, so replay re-serves
 // identical vendor panels.
 const ThirdPartyHubDemo = lazy(() => import('./thirdparty/hub_demo'));
+// The advanced-architecture topic's pair, riding the REAL distributed
+// patterns from the server's internal/domain/patterns: the saga — three
+// observed runs of the compensation machinery (success, injected
+// failure with its idempotent re-compensation replay, mid-saga
+// cancellation whose undo pass survives the dead context) — and the
+// event store — one inventory stream driven through rebuild-by-replay →
+// decide → append-with-expected-version, a typed optimistic-concurrency
+// conflict with its recovery, and deterministic rebuild proofs. Both
+// endpoints are stateless and clock-free, so replay re-serves
+// byte-identical ledgers; one lazy entry each, same as every demo.
+const ArchSagaDemo = lazy(() => import('./arch/saga_demo'));
+const ArchEventstoreDemo = lazy(() => import('./arch/eventstore_demo'));
 
 export const demoRegistry: DemoRegistry = {
   'go:runtime-types': RuntimeTypesDemo,
@@ -233,4 +245,6 @@ export const demoRegistry: DemoRegistry = {
   'scaling:stateless': ScalingStatelessDemo,
   'best:checklist': BestChecklistDemo,
   'thirdparty:hub': ThirdPartyHubDemo,
+  'arch:saga': ArchSagaDemo,
+  'arch:eventstore': ArchEventstoreDemo,
 };

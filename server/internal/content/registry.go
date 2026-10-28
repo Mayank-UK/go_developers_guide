@@ -458,6 +458,10 @@ func NewProductionRegistry() (Registry, error) {
 	if err != nil {
 		return Registry{}, fmt.Errorf("build third-party topic: %w", err)
 	}
+	advancedArchitecture, err := advancedArchitectureTopic()
+	if err != nil {
+		return Registry{}, fmt.Errorf("build advanced-architecture topic: %w", err)
+	}
 	return NewRegistry(
 		[]Topic{
 			goLanguage, goRuntime, httpWeb, goHTTPFundamentals, interfacesComposition,
@@ -467,7 +471,7 @@ func NewProductionRegistry() (Registry, error) {
 			filesMedia, internationalization, realtime, backgroundJobs, errorHandling,
 			dependencyManagement, architecture, observability, testingContent, debugging,
 			environments, deployment, performance, reliability, scaling, bestPractices,
-			thirdParty,
+			thirdParty, advancedArchitecture,
 		},
 		groups,
 	)
