@@ -220,8 +220,8 @@ func environmentsTopic() (Topic, error) {
 				"Datastore addresses — dev's compose publishes host ports and the defaults point at service names; prod's datastores sit on an internal network with no published ports, and the DSNs arrive as injected environment variables.",
 			),
 			code("env-beh-prod", "yaml",
-				"The prod declaration: the same server image, its one published port, and an internal network the datastores never leave.",
-				".docker/docker-compose.prod.yml",
+				"The prod declaration: the same server image — its environment injected by the platform, DSN on the required-variable secret rail — one published port, and an internal network the datastores never leave.",
+				"deploy/docker-compose.prod.yml",
 				"  server:\n"+
 					"    build:\n"+
 					"      context: ./../\n"+
@@ -229,8 +229,14 @@ func environmentsTopic() (Topic, error) {
 					"    image: gdg_server_prod\n"+
 					"    container_name: go_developers_guide_server_prod\n"+
 					"    restart: unless-stopped\n"+
+					"    environment:\n"+
+					"      GDG_ENV: prod\n"+
+					"      GDG_LOG_LEVEL: info\n"+
+					"      GDG_REDIS_ADDR: redis:6379\n"+
+					"      GDG_MONGO_URI: mongodb://mongo:27017\n"+
+					"      GDG_DATABASE_URL: postgres://guide:${POSTGRES_PASSWORD:?export POSTGRES_PASSWORD before compose up}@postgres:5432/guide?sslmode=disable\n"+
 					"    ports:\n"+
-					"      - 8100:8100\n"+
+					"      - \"8100:8100\"\n"+
 					"    networks:\n"+
 					"      - app_internal"),
 			text("env-beh-no-ifs",

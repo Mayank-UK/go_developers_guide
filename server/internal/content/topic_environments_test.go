@@ -250,7 +250,7 @@ func TestEnvironmentsQuotesTheRealInstruments(t *testing.T) {
 		"server/cmd/guide/main.go",
 		".devcontainer/devcontainer.json",
 		".docker/docker-compose.yml",
-		".docker/docker-compose.prod.yml",
+		"deploy/docker-compose.prod.yml",
 	} {
 		if !sources[want] {
 			t.Errorf("topic must quote its real instrument %s", want)

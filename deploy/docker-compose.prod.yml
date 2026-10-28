@@ -11,9 +11,10 @@
 # committed here and never baked into an image; compose interpolates it
 # into the DSN and the postgres password at START time only.
 #
-# The leaner .docker/docker-compose.prod.yml is the Phase 0.A bootstrap
-# stack; THIS file is the deployment topic's full artifact, parsed live
-# by the deploy:stack demo (GET /api/demo/deploy/stack).
+# This is the repo's ONE prod compose file: the Phase 0.A bootstrap
+# stack that lived at .docker/docker-compose.prod.yml was consolidated
+# into it, so every prod path in the guide quotes THIS file. It is
+# parsed live by the deploy:stack demo (GET /api/demo/deploy/stack).
 #
 # Validate: POSTGRES_PASSWORD=placeholder docker compose -f
 # deploy/docker-compose.prod.yml config
