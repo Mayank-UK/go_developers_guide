@@ -1,0 +1,134 @@
+# PERSISTENT PLATFORM STACK — booted once and untouched by releases.
+#
+# Project gdg_platform owns everything that OUTLIVES a deployment: the three
+# datastores (postgres, redis, mongo), same images/env/healthchecks as the
+# dev stack and the teaching prod stack (deploy/docker-compose.prod.yml)
+# carry. The TLS edge is NOT in this file — it is the infra repo's ONE
+# shared `caddy` container (its own compose project at /opt/caddy on the VM,
+# the only publisher of 80/443, serving every app on the box), which joins
+# the external gdg_frontend network to reach this app's gdg_client_<color>
+# containers by name. The seam between the stacks is the FLIP FILE
+# ~/go_developers_guide/platform/upstream.caddy (one line:
+# reverse_proxy gdg_client_<color>:80): the deploy writes it, the shared
+# caddy bind-mounts it read-only, and a release activates the flip with
+# `docker exec caddy caddy reload --config /etc/caddy/Caddyfile` — graceful,
+# no TLS blip.
+#
+# The datastore boot-race guarantee is enforced by DEPLOY ORDERING here:
+# `up -d --wait` must report all three datastores healthy BEFORE any app
+# stack starts — depends_on cannot cross compose files. The server itself
+# boots with redis/mongo down (the optional-service discipline) but its
+# PostgreSQL is part of the stack: it dials and goose-migrates at boot and
+# FAILS the boot when unreachable — platform-first ordering closes that
+# window on every deploy.
+#
+# Volumes are EXTERNAL on purpose (gdg_prod_*): the deploy creates them
+# idempotently before the first boot and they survive every release flip —
+# the databases are platform state, never per-color state.
+#
+# SINGLE-SOURCE SECRET WIRING: the app stack's server consumes the
+# PostgreSQL password inside its GDG_DATABASE_URL (interpolated from
+# POSTGRES_PASSWORD by docker-compose-prod.yml) and the postgres service
+# below consumes the SAME name via interpolation — the deploy/CI shell runs
+# `set -a; . server/.env.production; set +a` before any compose command
+# against either file, so ONE variable feeds both sides and the database
+# and the app cannot disagree on the password. POSTGRES_PASSWORD is the
+# repo's own required-variable rail name, the one
+# deploy/docker-compose.prod.yml (the deployment topic's artifact)
+# already teaches.
+name: gdg_platform
+
+services:
+  postgres:
+    image: postgres:17
+    container_name: gdg_postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=guide
+      # Parity rail: the SAME required variable the app stack's
+      # GDG_DATABASE_URL interpolates — the DB and the app agree by
+      # construction, and an unset value fails `compose config` up front.
+      # The deploy/CI shell supplies it by sourcing server/.env.production.
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set to a real database password}
+      - POSTGRES_DB=guide
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U guide -d guide"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      gdg_backend:
+        # The alias keeps the app stacks' GDG_DATABASE_URL hostname
+        # (postgres://guide:…@postgres:5432/guide) resolving without
+        # knowing this stack's service names.
+        aliases:
+          - postgres
+
+  redis:
+    image: redis:7-alpine
+    container_name: gdg_redis
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      # redis-cli ships in the redis image itself (alpine included).
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    networks:
+      gdg_backend:
+        aliases:
+          - redis
+
+  mongo:
+    # HARD PIN, never floating: mongo:8's newer 8.3.x patches carry the
+    # SERVER-121912 kernel detection — mongod refuses to start on Linux
+    # 6.19-7.0.13 (exactly what GitHub's newer hosted runners run) — while
+    # 8.0.12 (Aug 2025) predates the whole rseq affair and boots on every
+    # kernel. The dev stack's floating mongo:8 stays as-is (its datastores
+    # run on the family VM's kernel, which boots 8.3.x fine); this platform
+    # file feeds both CI and production, where the runner/VM kernel is not
+    # ours to choose. Bump deliberately, after checking the kernel guidance
+    # in the 8.0 release notes.
+    image: mongo:8.0.12
+    container_name: gdg_mongo
+    restart: unless-stopped
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      # mongosh ships in the mongo image itself.
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand({ ping: 1 }).ok"]
+      # Generous budget: a cold mongo:8.0.12 first boot on a loaded shared
+      # runner (CI e2e job) can outlast the family-default 10s/5x10s window
+      # and fail `up --wait` before mongod ever answers.
+      interval: 10s
+      timeout: 10s
+      retries: 18
+      start_period: 60s
+    networks:
+      gdg_backend:
+        aliases:
+          - mongo
+
+networks:
+  gdg_backend:
+    name: gdg_backend
+    external: true
+
+volumes:
+  # Created idempotently by the deploy (external: compose looks them up,
+  # never creates them) — platform data survives every release flip.
+  postgres_data:
+    name: gdg_prod_postgres_data
+    external: true
+  redis_data:
+    name: gdg_prod_redis_data
+    external: true
+  mongo_data:
+    name: gdg_prod_mongo_data
+    external: true

@@ -1,0 +1,109 @@
+# PER-RELEASE APP STACK — booted per deploy under the project of one color:
+#   COLOR=blue  IMAGE_TAG=sha-abc1234 docker compose -p gdg_blue  -f <this file> up -d --wait
+#   COLOR=green IMAGE_TAG=sha-def5678 docker compose -p gdg_green -f <this file> up -d --wait
+# The deploy script ALWAYS exports COLOR deliberately; the ${COLOR:-blue}
+# default below only exists so a bare local `up` boots something (blue).
+# There is deliberately NO top-level name: the -p flag names the project,
+# and the two colors must never share one.
+#
+# The persistent platform (postgres + redis + mongo, project gdg_platform)
+# lives in docker-compose-platform.yml and is booted BEFORE any app stack:
+# the server dials and goose-migrates PostgreSQL at boot, so the boot race
+# is won by deploy ORDERING (platform `up -d --wait` fully healthy first) —
+# depends_on cannot cross compose files. The app_internal network is
+# project-scoped ON PURPOSE: each color's `server` service-name DNS resolves
+# only within its own color, so nginx's baked `proxy_pass http://server:8100`
+# always reaches the SAME color's API, never the other release's.
+#
+# SECRETS arrive from ONE file: server/.env.production (POSTGRES_PASSWORD,
+# never in git). The app stack interpolates it into GDG_DATABASE_URL below;
+# the platform's postgres consumes the same name via interpolation once the
+# deploy/CI shell sources the file — one value, two doors, no duplication.
+# This is the teaching stack's own rail (deploy/docker-compose.prod.yml)
+# carried into the release machinery unchanged.
+services:
+  server:
+    image: "ghcr.io/mayank-uk/go-guide-server:${IMAGE_TAG:?IMAGE_TAG is required}"
+    container_name: gdg_server_${COLOR:-blue}
+    restart: unless-stopped
+    # No published ports — the API stays internal; nginx's /api proxy is the
+    # only caller. Debug hatch (loopback): - "127.0.0.1:8100:8100"
+    env_file:
+      - ./../server/.env.production
+    environment:
+      # environment: beats env_file:, so these win over any .env.production
+      # values. The platform datastores are reachable by their network
+      # ALIASES on the shared gdg_backend network — the same service-name
+      # shape the dev stack's defaults carry.
+      - GDG_ENV=prod
+      - GDG_LOG_LEVEL=info
+      # Compose-level fail-fast: the required-variable syntax makes an unset
+      # POSTGRES_PASSWORD a deploy-time error — `docker compose ... up`
+      # refuses to render the stack at all, before any container starts.
+      # The deploy/CI shell sources server/.env.production so the SAME
+      # password the platform's postgres consumed lands in the app's DSN.
+      - GDG_DATABASE_URL=postgres://guide:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set to a real database password}@postgres:5432/guide?sslmode=disable
+      - GDG_MONGO_URI=mongodb://mongo:27017
+      - GDG_REDIS_ADDR=redis:6379
+    healthcheck:
+      # The runtime image is distroless static — no shell, no wget, no
+      # curl, nothing to exec but the binary itself. The probe IS the
+      # binary: `guide -healthcheck` (cmd/guide) GETs its own
+      # /api/health on the configured port and exits 0/1 — the distroless
+      # answer to the deployment topic's "a Docker HEALTHCHECK has nothing
+      # to exec" trade-off, which the release stack closes by giving the
+      # binary a self-probe mode.
+      test: ["CMD", "/app/guide", "-healthcheck"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      # Generous on purpose: a cold boot on a fresh volume dials PostgreSQL
+      # and runs the full goose migration chain before serving.
+      start_period: 30s
+    networks:
+      - app_internal
+      - gdg_backend
+
+  client:
+    image: "ghcr.io/mayank-uk/go-guide-client:${IMAGE_TAG:?IMAGE_TAG is required}"
+    container_name: gdg_client_${COLOR:-blue}
+    restart: unless-stopped
+    # No published ports — Caddy is the front door (TLS on :443) and reaches
+    # this container BY NAME (gdg_client_<color>) on the shared gdg_frontend
+    # network; nginx is the internal app server behind it. Debug hatch
+    # (loopback, non-TLS): - "127.0.0.1:8080:80"
+    networks:
+      - app_internal
+      - gdg_frontend
+    depends_on:
+      # Long form: the app tier waits for its API — same color, same
+      # project, so the gate still works per release.
+      server:
+        condition: service_healthy
+    healthcheck:
+      # Prove the app tier answers, independent of the API gate — and prove
+      # the whole serving path: nginx proxies /api/ to the server, so a 200
+      # here covers client AND server AND the proxy between them (the full
+      # -stack check the teaching compose carries). nginx:alpine ships
+      # busybox wget.
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+networks:
+  # Plain project-scoped network: gdg_blue_app_internal / gdg_green_app_internal.
+  # THIS is the isolation unit — nginx's `proxy_pass http://server:8100` and
+  # this file's depends_on resolve `server` inside the color's own network.
+  app_internal: {}
+  # Shared with the platform stack (external, created by the deploy): caddy
+  # reaches gdg_client_<color> here.
+  gdg_frontend:
+    name: gdg_frontend
+    external: true
+  # Shared with the platform stack: postgres + redis + mongo live here by
+  # alias.
+  gdg_backend:
+    name: gdg_backend
+    external: true

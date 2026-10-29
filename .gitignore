@@ -12,6 +12,8 @@ dist/
 # build-env template is public-by-design (Umami placeholders, empty = off).
 .env*
 !client/.env.example
+!server/.env.production.example
+!.docker/.env
 # Test coverage OUTPUT (Go profiles + Vitest HTML reports). Anchored to
 # the repo root: server/tools/coverage/ is the committed coverage GATE
 # (check.sh + THRESHOLD.md) and must stay tracked.

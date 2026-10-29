@@ -1,0 +1,532 @@
+# CI: test the packages, scan for secrets, smoke the production images with a
+# real browser, publish attested images from master, and prune old GHCR tags.
+name: CI
+
+on:
+    push:
+        branches: [master]
+    pull_request:
+
+permissions:
+    contents: read
+
+jobs:
+    # The server suite — the repo's own verification stack, untrimmed: the
+    # real-PG/redis/mongo tests dial the dev-stack datastore HOSTNAMES
+    # (postgres/redis/mongo service names; GDG_PG_ADMIN_DSN's default is
+    # postgres://postgres:guide@postgres:5432/postgres), and the
+    # testcontainers-based tests spawn sibling containers through the
+    # runner's own Docker — so the datastores boot once behind those
+    # hostnames before the suite runs. gofmt + build + vet + staticcheck
+    # (v0.8.2, the pinned binary) + the coverage-gated suite run
+    # (tools/coverage/check.sh = go test ./... -race -covermode=atomic with
+    # the 74% floor) mirror the local Protocol v2 gate exactly.
+    server:
+        runs-on: ubuntu-latest
+        defaults:
+            run:
+                working-directory: server
+        steps:
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+            - uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6.1.0
+              with:
+                  go-version-file: server/go.mod
+                  cache: true
+                  cache-dependency-path: server/go.sum
+
+            # The datastores the suite's tests reach by the compose service
+            # names (postgres:5432, redis:6379, mongo:27017): boot the same
+            # image versions the dev compose runs — the DEV posture exactly
+            # (user postgres / password guide / db guide, the credentials
+            # the tests' defaultAdminDSN pins) — publishing the standard
+            # ports on the loopback, then alias the service names to
+            # 127.0.0.1 (passwordless sudo on hosted runners). The suite
+            # then behaves exactly as inside the dev network. mongo is
+            # patch-pinned: floating mongo:8's newer 8.3.x carries the
+            # SERVER-121912 kernel detection and refuses to boot on GitHub's
+            # newer runner kernels; 8.0.12 boots everywhere.
+            - name: Boot the datastores behind the dev-stack hostnames
+              run: |
+                  set -euo pipefail
+                  docker run -d --name gdg-pg \
+                    -p 127.0.0.1:5432:5432 \
+                    -e POSTGRES_USER=postgres \
+                    -e POSTGRES_PASSWORD=guide \
+                    -e POSTGRES_DB=guide \
+                    postgres:17
+                  docker run -d --name gdg-redis \
+                    -p 127.0.0.1:6379:6379 \
+                    redis:7-alpine
+                  docker run -d --name gdg-mongo \
+                    -p 127.0.0.1:27017:27017 \
+                    mongo:8.0.12
+                  echo "127.0.0.1 postgres redis mongo" | sudo tee -a /etc/hosts
+                  # Readiness gate (the same probes as the dev compose
+                  # healthchecks): the throwaway-database tests must not
+                  # race a still-initializing PostgreSQL.
+                  for _ in $(seq 1 30); do
+                    if docker exec gdg-pg pg_isready -U postgres -d guide >/dev/null 2>&1 \
+                      && docker exec gdg-redis redis-cli ping >/dev/null 2>&1 \
+                      && docker exec gdg-mongo mongosh --quiet --eval 'db.runCommand({ ping: 1 }).ok' >/dev/null 2>&1; then
+                      echo 'datastores ready'
+                      exit 0
+                    fi
+                    sleep 2
+                  done
+                  echo 'datastores did not become ready within 60s' >&2
+                  docker logs gdg-pg || true
+                  docker logs gdg-redis || true
+                  docker logs gdg-mongo || true
+                  exit 1
+
+            - name: gofmt
+              run: |
+                  files="$(gofmt -l .)"
+                  if [ -n "$files" ]; then
+                    echo 'gofmt found unformatted files:' >&2
+                    printf '%s\n' "$files" >&2
+                    exit 1
+                  fi
+            - run: go build ./...
+            - run: go vet ./...
+            - name: staticcheck (pinned v0.8.2)
+              run: |
+                  go install honnef.co/go/tools/cmd/staticcheck@v0.8.2
+                  "$(go env GOPATH)/bin/staticcheck" ./...
+            # The suite + race detector + the 74% coverage floor in one
+            # instrumented run — the repo's own gate, never trimmed.
+            - run: tools/coverage/check.sh
+
+            - name: Remove the datastore containers
+              if: always()
+              # `|| true`: hygiene must never mask a green (or already
+              # red) suite — some containers may not exist if the boot
+              # step itself failed partway.
+              run: docker rm -f gdg-pg gdg-redis gdg-mongo 2>/dev/null || true
+
+    # The client suite + production build. Plain npm on the runner — the
+    # canonical LOCAL gate runs the same stages inside Docker (see README),
+    # but CI has its own clean Node and no shared mount to flock around.
+    client:
+        runs-on: ubuntu-latest
+        defaults:
+            run:
+                working-directory: client
+        steps:
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+            - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+              with:
+                  node-version: 22
+                  cache: npm
+                  cache-dependency-path: client/package-lock.json
+            # npm >= 11, the family trap: npm 10.9.9's arborist crashes on
+            # this client's lockfile (the dev image and the prod Dockerfile
+            # install npm@11 for the same reason); Node 22 on hosted runners
+            # still bundles a 10.9.x.
+            - run: npm install -g npm@11
+            - run: npm ci
+            - run: npm test
+            - run: npm run build
+
+    secrets:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+              with:
+                  fetch-depth: 0
+            - uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e # v3.0.0
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    # The image smoke + browser gate: build BOTH production images locally,
+    # boot them beside the platform datastores with the prod compose file
+    # plus the CI override (caddy dropped, nginx published on the loopback),
+    # and drive the real UI with Playwright.
+    e2e:
+        name: Image smoke + browser gate
+        needs: [server, client, secrets]
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+            - name: Build server image (local, amd64)
+              uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+              with:
+                  context: .
+                  file: .docker/server/Dockerfile.prod
+                  platforms: linux/amd64
+                  push: false
+                  load: true
+                  tags: ghcr.io/mayank-uk/go-guide-server:ci
+                  cache-from: type=gha,scope=server
+                  # Fork PRs run with a read-only token — never attempt cache
+                  # writes there; the expression yields '' (cache write off).
+                  cache-to: ${{ github.event_name == 'push' && 'type=gha,mode=max,scope=server' || '' }}
+
+            - name: Build client image (local, amd64)
+              uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+              with:
+                  context: .
+                  file: .docker/client/Dockerfile.prod
+                  platforms: linux/amd64
+                  push: false
+                  load: true
+                  tags: ghcr.io/mayank-uk/go-guide-client:ci
+                  cache-from: type=gha,scope=client
+                  cache-to: ${{ github.event_name == 'push' && 'type=gha,mode=max,scope=client' || '' }}
+                  # Umami analytics (repository VARIABLES, not secrets — the
+                  # values are public in the served page source anyway).
+                  # Empty fallbacks keep the image analytics-free until the
+                  # vars exist; the smoke gate then tests exactly what ships.
+                  build-args: |
+                      VITE_UMAMI_SRC=${{ vars.VITE_UMAMI_SRC || secrets.VITE_UMAMI_SRC || '' }}
+                      VITE_UMAMI_ID=${{ vars.VITE_UMAMI_ID || secrets.VITE_UMAMI_ID || '' }}
+
+            - name: Prepare external compose resources and the env file
+              run: |
+                  set -euo pipefail
+                  # The platform/app stacks reference these as external:
+                  # compose looks them up, never creates them. Idempotent —
+                  # safe on reruns; a fresh runner just makes fresh ones.
+                  docker network create gdg_frontend 2>/dev/null || true
+                  docker network create gdg_backend 2>/dev/null || true
+                  for volume in \
+                    gdg_prod_postgres_data \
+                    gdg_prod_redis_data \
+                    gdg_prod_mongo_data; do
+                    docker volume inspect "$volume" >/dev/null 2>&1 || docker volume create "$volume"
+                  done
+                  # The real env file is not in git — only the committed
+                  # template is; the CI stack consumes the placeholders.
+                  cp server/.env.production.example server/.env.production
+
+            - name: Boot the platform datastores, then the production images
+              run: |
+                  set -euo pipefail
+                  # Source the placeholder env so POSTGRES_PASSWORD satisfies
+                  # BOTH compose rails (the platform's postgres interpolation
+                  # AND the app stack's GDG_DATABASE_URL) — one value feeds
+                  # the database and the app by construction.
+                  set -a
+                  . server/.env.production
+                  set +a
+                  # Platform first, exactly as the deploy boots it: the app
+                  # joins the external gdg_backend network and reaches the
+                  # datastores by alias; --wait proves them healthy before
+                  # any server starts (the server goose-migrates PostgreSQL
+                  # at boot — depends_on cannot cross compose files).
+                  docker compose -f .docker/docker-compose-platform.yml up -d --wait --wait-timeout 300
+                  docker compose -f .docker/docker-compose-prod.yml \
+                    -f .docker/docker-compose.ci.yml up -d --wait
+
+            - name: Probe the API through nginx
+              run: |
+                  set -euo pipefail
+                  for attempt in 1 2 3 4 5; do
+                      if curl -fsS --max-time 10 http://127.0.0.1:8080/api/health; then
+                          exit 0
+                      fi
+                      echo "health probe attempt ${attempt} failed; retrying" >&2
+                      sleep 5
+                  done
+                  echo 'health probe through nginx failed' >&2
+                  exit 1
+
+            - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+              with:
+                  node-version: 22
+                  cache: npm
+                  cache-dependency-path: e2e/package-lock.json
+
+            # The base URL points at the loopback nginx — the client and
+            # its /api proxy are the single front door in CI (E2E_BASE_URL
+            # is the suite's one override), exactly the door caddy fronts
+            # in prod.
+            - name: Run browser E2E against the booted stack
+              working-directory: e2e
+              env:
+                  E2E_BASE_URL: http://127.0.0.1:8080
+              run: |
+                  npm ci
+                  npx playwright install --with-deps chromium
+                  npm test
+
+            - name: Upload Playwright artifacts on failure
+              if: failure()
+              uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+              with:
+                  name: playwright-artifacts
+                  path: |
+                      e2e/test-results
+                      e2e/playwright-report
+                  retention-days: 14
+
+            - name: Tear down the CI stacks
+              if: always()
+              run: |
+                  set -euo pipefail
+                  # The rails interpolate on `down` too (POSTGRES_PASSWORD
+                  # lives in both files) — source the placeholder env so
+                  # teardown always runs, even after a failed boot step.
+                  if [ ! -f server/.env.production ]; then
+                    cp server/.env.production.example server/.env.production
+                  fi
+                  set -a
+                  . server/.env.production
+                  set +a
+                  docker compose -f .docker/docker-compose-prod.yml \
+                    -f .docker/docker-compose.ci.yml down -v --remove-orphans
+                  docker compose -f .docker/docker-compose-platform.yml down -v --remove-orphans
+
+    # The deployment VM's CPU decides what gets published: one SSH recon
+    # (uname -m) replaces the hardcoded platform pair — build-push then
+    # publishes exactly the one platform the VM runs.
+    vm-arch:
+        name: Detect VM architecture
+        runs-on: ubuntu-latest
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        # The VM SSH secrets live in the production environment — the same
+        # scope the deploy workflow reads them from.
+        environment: production
+        outputs:
+            arch: ${{ steps.arch.outputs.arch }}
+        steps:
+            - name: Read the VM's architecture over SSH
+              id: vm
+              uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2 # v1.2.5
+              with:
+                  host: ${{ secrets.VM_HOST }}
+                  username: ${{ secrets.VM_USER }}
+                  key: ${{ secrets.VM_PRIVATE_KEY }}
+                  fingerprint: ${{ secrets.VM_HOST_FINGERPRINT }}
+                  command_timeout: 1m
+                  capture_stdout: true
+                  # Banner noise in the captured stdout is why the marker exists.
+                  script: echo "VM_ARCH_MARKER=$(uname -m)"
+
+            - name: Map uname output to a Docker platform architecture
+              id: arch
+              shell: bash
+              env:
+                  VM_UNAME: ${{ steps.vm.outputs.stdout }}
+              run: |
+                  set -euo pipefail
+                  # capture_stdout returns the action's banner lines around the
+                  # real value — extract ONLY the marker line, then strip any
+                  # whitespace (a bare trim once glued banner noise onto the
+                  # value and no case matched).
+                  raw="$(printf '%s' "$VM_UNAME" | sed -n 's/^VM_ARCH_MARKER=//p' | head -n 1 | tr -d '[:space:]')"
+                  if [ -z "$raw" ]; then
+                      echo "No VM_ARCH_MARKER line in SSH output; refusing to guess." >&2
+                      exit 1
+                  fi
+                  case "$raw" in
+                      aarch64) arch=arm64 ;;
+                      x86_64 | amd64) arch=amd64 ;;
+                      *)
+                          echo "Unrecognized VM architecture: '$raw'" >&2
+                          exit 1
+                          ;;
+                  esac
+                  echo "arch=$arch" >> "$GITHUB_OUTPUT"
+
+    build-push:
+        name: Build and publish production images
+        needs: [e2e, vm-arch]
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        runs-on: ubuntu-latest
+        permissions:
+            contents: read
+            packages: write
+
+        strategy:
+            fail-fast: false
+            matrix:
+                include:
+                    - service: server
+                      image: ghcr.io/mayank-uk/go-guide-server
+                      dockerfile: .docker/server/Dockerfile.prod
+                    - service: client
+                      image: ghcr.io/mayank-uk/go-guide-client
+                      dockerfile: .docker/client/Dockerfile.prod
+
+        steps:
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+            - name: Compute commit image tag
+              id: image_tag
+              shell: bash
+              run: |
+                  set -euo pipefail
+                  short_sha="$(printf '%s' "$GITHUB_SHA" | cut -c1-7)"
+                  echo "tag=sha-${short_sha}" >> "$GITHUB_OUTPUT"
+
+            # Cross-arch insurance: the Go builder stage runs ON the target
+            # arch (no $BUILDPLATFORM split in this Dockerfile), so QEMU is
+            # genuinely needed whenever the runner and VM arches differ; a
+            # no-op when they already match.
+            - name: Set up QEMU
+              uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0
+
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+            - name: Log in to GitHub Container Registry
+              uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+              with:
+                  registry: ghcr.io
+                  username: ${{ github.actor }}
+                  password: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Build and push image
+              uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+              with:
+                  context: .
+                  file: ${{ matrix.dockerfile }}
+                  platforms: linux/${{ needs.vm-arch.outputs.arch }}
+                  push: true
+                  # Supply-chain attestations: provenance (how/where the image
+                  # was built) + SBOM (what is inside it) — pushed alongside
+                  # the image as OCI artifacts, verifiable in GHCR.
+                  provenance: true
+                  sbom: true
+                  tags: |
+                      ${{ matrix.image }}:${{ steps.image_tag.outputs.tag }}
+                      ${{ matrix.image }}:master
+                  cache-from: type=gha,scope=${{ matrix.service }}
+                  cache-to: type=gha,mode=max,scope=${{ matrix.service }}
+                  # Umami analytics (repository VARIABLES, not secrets — the
+                  # values are public in the served page source anyway).
+                  # Consumed by the client Dockerfile; the server build
+                  # simply ignores the unknown args. Empty fallbacks keep
+                  # the image analytics-free until the vars exist.
+                  build-args: |
+                      VITE_UMAMI_SRC=${{ vars.VITE_UMAMI_SRC || secrets.VITE_UMAMI_SRC || '' }}
+                      VITE_UMAMI_ID=${{ vars.VITE_UMAMI_ID || secrets.VITE_UMAMI_ID || '' }}
+
+    # GHCR tag retention: every master push leaves one sha-<7> version per
+    # package. This job deletes sha-tagged versions beyond the newest 10 —
+    # keep-10 aligns with the VM's keep-5 release dirs plus margin for
+    # workflow_dispatch rollback targets; versions carrying `master`/`latest`
+    # are never pruned. UNTAGGED versions are NEVER deleted: GHCR lists every
+    # manifest as a version, so a tagged index has untagged CHILDREN (per-arch
+    # images, provenance/SBOM attestations) and deleting untagged versions
+    # breaks the tagged pull (2026-10-21 incident: an untagged sweep killed
+    # the children of a freshly published image and took the deploy down).
+    # Untagged accumulation is accepted and bounded; delete failures only
+    # warn — hygiene must never block CD.
+    ghcr-prune:
+        name: Prune old GHCR image tags
+        needs: [build-push]
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        runs-on: ubuntu-latest
+        permissions:
+            contents: read
+            packages: write
+
+        steps:
+            - name: Delete sha-tagged GHCR versions beyond the newest 10
+              shell: bash
+              env:
+                  # The token rides in env, never inlined into the script
+                  # body; the script never runs with set -x.
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              run: |
+                  set -euo pipefail
+
+                  api='https://api.github.com'
+                  keep=10
+                  pages_max=3
+
+                  prune_package() {
+                      local pkg="$1"
+                      local encoded="${pkg//\//%2F}"
+                      local merged='[]'
+
+                      # (1) Paginate the version list; a short page ends the walk
+                      # (3 pages = 300 versions, far beyond anything real here).
+                      local page=1 page_file count
+                      while [ "$page" -le "$pages_max" ]; do
+                          page_file="$(mktemp)"
+                          if ! curl -fsS --max-time 30 \
+                              -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+                              -H 'Accept: application/vnd.github+json' \
+                              -o "$page_file" \
+                              "$api/user/packages/container/$encoded/versions?per_page=100&page=$page"; then
+                              echo "warn: could not list versions for $pkg — skipping it" >&2
+                              rm -f "$page_file"
+                              return 0
+                          fi
+                          if ! merged="$(jq --argjson m "$merged" --slurpfile p "$page_file" -n '$m + ($p[0] // [])')"; then
+                              echo "warn: malformed version page for $pkg — skipping it" >&2
+                              rm -f "$page_file"
+                              return 0
+                          fi
+                          count="$(jq 'length' "$page_file")"
+                          rm -f "$page_file"
+                          if [ "$count" -lt 100 ]; then
+                              break
+                          fi
+                          page=$((page + 1))
+                      done
+
+                      # Sanity guard: a malformed response must never feed the
+                      # delete loop — assert the accumulated list parses as a
+                      # JSON array BEFORE filtering; if not, warn and skip the
+                      # package (exit 0) rather than deleting blindly.
+                      if ! printf '%s' "$merged" | jq -e 'type == "array"' >/dev/null 2>&1; then
+                          echo "warn: version list for $pkg did not parse as JSON — skipping it" >&2
+                          return 0
+                      fi
+
+                      # (2) sha-tagged versions, newest first; (3) candidates
+                      # are those beyond the newest $keep minus any version
+                      # still carrying a protected tag. UNTAGGED versions are
+                      # deliberately absent from this rule: the versions API
+                      # exposes no parent/referrer link, so garbage orphans
+                      # and the live children of KEPT indexes are
+                      # indistinguishable — the 2026-10-21 incident deleted
+                      # freshly pushed children and broke every pull.
+                      local candidates
+                      candidates="$(printf '%s' "$merged" | jq --argjson keep "$keep" '
+                          [ .[]
+                            | select((.metadata.container.tags // [])
+                                 | any(.[]; test("^sha-[0-9a-f]{7}$"))) ]
+                          | sort_by(.created_at) | reverse
+                          | .[$keep:]
+                          | map(select(
+                                ((.metadata.container.tags // []) | index("master") | not) and
+                                ((.metadata.container.tags // []) | index("latest") | not)))
+                      ')"
+
+                      # (4) Deletes are individually NON-FATAL: a failure warns
+                      # and the loop continues — hygiene must never block CD.
+                      local total
+                      total="$(printf '%s' "$candidates" | jq 'length')"
+                      if [ "$total" -eq 0 ]; then
+                          echo "$pkg: nothing to prune"
+                          return 0
+                      fi
+                      echo "$pkg: pruning $total sha-tagged version(s) beyond the newest $keep"
+                      local id tags
+                      while read -r id tags; do
+                          curl -fsS --max-time 30 -X DELETE \
+                              -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+                              -H 'Accept: application/vnd.github+json' \
+                              "$api/user/packages/container/$encoded/versions/$id" \
+                              || echo "warn: failed to delete $pkg version $id — continuing" >&2
+                          echo "pruned $pkg version $id (tags: $tags)"
+                      done < <(printf '%s' "$candidates" | jq -r '.[] | "\(.id) \((.metadata.container.tags // []) | join(","))"')
+                  }
+
+                  # The /user/* package endpoints address GHCR containers by
+                  # their BARE name (ghcr.io/mayank-uk/go-guide-server
+                  # is package "go-guide-server" — verified live on the
+                  # sibling guides; the namespaced form 404s). The encode above
+                  # is a no-op here, kept defensive for any future name
+                  # carrying a '/'.
+                  prune_package 'go-guide-server'
+                  prune_package 'go-guide-client'

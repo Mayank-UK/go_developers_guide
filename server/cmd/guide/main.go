@@ -55,11 +55,47 @@ func main() {
 	}
 }
 
+// selfHealthcheck is the -healthcheck mode: one bounded GET against this
+// process's own /api/health on the configured port. HTTP 200 is healthy
+// (nil); anything else — dial failure, timeout, non-200 — returns an error
+// so main exits non-zero and Docker marks the container unhealthy. The
+// probe is dependency-free by design (the app's own health contract, the
+// same endpoint the k8s liveness probe and nginx's proxied check GET), and
+// it deliberately builds no logger, pool, or registry: a container whose
+// composition root cannot even start must fail its healthcheck as
+// unreachable, which is exactly what the dial error reports.
+func selfHealthcheck() error {
+	cfg, err := core.LoadConfig(os.Getenv)
+	if err != nil {
+		return fmt.Errorf("healthcheck: load config: %w", err)
+	}
+	client := &http.Client{Timeout: 5 * time.Second}
+	resp, err := client.Get(fmt.Sprintf("http://127.0.0.1:%d/api/health", cfg.Port))
+	if err != nil {
+		return fmt.Errorf("healthcheck: %w", err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("healthcheck: /api/health returned %s", http.StatusText(resp.StatusCode))
+	}
+	return nil
+}
+
 // run is the composition root: config → logger → content registry →
 // routes + middleware → serve → shut down. Operational failures return an
 // error for main to exit non-zero — panics are reserved for programmer
 // bugs, which this code has none of.
 func run() error {
+	// -healthcheck: the distroless runtime image ships no shell, no wget,
+	// no curl — nothing to exec but this binary — so the release stack's
+	// Docker healthcheck (.docker/docker-compose-prod.yml) runs the
+	// process's own self-probe mode instead. Nothing below this branch
+	// runs in that mode: it answers one question — is this process
+	// serving? — and never touches the datastores or the wiring.
+	if len(os.Args) > 1 && os.Args[1] == "-healthcheck" {
+		return selfHealthcheck()
+	}
+
 	// Boot-scoped context: dials and migrations get a bounded window so a
 	// wedged database fails the boot deterministically instead of hanging
 	// it. Once serving starts, request lifetimes belong to the signal

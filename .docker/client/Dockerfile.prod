@@ -11,6 +11,20 @@ RUN npm install -g npm@11
 COPY client/package.json client/package-lock.json ./
 RUN npm ci
 COPY client/ ./
+
+# Umami analytics (PUBLIC values — the beacon URL + website id are visible
+# in the served page source anyway, so these ride repository variables,
+# never secrets; client/.env.example documents the same pair). Vite bakes
+# import.meta.env at BUILD time, so they must be ENV before
+# `npm run build`; declared here (after npm ci) so toggling them never
+# invalidates the dependency layer. Empty defaults (= unset) keep
+# analytics a complete no-op: no script tag injected, trackEvent sends
+# nothing.
+ARG VITE_UMAMI_SRC=""
+ARG VITE_UMAMI_ID=""
+ENV VITE_UMAMI_SRC=$VITE_UMAMI_SRC
+ENV VITE_UMAMI_ID=$VITE_UMAMI_ID
+
 RUN npm run build
 
 FROM nginx:1.27-alpine

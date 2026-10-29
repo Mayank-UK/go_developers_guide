@@ -1,0 +1,42 @@
+# CI override — merged OVER the prod compose file by the CI workflow's e2e
+# job (and by local dry-runs of the same flow), BESIDE the platform file:
+#   docker compose -f .docker/docker-compose-platform.yml up -d --wait
+#   docker compose -f .docker/docker-compose-prod.yml \
+#     -f .docker/docker-compose.ci.yml up -d --wait
+#
+# What the override changes, and why:
+# - server/client images are pinned to the locally built :ci tags, and their
+#   container names are pinned to fixed *_ci names (the app file's
+#   ${COLOR:-blue} interpolation then cannot matter). Compose interpolates
+#   each file BEFORE merging, so the prod file's ${IMAGE_TAG:?} still fires —
+#   the sibling .env in this directory (IMAGE_TAG=ci) is what auto-loads to
+#   satisfy it: no registry, no IMAGE_TAG env, `config -q` succeeds bare;
+# - the platform file runs as its OWN project (gdg_platform) exactly as the
+#   deploy boots it, so the CI stack exercises the real seam: the app joins
+#   the external gdg_backend network and reaches the datastores by alias;
+# - the platform file ships NO caddy at all — the TLS edge is the infra
+#   repo's shared caddy and never runs in CI; the client's loopback 8080
+#   publish below remains the e2e front door;
+# - the client (nginx) publishes on the loopback only — exactly where prod's
+#   commented debug hatch puts it — so the health probe and Playwright reach
+#   the real front door at 127.0.0.1:8080 (both / and /api/... through
+#   nginx, the same door caddy fronts in prod);
+# - the job creates the external gdg_frontend/gdg_backend networks and the
+#   three external volumes idempotently before `up` (external resources are
+#   looked up, never created, by compose itself). `down -v` then removes
+#   only what each project owns — external volumes are never touched.
+#
+# The distinct project name isolates CI runs from the real prod stacks'
+# containers and volumes.
+name: go_developers_guide_ci
+
+services:
+    server:
+        image: ghcr.io/mayank-uk/go-guide-server:ci
+        container_name: go_developers_guide_ci_server
+
+    client:
+        image: ghcr.io/mayank-uk/go-guide-client:ci
+        container_name: go_developers_guide_ci_client
+        ports:
+            - "127.0.0.1:8080:80"

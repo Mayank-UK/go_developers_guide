@@ -10,6 +10,25 @@ import { expect, test } from '@playwright/test';
  * structure and provenance, never a measured value.
  */
 test('the perf bench demo renders its measured payload', async ({ page }) => {
+  // Image-stack caveat, probed up front: this demo's numbers come from a
+  // REAL bounded `go test -bench` run executed beside the process at boot,
+  // so it needs the Go toolchain AND the module's source tree. The
+  // dev-stack server runs inside the golang devcontainer with both beside
+  // it (the payload is always live there). A production-image front door
+  // (E2E_BASE_URL → the nginx/CI stack) runs the DISTROLESS server — no
+  // shell, no toolchain, no sources — and the endpoint then answers its
+  // documented, server-suite-pinned typed 503 instead of rounding
+  // anything into anecdotes. Skip exactly that case; any other failure
+  // shape still fails the spec below.
+  const probe = await page.request.get('/api/demo/perf/bench');
+  if (probe.status() === 503) {
+    const envelope = (await probe.json()) as { error?: { code?: string } };
+    test.skip(
+      envelope.error?.code === 'service_unavailable',
+      'perf:bench needs the Go toolchain + source tree beside the server; the distroless image stack answers with its documented typed 503',
+    );
+  }
+
   await page.goto('/topics/performance');
 
   // The lazy demo chunk loads (the loading note gives way to the payload).
