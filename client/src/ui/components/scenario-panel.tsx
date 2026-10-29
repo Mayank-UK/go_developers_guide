@@ -10,9 +10,10 @@ import type { GetScenarioUseCase } from '../../domain/scenario/get-scenario-usec
 import type { PatchScenarioUseCase } from '../../domain/scenario/patch-scenario-usecase';
 
 /**
- * ScenarioPanel — the app's ONE global demo toggle, mounted in the root
- * header next to the theme toggle: two compact selects (data mode, failure
- * injection) backed by GET/PATCH /api/demo/scenario. It is deliberately
+ * ScenarioPanel — the shared demo-scenario control, embedded inline by the
+ * demos that drive the scenario store (errors:explorer, reliability:breaker):
+ * two compact selects (data mode, failure injection) backed by GET/PATCH
+ * /api/demo/scenario. It is deliberately
  * impossible for this panel to break the shell: a failed initial GET degrades
  * to a muted "scenario unavailable" note, a failed PATCH reverts the select to
  * the last server-confirmed state and shows a brief inline error, and the

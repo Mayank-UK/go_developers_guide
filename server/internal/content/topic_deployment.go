@@ -566,76 +566,7 @@ func deploymentTopic() (Topic, error) {
 	return NewTopic(
 		"deployment",
 		"Deployment in Go: ship the artifact, run the declaration",
-		"How a Go service ships: an immutable static artifact "+
-			"plus a declaration of how it runs — taught from this "+
-			"repo's REAL deployment files. Ship versus run as two "+
-			"jobs: building (go build's single static binary, the "+
-			"multi-stage distroless Dockerfile, the tagged image) "+
-			"happens once per release; running (processes, config "+
-			"injection, probes, replacement) is everything after — "+
-			"and one build serves every environment, with every "+
-			"difference attaching at run time. The static-binary "+
-			"advantage: CGO_ENABLED=0 emits one self-contained file "+
-			"— no interpreter, no libc, no runtime to install — with "+
-			"-trimpath and -s -w for reproducible, smaller "+
-			"artifacts, cross-compilation as target SELECTION, and "+
-			"the honest cgo edge where static stops being a flag. "+
-			"Distroless multi-stage builds: a pinned builder stage "+
-			"with manifest-first layer caching feeding a runtime "+
-			"stage that holds nothing but the binary and a nonroot "+
-			"user — the CVE and attack surface collapsing to your "+
-			"own code — and scratch versus distroless traded on "+
-			"certificates, time zones, and a passwd entry. The full "+
-			"prod compose (deploy/docker-compose.prod.yml): "+
-			"dependency CONDITIONS instead of start-order hope, "+
-			"healthchecks on everything that ships probe tooling "+
-			"(and the honest reason the distroless server carries "+
-			"none — probing moves to the platform), resource hints "+
-			"on every container, and the one true secret behind a "+
-			"required-variable interpolation rail that refuses to "+
-			"start without it. The topic's demo, deploy:stack: the "+
-			"server parses those very files at request time (compose "+
-			"via the guide's zero-dep YAML-subset reader, manifests "+
-			"via encoding/json) and serves the derived topology "+
-			"with per-artifact provenance — no invented values, and "+
-			"a scanner that REFUSES non-placeholder secret values. "+
-			"The reverse proxy and TLS: the client's real nginx "+
-			"fronting /api/ with WebSocket upgrades alive, hashed "+
-			"assets cached forever beside a no-cache entrypoint, "+
-			"application security headers (topic 25) versus "+
-			"transport headers each at their own layer, Caddy's "+
-			"two-line ACME story as the contrast. Graceful shutdown "+
-			"quoted from the composition root: signal context, "+
-			"second-Ctrl-C escape, gRPC drained first, HTTP bounded "+
-			"at ten seconds, jobs worker last and idempotent, "+
-			"non-zero exit on every failure. CI/CD as the family "+
-			"states it: no hosted CI, the local verification gate "+
-			"run before every commit, and what a real pipeline would "+
-			"add (digest promotion, scanning, apply stages) without "+
-			"ever holding knowledge the repo lacks. Parity and "+
-			"secrets: identical pinned engines across stacks, the "+
-			"ConfigMap/Secret split, placeholders plus the enforcing "+
-			"scanner, and rotation as a restart. Kubernetes from the "+
-			"real deploy/k8s/ manifests — deliberately JSON so the "+
-			"stdlib parses them, a choice taught — five objects from "+
-			"namespace to service with named ports threading the "+
-			"numbers through one declaration. Rollouts: the probe "+
-			"contract wired to the REAL /api/health and /api/ready, "+
-			"maxSurge 1 / maxUnavailable 0 / minReadySeconds 5 as "+
-			"capacity arithmetic, termination grace out-waiting the "+
-			"drain, readinessGates named for what they need (an "+
-			"external controller). Infrastructure as code at its "+
-			"honest scope: declarations that are versioned, "+
-			"reviewed, and TESTED — with the suite breaking on port "+
-			"drift or a real-looking secret before staging does. "+
-			"Linux survival as the ops floor: signals (SIGTERM "+
-			"polite, SIGHUP a surprise by default), exit codes "+
-			"(0/1/143's meanings), PID 1's signal and reaping "+
-			"quirks with init:true and tini as the one-line fixes, "+
-			"and ports as per-network facts. Terminal companion: "+
-			"the stack viewer read raw, the compose rail proven to "+
-			"refuse and then validate, and the manifests dry-run-"+
-			"validated the way the repo actually does it.",
+		"How a Go service ships: an immutable static artifact plus a declaration of how it runs — taught from this repo's REAL deployment files.",
 		"ship",
 		37,
 		sections,

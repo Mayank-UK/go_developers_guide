@@ -446,7 +446,7 @@ func scalingTopic() (Topic, error) {
 	return Topic{
 		ID:       "scaling",
 		Title:    "Scaling",
-		Subtitle: "Serving more load by adding copies, not re-architecting: what scaling means along the request path, statelessness as a placement question (walked live by a real round-robin fleet — a session that dies in replica-local memory at the first hop and the first rollout, and the same session surviving everything once it lives in the shared store), load balancing from the Kubernetes Service to Docker's DNS, replicas as the Deployment's rolling-update contract, the data tier's honest order (indexes, pooling, then the levers this repo deliberately does not run), the edge this stack already ships (immutable hashed assets, revalidating index.html), backpressure from the token bucket to the realtime ceilings, and capacity as Little's law fed by the metrics pair this server already serves.",
+		Subtitle: "Serving more load by adding copies, not re-architecting: statelessness as a placement question, walked live by a real round-robin fleet where a session dies in replica-local memory and survives in the shared store.",
 		Group:    "ship",
 		Order:    40,
 		Sections: sections,

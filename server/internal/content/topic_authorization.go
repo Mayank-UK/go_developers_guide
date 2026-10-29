@@ -285,11 +285,9 @@ func authorizationTopic() (Topic, error) {
 	return NewTopic(
 		"authorization",
 		"Authorization from Go",
-		"What the caller may do: RBAC as one registry table, enforcement middleware that builds on the auth "+
-			"identity (403 for the known-but-refused, never 401), scopes as the narrowing half a role can never "+
-			"widen, object-level ownership over the posts substrate where owners, editors, and strangers get "+
-			"different answers, deny by default at every gate — with the full roles × scopes × ownership matrix "+
-			"run live over the seeded directory, and the terminal's curl tour.",
+		"What the caller may do: RBAC as one registry table, scopes as the narrowing half a "+
+			"role can never widen, and object-level ownership — deny by default at every gate, "+
+			"with the full roles × scopes × ownership matrix run live.",
 		"state-auth",
 		24,
 		sections,

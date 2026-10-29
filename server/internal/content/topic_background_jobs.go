@@ -401,16 +401,7 @@ func backgroundJobsTopic() (Topic, error) {
 	return NewTopic(
 		"background-jobs",
 		"Background jobs in Go: worker pools, asynq queues, retries, and the two numbers",
-		"The work that happens after the response is sent: bounded goroutine pools for "+
-			"in-process fan-out (memory-fast, memory-mortal), then asynq over the guide's "+
-			"Redis for durable jobs — client enqueue with caller-minted ids, weighted "+
-			"queues, a hosted ServerRunner worker (demo jobs:console runs the whole "+
-			"choreography live: fail-twice-then-succeed under exponential backoff, "+
-			"budget exhaustion into the dead-letter archive, a manual replay that "+
-			"re-runs for real, a delayed digest, per-second cron ticks) — closed by the "+
-			"operational disciplines: poison-message honesty in the DLQ, cron drift, "+
-			"email as the canonical out-of-band job with idempotent handlers, and queue "+
-			"depth + oldest-job age as the two numbers that page.",
+		"The work that happens after the response is sent: bounded goroutine pools for in-process fan-out (memory-fast, memory-mortal), then asynq over the guide's Redis for durable jobs — retries, dead letters, and the operational discipline to run them honestly.",
 		"media-realtime",
 		29,
 		sections,

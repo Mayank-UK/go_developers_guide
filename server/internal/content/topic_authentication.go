@@ -436,12 +436,10 @@ func authenticationTopic() (Topic, error) {
 	return NewTopic(
 		"authentication",
 		"Authentication from Go",
-		"Who is calling: sessions done right behind a sealed HttpOnly cookie, API keys hashed at rest and compared in "+
-			"constant time, HS256 JWTs minted and attacked from the standard library alone, the OAuth2 code grant with "+
-			"PKCE run honestly in one process, the sessions-vs-keys-vs-tokens decision measured live, argon2id password "+
-			"hashing with the rehash signal and a uniform decoy burn, and refresh rotation whose reuse detection turns a "+
-			"stolen token into an alarm — with the auth middleware that resolves every carrier to one identity, and the "+
-			"terminal's curl tour.",
+		"Who is calling: sessions behind a sealed HttpOnly cookie, API keys hashed at rest, "+
+			"HS256 JWTs from the standard library alone — the sessions-vs-keys-vs-tokens "+
+			"decision measured live, and refresh rotation whose reuse detection turns a "+
+			"stolen token into an alarm.",
 		"state-auth",
 		23,
 		sections,

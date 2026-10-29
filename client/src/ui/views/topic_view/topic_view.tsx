@@ -6,6 +6,7 @@ import { CodeBlock } from '../../components/code-block';
 import { ListBlock } from '../../components/list-block';
 import { DemoHost } from '../../components/demo-host/demo-host';
 import { ErrorPanel } from '../../components/error-panel';
+import { useHeaderTitle } from '../../hooks/use-header-title';
 import { trackEvent } from '../../analytics/analytics';
 import type { ContentBlock } from '../../../domain/content/content';
 import { useTopicDetail } from './topic_view.hooks';
@@ -21,6 +22,11 @@ export function TopicView() {
   const { topicId } = useParams<'topicId'>();
   const view = useTopicDetail(topicId);
   const loadedTopic = view.status.state === 'ready' ? view.status.topic : undefined;
+
+  // The header mirrors the served topic title: while it loads (and on error)
+  // the header keeps the route handle's generic 'Topic'; once served, this
+  // override takes over and is released again on unmount/navigation.
+  useHeaderTitle(loadedTopic?.title);
 
   // Self-hosted analytics: report each topic once when it finishes loading —
   // home-card clicks, direct links, and refreshes all count, keyed on the

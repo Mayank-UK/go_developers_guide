@@ -373,22 +373,7 @@ func architectureTopic() (Topic, error) {
 	return NewTopic(
 		"architecture",
 		"Architecture in Go: layers, the dependency rule, and one composition root",
-		"The whole-guide synthesis, taught from the repo that is running "+
-			"it: why the dependency rule is a cost control (the price of a "+
-			"violated seam is the next handler), the layer map of internal/ "+
-			"read off the composition root's own imports, presentation → "+
-			"domain ← data with ports the domain owns and adapters that "+
-			"prove satisfaction at compile time, thin handlers as corridors "+
-			"(parse, validate, delegate, map), main.go's constructor "+
-			"injection as Go's dependency injection, the one error taxonomy "+
-			"flowing up as typed values and down as one envelope with the "+
-			"%w thread intact, and the client's core/domain/data/ui mirror "+
-			"with container.ts as its own composition root — proven live by "+
-			"the request-flow tracer (demo arch:tracer), which walks a real "+
-			"posts request through middleware, handler, use case, and the "+
-			"adapter the scenario picked, measuring every hop at its seam, "+
-			"beside a clearly-labeled counterexample of the violation the "+
-			"rule exists to prevent.",
+		"The whole-guide synthesis, taught from the repo that is running it: the dependency rule as cost control, presentation → domain ← data over ports the domain owns, thin handlers, constructor injection in main.go, and one error taxonomy flowing up as typed values.",
 		"platform",
 		32,
 		sections,

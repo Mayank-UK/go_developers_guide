@@ -513,11 +513,9 @@ func redisTopic() (Topic, error) {
 	return NewTopic(
 		"redis",
 		"Redis from Go",
-		"What Redis actually is (a data structures server, not just a cache), the optional-service "+
-			"discipline that keeps a down store a typed 503, the five core structures walked live "+
-			"through go-redis v9, TTL and SET NX semantics read as data, INCR atomicity proven with "+
-			"a pipelined batch, one real pub/sub round-trip, and the judgment of when a second store "+
-			"earns its keep beside PostgreSQL — with the terminal's redis-cli and curl tour.",
+		"What Redis actually is — a data structures server, not just a cache — its five core "+
+			"structures walked live through go-redis v9, and the judgment of when a second store "+
+			"earns its keep beside PostgreSQL.",
 		"data",
 		20,
 		sections,

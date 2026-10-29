@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { container } from '../../../core/container';
 import type { Failure } from '../../../core/error-handling/failures';
 import { ErrorPanel } from '../../components/error-panel';
+import { ScenarioPanel } from '../../components/scenario-panel';
 import {
   GetErrorsExplorerDemoUseCase,
   ERRORS_EXPLORER_DEMO_USE_CASE,
@@ -22,9 +23,9 @@ import type {
  * and request id of the probe the explorer just executed through the
  * production middleware chain under the CURRENT failure injection.
  *
- * Reload (or flip the scenario in the header panel and reload) to
- * watch the same endpoint answer differently: the recovered 500 under
- * error injection, the slept-out 200 under latency, the instant
+ * Reload (or flip the scenario with the panel embedded above the walk and
+ * reload) to watch the same endpoint answer differently: the recovered 500
+ * under error injection, the slept-out 200 under latency, the instant
  * healthy row with nothing armed.
  */
 
@@ -83,6 +84,15 @@ export function ErrorsExplorerDemo() {
 
   return (
     <div className="flex flex-col gap-md" data-testid="errors-explorer-ready">
+      <section
+        data-testid="errors-explorer-controls"
+        className="flex flex-col gap-xxs rounded-md border border-outline bg-surface-tint px-md py-sm"
+      >
+        {/* The demo's own scenario control — the shared fake/live +
+            failure-injection toggle, embedded so this page drives standalone. */}
+        <ScenarioPanel />
+      </section>
+
       <section
         data-testid="errors-explorer-walk"
         className="flex flex-col gap-xxs rounded-md border border-outline bg-surface-tint px-md py-sm"

@@ -1,12 +1,14 @@
 import { expect, test } from '@playwright/test';
 
 /**
- * The ScenarioPanel is the app's ONE global demo toggle (root header): the
- * data-mode select is backed by GET/PATCH /api/demo/scenario, with an
- * optimistic UI that a failed PATCH reverts. This spec drives the select
- * through the browser and proves the change round-trips — the server's
- * shared scenario endpoint confirms it, a reload re-reads it, and the
- * original mode is restored so the shared stack is left as found.
+ * The ScenarioPanel is the demo-scenario control embedded inside the demos
+ * that need it — this spec drives the error-handling topic's embedded panel
+ * (the errors:explorer demo's own control). The data-mode select is backed
+ * by GET/PATCH /api/demo/scenario, with an optimistic UI that a failed
+ * PATCH reverts. This spec drives the select through the browser and proves
+ * the change round-trips — the server's shared scenario endpoint confirms
+ * it, a reload re-reads it, and the original mode is restored so the shared
+ * stack is left as found.
  */
 test('the scenario panel round-trips dataMode through the server', async ({
   page,
@@ -17,7 +19,8 @@ test('the scenario panel round-trips dataMode through the server', async ({
   const before = await (await request.get('/api/demo/scenario')).json();
   const other: string = before.dataMode === 'fake' ? 'live' : 'fake';
 
-  await page.goto('/');
+  // The topic page and its demo both lazy-load; await the embedded panel.
+  await page.goto('/topics/error-handling');
   const panel = page.getByTestId('scenario-panel');
   await expect(panel).toBeVisible();
   const dataMode = panel.getByLabel('Data mode');
@@ -37,6 +40,7 @@ test('the scenario panel round-trips dataMode through the server', async ({
   // scenario and renders the flipped mode.
   await page.reload();
   const reloaded = page.getByTestId('scenario-panel').getByLabel('Data mode');
+  await expect(reloaded).toBeVisible();
   await expect(reloaded).toHaveValue(other);
 
   // Restore the original mode — never leave the shared stack mutated.

@@ -466,13 +466,9 @@ func securityTopic() (Topic, error) {
 	return NewTopic(
 		"security",
 		"Security from Go",
-		"The threat-model habit; the five security headers stamped by middleware (demo security:lab); CORS as the "+
-			"browser's read contract; rate limiting as a per-client token bucket over golang.org/x/time/rate with the "+
-			"typed 429 envelope; the injection family in Go terms — parameterized SQL, html/template auto-escaping, path "+
-			"confinement; CSRF and SSRF; secrets minted at boot and never logged; the OWASP API Top 10 as a review "+
-			"rubric; and the PII/GDPR substrate — classification, masked serving, an access log with no room for values, "+
-			"and erasure proven by audit (demo security:pii) — closed by the terminal's curl tour, headers and 429s off "+
-			"the wire.",
+		"The threat-model habit — security headers, CORS, rate limiting, the injection family, "+
+			"CSRF and SSRF, and the PII/GDPR substrate with erasure proven by audit — every "+
+			"control stamped by middleware and verified off the wire.",
 		"state-auth",
 		25,
 		sections,

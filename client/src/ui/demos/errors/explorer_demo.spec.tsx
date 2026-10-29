@@ -1,10 +1,11 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import { ErrorsExplorerDemo } from './explorer_demo';
 import { container } from '../../../core/container';
 import { createAppConfig } from '../../../core/config/app-config';
 import { ServerFailure } from '../../../core/error-handling/failures';
 import { failed, success, type Result } from '../../../core/result';
+import { stubApiFetch } from '../../../test/fetch_stub';
 import {
   GetErrorsExplorerDemoUseCase,
   ERRORS_EXPLORER_DEMO_USE_CASE,
@@ -16,10 +17,10 @@ import type { ErrorsExplorerDemoData } from '../../../domain/demo/errors-explore
  * component resolves its use case through the container token (the
  * documented register-a-singleton seam), so the spec swaps that
  * registration instead of stubbing fetch. Behavior, not
- * implementation: the live walk renders with its observed status and
- * derived note, the taxonomy rows with their triggers (try-it vs
- * recipe), the scenario and probe panels, and failures degrade to the
- * shared error panel with recovery.
+ * implementation: the embedded scenario control, the live walk with its
+ * observed status and derived note, the taxonomy rows with their
+ * triggers (try-it vs recipe), the scenario and probe panels, and
+ * failures degrade to the shared error panel with recovery.
  */
 
 const fixture: ErrorsExplorerDemoData = {
@@ -77,6 +78,9 @@ const fixture: ErrorsExplorerDemoData = {
   reasoning: 'eight kinds, one envelope, zero exceptions to either',
 };
 
+/** The embedded scenario panel's mount-time GET; stubbed so every render is deterministic. */
+const scenario = { url: '/api/demo/scenario', body: { dataMode: 'fake', injectFailure: 'none' } };
+
 function stubUseCase(execute: () => Promise<Result<ErrorsExplorerDemoData>>): void {
   container.initialize(createAppConfig());
   container.register(
@@ -85,15 +89,26 @@ function stubUseCase(execute: () => Promise<Result<ErrorsExplorerDemoData>>): vo
   );
 }
 
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
+
 describe('ErrorsExplorerDemo', () => {
-  it('renders loading first, then the walk, the table, and the panels', async () => {
+  it('renders loading first, then the control, the walk, the table, and the panels', async () => {
     stubUseCase(async () => success(fixture));
+    stubApiFetch([scenario]);
 
     render(<ErrorsExplorerDemo />);
 
     expect(screen.getByTestId('errors-explorer-loading')).toBeInTheDocument();
 
     await waitFor(() => expect(screen.getByTestId('errors-explorer-ready')).toBeInTheDocument());
+
+    // The embedded scenario control — the demo's own fake/live + failure
+    // toggle, so the page drives standalone.
+    expect(await screen.findByTestId('scenario-panel')).toBeInTheDocument();
+    expect(screen.getByLabelText('Data mode')).toBeInTheDocument();
+    expect(screen.getByLabelText('Inject failure')).toBeInTheDocument();
 
     // The live walk: observed status, the envelope body, the derived note.
     const walk = screen.getByTestId('errors-explorer-walk');
@@ -127,6 +142,7 @@ describe('ErrorsExplorerDemo', () => {
       { code: 'network_error', status: 0, requestId: 'rid-explorer-down' },
     );
     stubUseCase(async () => failed(failure));
+    stubApiFetch([scenario]);
 
     render(<ErrorsExplorerDemo />);
 
@@ -137,5 +153,7 @@ describe('ErrorsExplorerDemo', () => {
     stubUseCase(async () => success(fixture));
     screen.getByRole('button', { name: 'Try again' }).click();
     await waitFor(() => expect(screen.getByTestId('errors-explorer-ready')).toBeInTheDocument());
+    // The recovered view re-mounts the embedded scenario control.
+    expect(await screen.findByTestId('scenario-panel')).toBeInTheDocument();
   });
 });

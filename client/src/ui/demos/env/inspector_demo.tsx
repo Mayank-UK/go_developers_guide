@@ -15,8 +15,9 @@ import {
  * variable: name, source — environment or default — validated value,
  * redacted where sensitive), the twelve-factor scorecard (the same
  * twelve verdicts the topic's prose walked, as data), and the live
- * flag panel (the ScenarioStore's CURRENT state — flip it with the
- * header's scenario control and reload to watch the panel follow).
+ * flag panel (the ScenarioStore's CURRENT state — flip it with a
+ * demo's embedded scenario control, or PATCH /api/demo/scenario,
+ * and reload to watch the panel follow).
  */
 
 type InspectorStatus =
@@ -111,8 +112,8 @@ export function EnvInspectorDemo() {
           flags · dataMode: {data.flags.dataMode} · injectFailure: {data.flags.injectFailure}
         </p>
         <p className="text-caption text-on-surface-variant">
-          the ScenarioStore’s current state, snapshotted at request time — flip it with the
-          header’s scenario control and reload
+          the ScenarioStore’s current state, snapshotted at request time — flip it with a
+          demo’s embedded scenario control (or PATCH /api/demo/scenario) and reload
         </p>
       </section>
 

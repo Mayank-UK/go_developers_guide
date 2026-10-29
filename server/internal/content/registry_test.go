@@ -3,6 +3,7 @@ package content
 import (
 	"strings"
 	"testing"
+	"unicode/utf8"
 )
 
 // Fixture builders (the fastapi guide's tests/content_builders.py shape):
@@ -354,5 +355,23 @@ func TestProductionRegistryIsValid(t *testing.T) {
 			"production registry has %d topics, want 43 (go-language, go-runtime, http-web, go-http-fundamentals, interfaces-and-composition, goroutines-and-channels, routing, middleware, request-response, validation, api-design, api-documentation, graphql, webhooks, grpc, sql-schema, databases-sql, sqlc-gorm, mongodb, redis, caching, messaging, authentication, authorization, security, files-media, internationalization, realtime, background-jobs, error-handling, dependency-management, architecture, observability, testing, debugging, environments, deployment, performance, reliability, scaling, best-practices, third-party, advanced-architecture)",
 			count,
 		)
+	}
+}
+
+// The home-page topic card and the topic page header render the subtitle as
+// one line of body text; the family bar (fastapi median ~220 chars, hard
+// product cap 300) keeps it a thesis, never a table of contents.
+func TestProductionSubtitlesStayCardSized(t *testing.T) {
+	registry, err := NewProductionRegistry()
+	if err != nil {
+		t.Fatalf("production registry must boot: %v", err)
+	}
+	for _, summary := range registry.Summaries() {
+		if strings.TrimSpace(summary.Subtitle) == "" {
+			t.Errorf("topic %q has no subtitle", summary.ID)
+		}
+		if n := utf8.RuneCountInString(summary.Subtitle); n > 300 {
+			t.Errorf("topic %q subtitle is %d runes, want ≤ 300 (card-sized thesis)", summary.ID, n)
+		}
 	}
 }

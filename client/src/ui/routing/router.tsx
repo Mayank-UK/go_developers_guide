@@ -14,8 +14,12 @@ const HomeView = lazy(() => import('../views/home_view/home_view'));
 const TopicView = lazy(() => import('../views/topic_view/topic_view'));
 
 /**
- * The route tree. Exposed as a function so the app builds a browser router and
- * tests can build an equivalent memory router from the same objects.
+ * The route tree. Every route sets a `handle.title` that the shared header
+ * surfaces via useRouteTitle() — the page's name lives with its route, not in
+ * the view. Topic titles are served content (the screen renders its own h1),
+ * so the topic route carries the generic chrome title. Exposed as a function
+ * so the app builds a browser router and tests can build an equivalent memory
+ * router from the same objects.
  */
 export function appRoutes(): RouteObject[] {
   return [
@@ -25,14 +29,20 @@ export function appRoutes(): RouteObject[] {
         {
           path: RoutePaths.Home,
           element: <HomeView />,
+          handle: { title: 'Go Developers Guide' },
         },
         {
           path: RoutePaths.Topic,
           element: <TopicView />,
+          // Generic chrome title: TopicView overrides it with the served topic
+          // title once loaded (use-header-title), so this covers loading and
+          // failed topics only.
+          handle: { title: 'Topic' },
         },
         {
           path: RoutePaths.NotFound,
           element: <NotFoundView />,
+          handle: { title: 'Page not found' },
         },
       ],
     },

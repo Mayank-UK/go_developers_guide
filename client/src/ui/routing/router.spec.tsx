@@ -1,5 +1,5 @@
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import { ThemeProvider } from '../design-system/theme-provider';
 import { appRoutes } from './router';
@@ -42,11 +42,20 @@ describe('routing', () => {
     renderAt('/nowhere/at/all');
 
     expect(
-      await screen.findByRole('heading', { level: 1, name: 'Page not found' }),
+      await within(screen.getByRole('main')).findByRole('heading', {
+        level: 1,
+        name: 'Page not found',
+      }),
     ).toBeInTheDocument();
     expect(screen.getByText('The page you are looking for does not exist.')).toBeInTheDocument();
-    // The shared chrome (guide name + theme toggle) stays present.
-    expect(screen.getByRole('link', { name: /Go Developers Guide/ })).toBeInTheDocument();
+    // The shared chrome (the header's route-title h1 + theme toggle) stays
+    // present — the banner mirrors the route handle's title.
+    expect(
+      within(screen.getByRole('banner')).getByRole('heading', {
+        level: 1,
+        name: 'Page not found',
+      }),
+    ).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /switch to/i })).toBeInTheDocument();
   });
 
@@ -58,9 +67,15 @@ describe('routing', () => {
 
     renderAt(RoutePaths.Home);
 
-    // The chunk resolves; then the home hero takes over from the fallback.
+    // The chunk resolves; then the home hero takes over from the fallback
+    // (scoped to main — the banner header also renders an h1 with the route
+    // handle's title).
     expect(
-      await screen.findByRole('heading', { level: 1, name: 'Go Developers Guide' }, { timeout: 5000 }),
+      await within(screen.getByRole('main')).findByRole(
+        'heading',
+        { level: 1, name: 'Go Developers Guide' },
+        { timeout: 5000 },
+      ),
     ).toBeInTheDocument();
     expect(await screen.findByTestId('curriculum-landing-soon')).toBeInTheDocument();
   });
@@ -84,8 +99,10 @@ describe('routing', () => {
 
     renderAt(topicPath('go-http-fundamentals'));
 
+    // The article itself waits out the lazy chunk; its h1 paints with it.
+    const article = await screen.findByRole('article', {}, { timeout: 5000 });
     expect(
-      await screen.findByRole('heading', { level: 1, name: 'Go HTTP Fundamentals' }, { timeout: 5000 }),
+      within(article).getByRole('heading', { level: 1, name: 'Go HTTP Fundamentals' }),
     ).toBeInTheDocument();
     expect(screen.getByText('The body.')).toBeInTheDocument();
   });

@@ -1,21 +1,20 @@
-import { Suspense, useEffect } from 'react';
-import { Link, Outlet, useLocation, useNavigate } from 'react-router';
+import { Suspense, useEffect, useMemo, useState } from 'react';
+import { Outlet, useLocation, useNavigate } from 'react-router';
 import { ThemeToggle } from './theme-toggle';
-import { ScenarioPanel } from './scenario-panel';
+import { useRouteTitle } from '../hooks/use-route-title';
+import { HeaderTitleContext } from '../hooks/use-header-title';
 import { RoutePaths } from '../routing/routes';
 import { initAnalytics } from '../analytics/analytics';
 
 /**
- * RootLayout — the single shared app shell: a quiet header (guide name as a
- * home link + the one global demo-scenario control + theme toggle) and a
- * scrolling content area via <Outlet/>. The home screen is the navigation
- * hub, so the header carries no drawer and no other chrome — the served
- * content carries the page. The scenario panel is the header's single extra
- * control: the app-wide fake/live + failure-injection toggle every demo
- * reads, degrading to a muted note rather than ever breaking the shell. The
- * one further control is the back arrow, shown on every route except home
- * (the hub), so any nested page has a one-click way back through history to
- * where the user came from.
+ * RootLayout — the single shared app shell: a quiet header (back arrow + the
+ * current page's title + theme toggle) and a scrolling content area via
+ * <Outlet/>. The current page's title comes from the matched route's
+ * `handle` via useRouteTitle(). The home screen is the navigation hub, so
+ * the header carries no drawer and no other chrome — the served content
+ * carries the page. The one further control is the back arrow, shown on
+ * every route except home (the hub), so any nested page has a one-click way
+ * back through history to where the user came from.
  *
  * This is also the app's ONE Suspense boundary for route views: the home view
  * is a lazy() chunk (see ui/routing/router.tsx) and resolves behind this
@@ -25,6 +24,14 @@ export function RootLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const canGoBack = location.pathname !== RoutePaths.Home;
+  const routeTitle = useRouteTitle();
+
+  // A screen may override the header title with data it loads (see
+  // use-header-title.ts); the route handle is the fallback, and the guide
+  // name is the defensive floor if a route ever ships without a handle.
+  const [titleOverride, setTitleOverride] = useState<string | undefined>(undefined);
+  const title = titleOverride ?? routeTitle ?? 'Go Developers Guide';
+  const titleContext = useMemo(() => ({ setTitle: setTitleOverride }), []);
 
   // Self-hosted analytics beacon (Umami — see ui/analytics/analytics.ts):
   // shell-level so it loads once per document for EVERY route. A no-op
@@ -49,33 +56,30 @@ export function RootLayout() {
             ←
           </button>
         )}
-        <Link
-          to={RoutePaths.Home}
-          className="truncate font-display text-title-sm text-on-surface hover:text-primary"
-        >
-          Go Developers Guide
-        </Link>
-        <div className="flex-1" />
-        <ScenarioPanel />
+        <h1 className="flex-1 truncate font-body text-body font-medium text-on-surface-variant">
+          {title}
+        </h1>
         <ThemeToggle />
       </header>
 
       <main className="flex flex-1 flex-col">
-        <Suspense
-          fallback={
-            <div
-              data-testid="route-loading"
-              className="mx-auto flex w-full max-w-content flex-col gap-md px-md py-xl"
-              aria-hidden
-            >
-              <p className="text-body text-on-surface-variant">loading…</p>
-              <div className="h-lg w-full animate-pulse rounded-md bg-surface-variant" />
-              <div className="h-lg w-2/3 animate-pulse rounded-md bg-surface-variant" />
-            </div>
-          }
-        >
-          <Outlet />
-        </Suspense>
+        <HeaderTitleContext.Provider value={titleContext}>
+          <Suspense
+            fallback={
+              <div
+                data-testid="route-loading"
+                className="mx-auto flex w-full max-w-content flex-col gap-md px-md py-xl"
+                aria-hidden
+              >
+                <p className="text-body text-on-surface-variant">loading…</p>
+                <div className="h-lg w-full animate-pulse rounded-md bg-surface-variant" />
+                <div className="h-lg w-2/3 animate-pulse rounded-md bg-surface-variant" />
+              </div>
+            }
+          >
+            <Outlet />
+          </Suspense>
+        </HeaderTitleContext.Provider>
       </main>
     </div>
   );

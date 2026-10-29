@@ -1,10 +1,11 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { ReliabilityBreakerDemo } from './breaker_demo';
 import { container } from '../../../core/container';
 import { createAppConfig } from '../../../core/config/app-config';
 import { ServerFailure } from '../../../core/error-handling/failures';
 import { failed, success, type Result } from '../../../core/result';
+import { stubApiFetch } from '../../../test/fetch_stub';
 import {
   GetReliabilityBreakerDemoUseCase,
   RELIABILITY_BREAKER_DEMO_USE_CASE,
@@ -14,12 +15,12 @@ import type { ReliabilityBreakerDemoData } from '../../../domain/demo/reliabilit
 /**
  * ReliabilityBreakerDemo spec — fixture-driven (happy + failure): the
  * component resolves its use case through the container token.
- * Behavior, not implementation: the scenario toggle and persistent
- * breaker state render with config, counters, and the transition
- * ring; the walk renders attempt-by-attempt state journeys with
- * measured elapsed figures; the retry series renders its bounded
- * attempts with measured waits; the re-walk button drives a fresh
- * execute through the same persistent server-side breaker; and
+ * Behavior, not implementation: the embedded scenario control, the
+ * scenario toggle and persistent breaker state render with config,
+ * counters, and the transition ring; the walk renders attempt-by-attempt
+ * state journeys with measured elapsed figures; the retry series renders
+ * its bounded attempts with measured waits; the re-walk button drives a
+ * fresh execute through the same persistent server-side breaker; and
  * failures degrade to the shared error panel with recovery.
  */
 
@@ -95,6 +96,9 @@ const fixture: ReliabilityBreakerDemoData = {
   reasoning: 'the breaker state persists across requests',
 };
 
+/** The embedded scenario panel's mount-time GET; stubbed so every render is deterministic. */
+const scenario = { url: '/api/demo/scenario', body: { dataMode: 'fake', injectFailure: 'none' } };
+
 function stubUseCase(execute: () => Promise<Result<ReliabilityBreakerDemoData>>): void {
   container.initialize(createAppConfig());
   container.register(
@@ -103,9 +107,14 @@ function stubUseCase(execute: () => Promise<Result<ReliabilityBreakerDemoData>>)
   );
 }
 
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
+
 describe('ReliabilityBreakerDemo', () => {
-  it('renders loading first, then the scenario, breaker, walk, and retry panels', async () => {
+  it('renders loading first, then the control, scenario, breaker, walk, and retry panels', async () => {
     stubUseCase(async () => success(structuredClone(fixture)));
+    stubApiFetch([scenario]);
 
     render(<ReliabilityBreakerDemo />);
 
@@ -113,10 +122,16 @@ describe('ReliabilityBreakerDemo', () => {
 
     await screen.findByTestId('reliability-breaker-ready');
 
-    const scenario = screen.getByTestId('reliability-breaker-scenario');
-    expect(scenario).toHaveTextContent('scenario · error');
-    expect(scenario).toHaveTextContent('/api/demo/scenario');
-    expect(scenario).toHaveTextContent('none | error | latency');
+    // The embedded scenario control — the demo's own fake/live + failure
+    // toggle, so the page drives standalone.
+    expect(await screen.findByTestId('scenario-panel')).toBeInTheDocument();
+    expect(screen.getByLabelText('Data mode')).toBeInTheDocument();
+    expect(screen.getByLabelText('Inject failure')).toBeInTheDocument();
+
+    const scenarioPanel = screen.getByTestId('reliability-breaker-scenario');
+    expect(scenarioPanel).toHaveTextContent('scenario · error');
+    expect(scenarioPanel).toHaveTextContent('/api/demo/scenario');
+    expect(scenarioPanel).toHaveTextContent('none | error | latency');
 
     const breaker = screen.getByTestId('reliability-breaker-state');
     expect(breaker).toHaveTextContent('breaker · open · held for 1.4s');
@@ -158,6 +173,7 @@ describe('ReliabilityBreakerDemo', () => {
         },
       }),
     );
+    stubApiFetch([scenario]);
 
     render(<ReliabilityBreakerDemo />);
 
@@ -169,6 +185,7 @@ describe('ReliabilityBreakerDemo', () => {
   it('re-walks through the same use case when the button fires', async () => {
     const execute = vi.fn(async () => success(structuredClone(fixture)));
     stubUseCase(execute);
+    stubApiFetch([scenario]);
 
     render(<ReliabilityBreakerDemo />);
     await screen.findByTestId('reliability-breaker-ready');
@@ -184,6 +201,7 @@ describe('ReliabilityBreakerDemo', () => {
     stubUseCase(async () =>
       failed(new ServerFailure('the breaker demo endpoint is unreachable')),
     );
+    stubApiFetch([scenario]);
 
     render(<ReliabilityBreakerDemo />);
 
@@ -199,5 +217,7 @@ describe('ReliabilityBreakerDemo', () => {
 
     await fireEvent.click(screen.getByRole('button', { name: /try again/i }));
     expect(await screen.findByTestId('reliability-breaker-ready')).toBeInTheDocument();
+    // The recovered view re-mounts the embedded scenario control.
+    expect(await screen.findByTestId('scenario-panel')).toBeInTheDocument();
   });
 });

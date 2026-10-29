@@ -601,11 +601,9 @@ func mongodbTopic() (Topic, error) {
 	return NewTopic(
 		"mongodb",
 		"MongoDB from Go",
-		"Document thinking and when it fits, the optional-service discipline (Mongo down → "+
-			"typed 503, never a crash), mongo-driver v2, validation that lives in the application "+
-			"layer, queries with filter/sort/limit and projection, indexes and TTL collections, "+
-			"the port-and-adapter layering unchanged, SQL vs Mongo honestly, and the wider NoSQL "+
-			"survey — one console demo running every beat live against the stack's MongoDB.",
+		"Document thinking and when it fits, under the optional-service discipline — Mongo down "+
+			"is a typed 503, never a crash — with the port-and-adapter layering unchanged and "+
+			"SQL vs Mongo argued honestly.",
 		"data",
 		19,
 		sections,

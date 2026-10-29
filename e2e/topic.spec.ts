@@ -20,6 +20,15 @@ test('a topic page renders its sections and terminal companion', async ({
       .getByRole('heading', { level: 1, name: 'The Go language' }),
   ).toBeVisible();
 
+  // The header mirrors the same served title: the route handle's generic
+  // 'Topic' covered the load, and the screen's served title then took over
+  // the banner h1.
+  await expect(
+    page
+      .getByRole('banner')
+      .getByRole('heading', { level: 1, name: 'The Go language' }),
+  ).toBeVisible();
+
   // Sections render from the content API — the opening pitch, the
   // self-contained basics sections, and the terminal companion that closes
   // every topic.

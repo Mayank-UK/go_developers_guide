@@ -467,17 +467,7 @@ func realtimeTopic() (Topic, error) {
 	return NewTopic(
 		"realtime",
 		"Realtime Go: server-sent events and WebSockets",
-		"Push over HTTP, twice: server-sent events as one never-ending Flushered response "+
-			"(text/event-stream frames with id/event/data fields, comment keepalives, and "+
-			"Last-Event-ID replay from a bounded log — demo realtime:ticker streams the guide's "+
-			"shared feed live beside its derived story), and WebSockets via coder/websocket "+
-			"(the 101 upgrade, origin-checked handshakes, text/binary message types, ping/pong "+
-			"liveness, and named close codes — demo realtime:chat runs a live room). Both fan "+
-			"out through one hub: named rooms, per-connection read/write pumps, bounded "+
-			"per-subscriber buffers, and an explicit slow-consumer eviction (close 1013) that "+
-			"keeps room memory bounded by engaged readers — closed by reconnection semantics "+
-			"(the browser owns the SSE retry; ids make resume and dedupe possible; at-least-once "+
-			"is the honest promise) and the terminal's curl -N and websocat tour.",
+		"Push over HTTP, twice: server-sent events as one never-ending Flushered response, and WebSockets via coder/websocket — both fanning out through one hub of named rooms.",
 		"media-realtime",
 		28,
 		sections,

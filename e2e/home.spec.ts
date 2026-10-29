@@ -39,7 +39,8 @@ test('the home hub renders the full topic map', async ({ page, request }) => {
 
   await page.goto('/');
 
-  // Scoped to the main region: the page-level h1 is the hero inside <main>.
+  // Scoped to the main region: the sticky header also renders the route
+  // title as an h1 (banner), so the page-level h1 is the one inside <main>.
   await expect(
     page
       .getByRole('main')

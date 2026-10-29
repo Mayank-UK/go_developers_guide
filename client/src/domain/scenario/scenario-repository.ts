@@ -3,7 +3,8 @@ import type { ScenarioPatch, ScenarioState } from './scenario';
 
 /**
  * ScenarioRepository — the domain-facing port for the demo scenario toggle.
- * Use cases and the header panel depend on this interface only; the adapter
+ * Use cases and the demos' embedded scenario panel depend on this interface
+ * only; the adapter
  * that talks HTTP lives in data/scenario and is wired at the composition root
  * (core/container.ts).
  */

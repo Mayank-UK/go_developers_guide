@@ -765,18 +765,9 @@ func thirdPartyTopic() (Topic, error) {
 	}
 
 	return Topic{
-		ID:    "third-party",
-		Title: "Third-party services",
-		Subtitle: "Integrating versus building — the decision this repo made for every piece it did not write, and the " +
-			"vendor-shaped problems (email, payments, object storage) that force the same decision on every real " +
-			"application · walked through a REAL adapter-surface hub: three vendor ports, each carrying a deterministic " +
-			"sandbox (signing, idempotency keys, quota accounting, error-taxonomy mapping) and a credential-gated live " +
-			"skeleton, switched fake/live by the shared scenario store exactly as the posts surface swaps its data mode · " +
-			"email taught concept-first over the bounded-call discipline (net/smtp's frozen status stated honestly) · " +
-			"the email-as-a-job seam from topic 29 recapped, not re-taught · Stripe as the archetype SaaS integration " +
-			"mapped onto machinery this repo already owns (the HMAC webhook gate, the idempotent consumer, the " +
-			"Idempotency-Key contract) · cloud storage one adapter away from the files topic's Store port · and the " +
-			"keys, quotas, and blast radii every integration leaves behind — named, gated, and never leaked by value.",
+		ID:       "third-party",
+		Title:    "Third-party services",
+		Subtitle: "Integrating versus building — the decision this repo made for every piece it did not write, and the vendor-shaped problems (email, payments, object storage) that force the same decision on every real application.",
 		Group:    "capstones",
 		Order:    42,
 		Sections: sections,

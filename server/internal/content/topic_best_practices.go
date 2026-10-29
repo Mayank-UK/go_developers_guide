@@ -390,15 +390,9 @@ func bestPracticesTopic() (Topic, error) {
 	}
 
 	return Topic{
-		ID:    "best-practices",
-		Title: "Best practices",
-		Subtitle: "The capstone synthesis: every discipline this guide taught, audited against the repo that taught it — " +
-			"setup and toolchain, API discipline, security, data, reliability, observability, performance, operations, " +
-			"git and review, and the human practices no checklist can verify, each cross-referenced back to the topic " +
-			"that taught it and grounded in real code; an anti-checklist of deliberate not-dos with their reasons; and " +
-			"a live self-audit whose every verdict was computed at boot from machinery that actually executed — real " +
-			"probes, real tool runs, real file reads — with honest fails where a check cannot run and manual verdicts " +
-			"where none can honestly judge.",
+		ID:       "best-practices",
+		Title:    "Best practices",
+		Subtitle: "The capstone synthesis: every discipline this guide taught, audited against the repo that taught it — plus an anti-checklist of deliberate not-dos and a live self-audit whose verdicts were computed at boot from machinery that actually executed.",
 		Group:    "capstones",
 		Order:    41,
 		Sections: sections,

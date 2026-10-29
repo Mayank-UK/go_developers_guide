@@ -525,34 +525,7 @@ func observabilityTopic() (Topic, error) {
 	return NewTopic(
 		"observability",
 		"Observability in Go: logs, metrics, traces, and the probes between",
-		"The three questions (what happened, where, why now) answered by "+
-			"three signals run as one system on the server you are reading "+
-			"— stdlib-only, by protocol. slog JSON logs (the logger this "+
-			"server runs, one line dissected field by field; the level "+
-			"dial's cost economics) and the request-logging middleware that "+
-			"writes the ledger, proven live by the slog viewer demo (a real "+
-			"replayed request's lines, the level matrix computed by really "+
-			"gating each severity, and the request-id correlation joining a "+
-			"404's warn to its access line and envelope). Health's two "+
-			"halves: liveness (the dependency-free probe that must never "+
-			"ping anything) vs readiness (the real /api/ready — PostgreSQL "+
-			"and Redis pinged through domain-owned ports inside bounded "+
-			"timeouts, honest 503s naming the down dependency). pprof in "+
-			"production, mounted on a dedicated /internal/ prefix off the "+
-			"public root. Prometheus metrics by hand: the text exposition "+
-			"format rendered from a stdlib registry, request counters and "+
-			"duration histograms whose labels are route PATTERNS — "+
-			"cardinality bounded by the route table itself. W3C trace "+
-			"context: traceparent parsed to the spec's own edge cases, "+
-			"propagated by additive middleware, rejected honestly when "+
-			"malformed, feeding a span-tree recorder — the trace demo's "+
-			"round-trip (your header in, child spans across handler → use "+
-			"case → adapter, the tree with its graft point) — with the "+
-			"OpenTelemetry SDK compared honestly. Alerting's bar (what "+
-			"pages a human: error rate, queue depth, dead letters, "+
-			"readiness — and alert fatigue as the one-way door), and the "+
-			"process nets (bounded timeouts, recovery, graceful drain) the "+
-			"instruments stand on.",
+		"The three questions (what happened, where, why now) answered by three signals run as one system on the server you are reading — stdlib-only, by protocol.",
 		"platform",
 		33,
 		sections,

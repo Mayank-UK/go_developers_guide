@@ -28,8 +28,10 @@ test('an unknown topic id degrades to the error panel with the envelope', async 
 test('an unknown route renders the friendly 404 view', async ({ page }) => {
   await page.goto('/nowhere/at-all');
 
+  // Scoped to main: the sticky header also renders the route title as an h1
+  // (banner), so the page-level h1 is the one inside <main>.
   await expect(
-    page.getByRole('heading', { level: 1, name: 'Page not found' }),
+    page.getByRole('main').getByRole('heading', { level: 1, name: 'Page not found' }),
   ).toBeVisible();
   const backHome = page.getByRole('link', { name: '← back to the guide' });
   await expect(backHome).toBeVisible();
@@ -37,6 +39,6 @@ test('an unknown route renders the friendly 404 view', async ({ page }) => {
   // The way out works, not just renders.
   await backHome.click();
   await expect(
-    page.getByRole('heading', { level: 1, name: 'Go Developers Guide' }),
+    page.getByRole('main').getByRole('heading', { level: 1, name: 'Go Developers Guide' }),
   ).toBeVisible();
 });

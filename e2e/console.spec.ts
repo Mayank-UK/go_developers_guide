@@ -19,8 +19,9 @@ test('home and a topic page render with zero console errors', async ({ page }) =
   });
 
   await page.goto('/');
+  // Scoped to main: the sticky header also renders the route title as an h1.
   await expect(
-    page.getByRole('heading', { level: 1, name: 'Go Developers Guide' }),
+    page.getByRole('main').getByRole('heading', { level: 1, name: 'Go Developers Guide' }),
   ).toBeVisible();
   await expect(page.locator('#topic-map')).toBeVisible();
 

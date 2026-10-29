@@ -374,53 +374,7 @@ func debuggingTopic() (Topic, error) {
 	return NewTopic(
 		"debugging",
 		"Debugging in Go: from print to profile",
-		"How a Go system tells you why it is misbehaving, taught from "+
-			"this repo's own machinery: the mindset (read the error — Go's "+
-			"wrapped error chains are a compressed narrative; form ONE "+
-			"falsifiable hypothesis before any probe; bisect the space — "+
-			"git bisect in time, the layer map's middle seam in space). "+
-			"Print discipline stated honestly: fmt.Println dies at scale "+
-			"(no correlation, levels, structure, cost control, or "+
-			"lifecycle) but the disciplined temporary print is not a sin — "+
-			"and when the print stays, it becomes the request logger's "+
-			"slog shape, quoted with request ids that thread one request "+
-			"into one story. delve as the real debugger — installed per "+
-			"machine (deliberately NOT in the manifest), session verbs "+
-			"(break/continue/print/stack/goroutines), exec vs attach vs "+
-			"dlv test driving a table loop one row at a time — taught in "+
-			"prose and terminal, honestly not wired as a demo because a "+
-			"breakpoint prompt cannot ride a GET. pprof: topic 33's REAL "+
-			"/internal/ mount quoted (default-mux side effect neutralized, "+
-			"one prefix to fence), CPU vs heap as a decision table (slow → "+
-			"CPU, growing → heap, stuck → the under-used goroutine census), "+
-			"flame graph as a projection of the same samples — and the "+
-			"topic's demo, debug:stall: a REAL wedge (one worker of five "+
-			"blocking forever on a channel nobody serves) whose anatomy is "+
-			"captured from the process's OWN goroutine profile via "+
-			"runtime/pprof, parsed by a table-tested reader of the "+
-			"runtime's grammar (header states with durations, multi-frame "+
-			"stacks, created-by pairs), served beside the request's own "+
-			"goroutine as contrast — released deterministically before the "+
-			"response returns, leak-proven, bounded so the demo can never "+
-			"wedge its own request, and refusing to invent a stack if the "+
-			"wedge is lost. The execution tracer: what aggregates cannot "+
-			"show (GC pauses, starvation, wait-vs-compute), three capture "+
-			"doors (endpoint, runtime/trace, go test -trace), go tool "+
-			"trace's viewer and headless -pprof extraction. Production: "+
-			"the observability loop FIRST (logs by request id, metric "+
-			"rates, readiness — wiring quoted), pprof in prod with care "+
-			"(access fence, per-instrument cost, real traffic's payoff), "+
-			"and rehearsed failure via topic 30's injectFailure as "+
-			"recognition training. The process nets that turn crashes "+
-			"into diagnosable events: bounded timeouts everywhere (server "+
-			"read/write windows quoted — an expiry is a signal, a hang is "+
-			"only an absence), the recover middleware logging stack + "+
-			"request id into the envelope's 500, graceful shutdown that "+
-			"drains both surfaces, and the forensic pair SIGQUIT / "+
-			"GOTRACEBACK. Terminal companion: the stall's parsed anatomy, "+
-			"the live goroutine census, a real go tool pprof -top on a "+
-			"captured CPU profile, the heap's inuse view, one second of "+
-			"trace, and the loop that always reads first.",
+		"How a Go system tells you why it is misbehaving, taught from this repo's own machinery: read the error — Go's wrapped error chains as a compressed narrative — form ONE falsifiable hypothesis before any probe, then bisect the space.",
 		"platform",
 		35,
 		sections,

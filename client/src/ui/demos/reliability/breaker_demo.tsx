@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { container } from '../../../core/container';
 import type { Failure } from '../../../core/error-handling/failures';
 import { ErrorPanel } from '../../components/error-panel';
+import { ScenarioPanel } from '../../components/scenario-panel';
 import type {
   ReliabilityBreakerDemoData,
   ReliabilityRetryRowView,
@@ -20,10 +21,10 @@ import {
  * and the transition ring), this request's walk — attempt by attempt,
  * with the state before/after, the action (call or fast-fail), the
  * outcome, and the MEASURED elapsed time — and the bounded
- * retry-with-backoff series beside it. Flipping the shared scenario
- * panel (the header's ScenarioPanel writes PATCH /api/demo/scenario)
- * and re-walking trips the breaker under error injection, converts
- * stalls into deadline exceeded under latency, and lets the half-open
+ * retry-with-backoff series beside it. The scenario panel embedded at
+ * the top is this demo's own control (it writes PATCH /api/demo/scenario):
+ * flip it and re-walk to trip the breaker under error injection, convert
+ * stalls into deadline exceeded under latency, and let the half-open
  * probe close the circuit once disarmed. The client never teaches; it
  * renders what the server measured.
  */
@@ -127,6 +128,15 @@ export function ReliabilityBreakerDemo() {
 
   return (
     <div className="flex flex-col gap-md" data-testid="reliability-breaker-ready">
+      <section
+        data-testid="reliability-breaker-controls"
+        className="flex flex-col gap-xxs rounded-md border border-outline bg-surface-tint px-md py-sm"
+      >
+        {/* The demo's own scenario control — the shared fake/live +
+            failure-injection toggle, embedded so this page drives standalone. */}
+        <ScenarioPanel />
+      </section>
+
       <section
         data-testid="reliability-breaker-scenario"
         className="flex flex-col gap-xxs rounded-md border border-outline bg-surface-tint px-md py-sm"

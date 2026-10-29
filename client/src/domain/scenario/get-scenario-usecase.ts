@@ -4,7 +4,7 @@ import type { ScenarioState } from './scenario';
 
 /**
  * GetScenarioUseCase — loads the demo scenario's current snapshot for the
- * header panel. A thin orchestration seam over the repository port
+ * demos' embedded scenario panel. A thin orchestration seam over the repository port
  * (react-guide use-case style); the port→adapter wiring happens at the
  * composition root.
  */

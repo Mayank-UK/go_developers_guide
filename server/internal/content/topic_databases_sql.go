@@ -699,10 +699,9 @@ func databasesSQLTopic() (Topic, error) {
 	return NewTopic(
 		"databases-sql",
 		"Databases and SQL from Go",
-		"pgx v5 pooling, the DAO discipline with parameterized SQL, the fake/live repository switch "+
-			"wired for real behind every API surface, transactions and savepoints, CTEs and window "+
-			"functions, EXPLAIN plans, full-text search with tsvector, isolation and row locks, and "+
-			"audit rows that ride the changing transaction — six live demos over the topic 16 schema.",
+		"pgx v5 pooling and the DAO discipline — parameterized SQL, transactions, and audit "+
+			"rows riding the changing transaction — with every repository switchable fake/live "+
+			"behind the same API surface.",
 		"data",
 		17,
 		sections,

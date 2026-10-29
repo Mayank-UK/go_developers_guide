@@ -9,7 +9,7 @@ import type { ScenarioApi } from './scenario-api';
  * ScenarioRepositoryImpl — adapts the scenario API to the domain port. Every
  * thrown transport error (network, non-2xx envelope, malformed payload) is
  * guarded by safeRepositoryCall into a `failed` Result with its machine
- * diagnostics, so use cases and the header panel never need try/catch and no
+ * diagnostics, so use cases and the embedded scenario panel never need try/catch and no
  * rejection goes unhandled.
  */
 export class ScenarioRepositoryImpl implements ScenarioRepository {

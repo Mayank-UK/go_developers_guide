@@ -322,20 +322,7 @@ func dependencyManagementTopic() (Topic, error) {
 	return NewTopic(
 		"dependency-management",
 		"Dependency management in Go: modules, MVS, and the caches underneath",
-		"What a dependency IS in Go — a module pinned at a version, "+
-			"resolved to one copy per build — and the machinery around "+
-			"that rule, taught from the artifacts this repo runs: go.mod "+
-			"and go.sum with minimal version selection (why one require "+
-			"wins and why upgrades broadcast), the tidy/why/graph tool "+
-			"belt with the tools/deps.go anchor pattern that keeps pins "+
-			"honest before their topic lands, govulncheck's reachability "+
-			"verdict over the live graph (demo deps:manifest parses the "+
-			"real go.mod beside the serving binary's own build info, "+
-			"walks the anchors, names the gdg-go/gdg-gocache Docker "+
-			"volumes, and runs the real scanner when it can), upgrades "+
-			"as deliberate acts with manifests-first layer ordering, and "+
-			"the bar for choosing a dependency at all — stdlib first, "+
-			"stewardship, transitive weight, containment.",
+		"What a dependency IS in Go — a module pinned at a version, resolved to one copy per build — and the machinery around that rule, taught from the artifacts this repo runs.",
 		"platform",
 		31,
 		sections,

@@ -591,11 +591,9 @@ func sqlcGormTopic() (Topic, error) {
 	return NewTopic(
 		"sqlc-gorm",
 		"sqlc and GORM: typed queries and the ORM, measured",
-		"sqlc's SQL-first code generation and GORM's full ORM, run against the same "+
-			"schema — with the N+1 query problem measured live (statements counted, not "+
-			"opined), lazy versus eager loading as shapes, the unit-of-work pattern for "+
-			"transactions across repositories, and testcontainers-go pinning every number "+
-			"against a real PostgreSQL.",
+		"sqlc's SQL-first code generation and GORM's full ORM run against the same schema — "+
+			"the N+1 query problem measured live (statements counted, not opined), with "+
+			"testcontainers-go pinning every number against a real PostgreSQL.",
 		"data",
 		18,
 		sections,

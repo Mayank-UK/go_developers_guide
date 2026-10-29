@@ -3,8 +3,8 @@ import type { ScenarioRepository } from './scenario-repository';
 import type { ScenarioPatch, ScenarioState } from './scenario';
 
 /**
- * PatchScenarioUseCase — applies a partial scenario update (the header panel's
- * select changes) and answers with the resulting full state. Thin
+ * PatchScenarioUseCase — applies a partial scenario update (the embedded
+ * scenario panel's select changes) and answers with the resulting full state. Thin
  * orchestration seam over the repository port (react-guide use-case style);
  * the port→adapter wiring happens at the composition root.
  */

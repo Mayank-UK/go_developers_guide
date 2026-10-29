@@ -610,16 +610,7 @@ func internationalizationTopic() (Topic, error) {
 	return NewTopic(
 		"internationalization",
 		"Internationalization from Go",
-		"Go is global by default — UTF-8 everywhere, strings walked rune-wise — so i18n is three engines, "+
-			"not an encoding project: an Accept-Language parser with fallback chains (exact → base → wildcard → "+
-			"default, q=0 exclusions, malformed members dropped — never guessed for; demo i18n:negotiator walks THIS "+
-			"request's header to a served message), message catalogs with Go source as the store (maps and embed.FS "+
-			"JSON behind one port, hand-rolled plural rules, {placeholder} interpolation, and a missing-key policy that "+
-			"serves the key and logs — never a 500), and locale-aware formatting by hand (grouping separators, decimal "+
-			"comma vs point, integer-minor-unit money, month names, 12- vs 24-hour clocks) — while time.LoadLocation "+
-			"keeps TIME a separate axis (IANA zones, embedded tzdata for slim containers, honest unknown-zone errors, "+
-			"DST caught between changeovers) — closed by the terminal's curl tour, one endpoint under many Accept-Language "+
-			"headers.",
+		"Go is global by default — UTF-8 everywhere, strings walked rune-wise — so i18n is three engines, not an encoding project: language negotiation, message catalogs, and locale-aware formatting — with time kept a separate axis.",
 		"media-realtime",
 		27,
 		sections,

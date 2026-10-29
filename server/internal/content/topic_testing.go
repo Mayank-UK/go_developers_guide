@@ -474,36 +474,7 @@ func testingTopic() (Topic, error) {
 	return NewTopic(
 		"testing",
 		"Testing in Go: the pyramid this repo actually runs",
-		"How this guide verifies itself, taught from its own test "+
-			"code: the pyramid described honestly (unit-heavy tables, "+
-			"httptest chains in the middle, integration where it pays, "+
-			"browser E2E one thin host-run suite — no dogma, just the real "+
-			"distribution). Table-driven tests and t.Parallel as the "+
-			"config table exemplifies them (one test, many cases, cases "+
-			"concurrent). Handlers tested through the production "+
-			"middleware chain with httptest (newPostsServer + doRequest, "+
-			"the wire contract pinned in milliseconds). testcontainers-go "+
-			"gated honestly — the boot/skip pattern, the pinned image, "+
-			"the second-occurrence wait — with the topic's demo, the "+
-			"RUNNER: a real bounded `go test -json` run over a curated "+
-			"slice of the repo's own packages, parsed event by event "+
-			"into a timeline (packages, subtests, durations) plus the "+
-			"suite's shape counted from the tree; boot-cached with its "+
-			"wall-clock age, timeout enforced by killing the process "+
-			"group, degraded by typed 503 when the toolchain is absent. "+
-			"The awkward bits made boring: injectable clocks (the "+
-			"stepping cache clock), run-scoped isolation (throwaway "+
-			"PostgreSQL databases, random redis namespaces), and the "+
-			"race detector where the switching facade's flip-and-hammer "+
-			"test exercises it. The client's three vitest layers (DTO "+
-			"specs, repository specs over a stubbed fetch, component "+
-			"specs with fixtures at the container token). Coverage as a "+
-			"map, guarded instead by the prose-floor pin and the "+
-			"canary-proven snippet ratchet. The CI contract: no hosted "+
-			"CI by family stance — the local docker-exec command pair IS "+
-			"the gate, and what a hosted runner would run if it existed. "+
-			"Browser E2E as a drawn boundary: journeys there, "+
-			"behavior here.",
+		"How this guide verifies itself, taught from its own test code: the pyramid described honestly — unit-heavy tables, httptest chains, integration where it pays, one thin host-run E2E suite; no dogma, just the real distribution.",
 		"platform",
 		34,
 		sections,

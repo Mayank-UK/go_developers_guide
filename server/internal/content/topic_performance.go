@@ -386,45 +386,7 @@ func performanceTopic() (Topic, error) {
 	return NewTopic(
 		"performance",
 		"Performance in Go: measure, then earn the tuning",
-		"Making a Go service fast the honest way — no number, "+
-			"no tuning — taught from this repo's real instruments. "+
-			"Measure first: the testing package's benchmark framework "+
-			"(b.Run subtests, b.ReportAllocs, -benchmem, -count), how to "+
-			"read a benchmark line (iteration count before ns/op), the "+
-			"honest variance talk single runs cannot skip, and benchstat "+
-			"as the A/B judge — saved baselines, identical commands, "+
-			"deltas that must clear the noise floor. Allocations and "+
-			"escape analysis as the Go tax: stack versus heap, the "+
-			"compiler's own verdicts read off `go build -gcflags=-m` "+
-			"over THIS repo's wire shaping (the returned tags copy that "+
-			"escapes, the defensive-copy discipline on the storage side "+
-			"that pays it), the common escape triggers as a checklist, "+
-			"and testing.AllocsPerRun turning allocation knowledge into "+
-			"a suite-bound pin. GC tuning with a mostly-don't stance: "+
-			"GOGC's heap-growth arithmetic, GOMEMLIMIT's soft ceiling "+
-			"under container memory reservations, when each knob is "+
-			"legitimately worth turning (batch jobs, capped containers, "+
-			"profiled GC theft) and why reducing the allocation rate "+
-			"beats both. Connection pooling as amortization made "+
-			"structural: the ONE pgx pool and ONE go-redis client this "+
-			"server boots with, quoted — pool knobs as DSN parameters, "+
-			"the fail-fast ping, timeout policy at construction, and "+
-			"the per-request-client anti-pattern. The compression "+
-			"benchmark as the classic measured trade-off: gzip levels "+
-			"1/6/9 swept across 4KB/64KB/512KB deterministic documents "+
-			"with sizes computed from the same bytes the benchmark "+
-			"compressed — and the topic's demo, perf:bench: the curated "+
-			"benchmarks executed ONCE at process boot under a hard "+
-			"process-group-killing timeout, their parsed samples served "+
-			"with the exact command, benchtime, count, duration, and "+
-			"age, both count samples side by side beside a verbatim "+
-			"escape-analysis panel. The pre-production checklist ties "+
-			"the platform together: budgets written down, pprof from "+
-			"topic 35, /metrics from topic 33, the benchstat A/B, and a "+
-			"load rehearsal. Terminal companion: the real `go test "+
-			"-bench` invocation with real budgets, the benchstat "+
-			"ritual, the escape build grepped, and the demo's boot-"+
-			"cached numbers curled with their provenance.",
+		"Making a Go service fast the honest way — no number, no tuning — taught from this repo's real instruments: benchmarks as the judge, allocations as the Go tax, profiles as the map.",
 		"ship",
 		38,
 		sections,

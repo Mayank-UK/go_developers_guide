@@ -492,51 +492,7 @@ func reliabilityTopic() (Topic, error) {
 	return NewTopic(
 		"reliability",
 		"Reliability in Go: survive your dependencies",
-		"Keeping a distributed Go service useful while its dependencies "+
-			"misbehave — taught from this repo's real machinery. The "+
-			"failure taxonomy first: the clean error, the late answer, "+
-			"and the missing one — three shapes, three tools, and the "+
-			"map that pairs them. Timeouts as a budget ledger: "+
-			"context.WithTimeout deriving child deadlines that only "+
-			"tighten, the two altitudes of bounding (the http.Server "+
-			"connection timeouts this process boots with, quoted, and "+
-			"the per-call deadline derived from the request), the "+
-			"select-with-a-Done-arm mechanics the runtime topic pinned, "+
-			"and gRPC deadlines that cross the process boundary. "+
-			"Retries that earn the second attempt: idempotency as the "+
-			"precondition, transient-only filtering by error identity, "+
-			"exponential backoff with a cap and jitter (the jobs "+
-			"worker's real policy and the demo's cancellable waits, "+
-			"both quoted), and bounded series that end in an answer. "+
-			"The circuit breaker as shared process state: closed/open/"+
-			"half-open, consecutive-failure threshold, cooldown, "+
-			"single-probe semantics — the real mutex-guarded "+
-			"implementation quoted function by function, with the "+
-			"topic's demo, reliability:breaker, inline: a process-"+
-			"lifetime breaker protecting a dependency that honors the "+
-			"SHARED scenario panel's injectFailure enum and respects "+
-			"context deadlines, so PATCHing the global panel trips and "+
-			"recovers it live across requests — every elapsed figure "+
-			"in the payload measured around the calls that just "+
-			"happened. Graceful degradation from the guide's own "+
-			"optional-service discipline: fail fast inside command "+
-			"timeouts, degrade to the typed 503, contain the blast "+
-			"radius, and the honest ladder (cache, fallback, feature "+
-			"degradation, readiness) with its one prohibition — never "+
-			"pretend. Bulkheads and shedding: the bounded worker pool "+
-			"as compartment (quoted from the concurrency demo) and "+
-			"the rate limiter as the model shed (typed 429, Retry-"+
-			"After, quoted). Chaos engineering as the experimental "+
-			"method, with the scenario store's failure-injection enum "+
-			"as this repo's chaos toggle (quoted) and the breaker's "+
-			"dependency as its newest customer. Races: failure paths "+
-			"as cold code that runs hot, mutex discipline with small "+
-			"critical sections, immutable snapshots at the boundary, "+
-			"and goroutine-exit guarantees on every path a failure "+
-			"reaches. Terminal companion: the full trip-and-recover "+
-			"curl tour — baseline, threshold trip, fast-fail "+
-			"standoff, deadline conversion, half-open recovery, and "+
-			"the 422 the bogus mode earns.",
+		"Keeping a distributed Go service useful while its dependencies misbehave — taught from this repo's real machinery: three failure shapes — the clean error, the late answer, the missing one — and the map that pairs each with its tool.",
 		"ship",
 		39,
 		sections,

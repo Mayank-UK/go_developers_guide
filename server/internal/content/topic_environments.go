@@ -353,58 +353,7 @@ func environmentsTopic() (Topic, error) {
 	return NewTopic(
 		"environments",
 		"Environments in Go: one codebase, many environments",
-		"How one Go codebase serves dev, staging, and prod from "+
-			"the same bytes while everything that differs becomes "+
-			"CONFIG — taught from this repo's own artifacts. One "+
-			"codebase: the build's output is immutable (a static "+
-			"binary you can checksum between CI and prod); the "+
-			"environment is a DECLARATION beside the code — the "+
-			"devcontainer and compose files quoted as the dev "+
-			"instance, with what varies (backing services, config "+
-			"injection, toolchain) and what never does (the module, "+
-			"the embedded migrations, identically pinned engine "+
-			"versions). The twelve-factor app walked honestly "+
-			"against real machinery: ten hits each named to the "+
-			"code that earned them, and three DELIBERATE differs "+
-			"(the in-process jobs worker, the devcontainer-vs-"+
-			"distroless parity gap, boot-time embedded migrations) "+
-			"recorded as trade-offs — no dogma, in either "+
-			"direction. Typed environment config with core."+
-			"LoadConfig as the case study: the GDG_* contract, "+
-			"dev-safe secret-free defaults that make dev zero-"+
-			"config, validation-at-boot that NAMES the failing "+
-			"variable, the fail-fast composition root quoted, and "+
-			"the honest boundary where DSN validation belongs to "+
-			"the driver's dial. The topic's demo, env:inspector: "+
-			"THIS process's resolved config derived at request "+
-			"time — every variable with environment-vs-default "+
-			"attribution (the loader's own rule, re-applied), "+
-			"credentials REDACTED by a table-tested policy (DSN "+
-			"password and the ENTIRE query never reach the wire; "+
-			"unparseable values hidden outright), the twelve-"+
-			"factor scorecard as data, and the ScenarioStore's "+
-			"CURRENT state as the live flag panel. Environment-"+
-			"specific behavior as the honest list — log levels, "+
-			"the pprof fence, error detail, rate limits, "+
-			"datastore addresses — beside the bigger fact that "+
-			"the code holds no env ifs: the PLATFORM differs, "+
-			"not the process. Secrets beyond .env: what never "+
-			"goes in code or git, the .gitignore discipline with "+
-			"its one public-template exception, compose/devcontainer "+
-			"injection as the dev story, secret managers by "+
-			"comparison (rotation, leasing, per-service "+
-			"authorization — the app still reads getenv), and the "+
-			"lifecycle duties (rotate, expose minimally, grep your "+
-			"diff, know the blast radius). Feature flags: the "+
-			"ScenarioStore as the guide's REAL machinery — "+
-			"runtime-flippable, typed enums validated per PATCH, "+
-			"race-free copy-in/copy-out — against flags-as-config "+
-			"trade-offs and the honest process-locality limit. "+
-			"Terminal companion: the inspector read raw, the "+
-			"redaction asserted on the wire, a flag flip "+
-			"reflected and restored, and a scratch binary driven "+
-			"through GDG_PORT/GDG_LOG_LEVEL overrides and the "+
-			"fail-fast refusals.",
+		"How one Go codebase serves dev, staging, and prod from the same bytes while everything that differs becomes CONFIG — taught from this repo's own artifacts.",
 		"platform",
 		36,
 		sections,

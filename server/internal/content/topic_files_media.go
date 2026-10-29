@@ -469,14 +469,7 @@ func filesMediaTopic() (Topic, error) {
 	return NewTopic(
 		"files-media",
 		"Files and media from Go",
-		"Uploads are streams, not slurps — bounded by io.LimitReader, staged through temp-file-plus-rename, "+
-			"and parsed with r.MultipartReader instead of the buffering ParseMultipartForm (demo files:workbench "+
-			"measures the streaming honesty live); downloads with honest Content-Disposition; RFC 7233 range "+
-			"requests as pure math over the size — 206 slices, the 416 census, If-Range validators; backpressure "+
-			"as the property a streaming pipeline already is; image processing with the stdlib codecs behind a "+
-			"decode-bomb pixel budget and a hand-rolled box-sample thumbnail; and the three-lock name jail — "+
-			"sanitizer, Clean+prefix, EvalSymlinks — that keeps hostile filenames from becoming paths — closed by "+
-			"the terminal's curl tour: -F uploads and ranged curls off the wire.",
+		"Uploads are streams, not slurps — bounded by io.LimitReader, staged through temp-file-plus-rename, parsed with r.MultipartReader — a streaming honesty carried into downloads, range requests, backpressure, and image processing.",
 		"media-realtime",
 		26,
 		sections,

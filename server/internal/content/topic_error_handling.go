@@ -526,16 +526,9 @@ func errorHandlingTopic() (Topic, error) {
 	return NewTopic(
 		"error-handling",
 		"Error handling in Go: values, wrapping, one envelope, and the nets underneath",
-		"Go's stance — errors are values, panics are for programmer bugs — made "+
-			"operational by the code this server already runs: wrapping with %w and "+
-			"matching with errors.Is/As, sentinel versus typed errors and when each, "+
-			"the eight-kind taxonomy mapped to one error envelope by the central "+
-			"writer, the panic policy the recover middleware enforces (demo "+
-			"errors:explorer walks the live probe that honors the scenario store's "+
-			"error/latency injection — the deliberate panic into the recovered 500, "+
-			"the slept-out latency), the three slog lines a failure leaves threaded "+
-			"by one request id, and the process nets: recover, timeouts, bounded "+
-			"shutdown, fail-fast boot.",
+		"Go's stance — errors are values, panics are for programmer bugs — made operational: "+
+			"wrapping with %w and errors.Is/As, one taxonomy mapped to one envelope by the "+
+			"central writer, and the process nets of recover, timeouts, and fail-fast boot.",
 		"platform",
 		30,
 		sections,

@@ -681,19 +681,9 @@ func advancedArchitectureTopic() (Topic, error) {
 	}
 
 	return Topic{
-		ID:    "advanced-architecture",
-		Title: "Advanced architecture",
-		Subtitle: "The architecture capstone: what happens when the boundary moves past the process — the consistency map that chooses " +
-			"the right guarantee per operation · the DDD vocabulary that keeps a growing domain speakable, every term mapped to a real " +
-			"shape in this repo · the monolith-first position this guide IS, with seams a future extraction would cut already cut at the " +
-			"composition root · what actually travels between services (bounded calls, the transactional outbox, the app-minted " +
-			"idempotency id) · the SAGA as a distributed transaction: forward-until-failure, reverse compensation on " +
-			"context.WithoutCancel, idempotent undo, a typed step error — real machinery in internal/domain/patterns, driven live " +
-			"[demo arch:saga] · CQRS as separation, not ceremony — the five use cases you already have, and the event-sourced boundary " +
-			"· EVENT SOURCING: state as a derivation from an append-only ledger, optimistic concurrency as the version check, " +
-			"rebuild-decide-append as the command path — real store, one stream's whole lifecycle including the conflict and its " +
-			"recovery [demo arch:eventstore] · and tracing across the boundary: the graft point, the child context, and the saga " +
-			"ledger as a domain-level trace.",
+		ID:       "advanced-architecture",
+		Title:    "Advanced architecture",
+		Subtitle: "The architecture capstone: what happens when the boundary moves past the process — the consistency map that chooses the right guarantee per operation, the monolith-first position with seams already cut, and SAGA, CQRS, and event sourcing as real machinery in this repo.",
 		Group:    "capstones",
 		Order:    43,
 		Sections: sections,

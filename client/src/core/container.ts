@@ -420,7 +420,7 @@ import {
  * Phase 0 wired the health pipeline; the content engine added the content
  * pipeline (content API → repository → index/detail use cases); the demo
  * scenario toggle (scenario API → repository → get/patch use cases, behind
- * the root header's ScenarioPanel) rides the same shape. Later phases add
+ * the demos' embedded ScenarioPanel) rides the same shape. Later phases add
  * the per-topic demo pipelines the same way: one import quartet + token
  * pair + register block per demo. Resolution has two eras — views either
  * read a typed getter below or (the standard, for later demos) resolve

@@ -661,12 +661,9 @@ func cachingTopic() (Topic, error) {
 	return NewTopic(
 		"caching",
 		"Caching",
-		"The two worlds of caching — the HTTP edge (ETag, If-None-Match, the honest "+
-			"304) and the server's own memory (a real cache-aside decorator around the "+
-			"posts port, with write invalidation, TTL expiry, herd coalescing, and the "+
-			"partition salt that keeps two stores from sharing entries) — plus CDN and "+
-			"content-hashed asset strategy, the do-not-cache table, and a terminal "+
-			"companion that replays the validator by curl.",
+		"The two worlds of caching — the HTTP edge (ETag, If-None-Match, the honest 304) and "+
+			"the server's own memory: a real cache-aside decorator with write invalidation, TTL "+
+			"expiry, and herd coalescing around the posts port.",
 		"state-auth",
 		21,
 		sections,

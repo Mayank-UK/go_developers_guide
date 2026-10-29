@@ -579,12 +579,9 @@ func messagingTopic() (Topic, error) {
 	return NewTopic(
 		"messaging",
 		"Messaging from Go",
-		"Why systems message at all, the log-versus-queue model, consumer groups and ordering walked live "+
-			"through Redis Streams (XADD, XREADGROUP, the pending ledger, XAUTOCLAIM recovery), the three "+
-			"delivery guarantees argued honestly, the transactional outbox that welds a PostgreSQL commit and "+
-			"its event into one all-or-nothing unit across two stores, the idempotent consumer that makes "+
-			"at-least-once delivery safe, and where Kafka and RabbitMQ honestly earn their keep — with the "+
-			"terminal's redis-cli and curl tour.",
+		"Why systems message at all, the log-versus-queue model, and the three delivery "+
+			"guarantees argued honestly — walked live through Redis Streams, with the "+
+			"transactional outbox and idempotent consumer that make at-least-once delivery safe.",
 		"state-auth",
 		22,
 		sections,
