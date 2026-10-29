@@ -93,6 +93,12 @@ jobs:
               run: |
                   go install honnef.co/go/tools/cmd/staticcheck@v0.8.2
                   "$(go env GOPATH)/bin/staticcheck" ./...
+            # Pre-warm the FULL module graph: the snapshot drift test runs
+            # `go list -m all` OFFLINE against the warm cache, and setup-go's
+            # go.sum-keyed cache only holds the build's modules — `all` needs
+            # every go.mod in the graph.
+            - run: go mod download all
+
             # The suite + race detector + the 74% coverage floor in one
             # instrumented run — the repo's own gate, never trimmed.
             - run: tools/coverage/check.sh
