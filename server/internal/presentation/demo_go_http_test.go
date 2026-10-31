@@ -71,16 +71,19 @@ func TestAppInfoDemoServesThePayload(t *testing.T) {
 	if err := json.Unmarshal(rec.Body.Bytes(), &decoded); err != nil {
 		t.Fatalf("body not the demo DTO shape: %v\n%s", err, rec.Body.String())
 	}
-	// 19 = the linked-module count of THIS package's test binary —
+	// 26 = the linked-module count of THIS package's test binary —
 	// derived live, pinned here.
 	// The count is binary-scoped: this package's test binary links the
 	// auth engines (argon2 rides along), the security stack (x/time rides
-	// along), and the realtime handlers (coder/websocket rides along), so
-	// it sees three more modules than the demos package's test binary —
-	// whose pinned 16 the go-http-fundamentals topic quotes verbatim.
+	// along), the realtime handlers (coder/websocket rides along), and —
+	// since the VM monitoring rollout — the /api/metrics handler's
+	// prometheus client graph (client_golang and its exposition support
+	// modules ride along), so it sees ten more modules than the demos
+	// package's test binary — whose pinned 16 the go-http-fundamentals
+	// topic quotes verbatim.
 	// Both pins are live facts about their own binaries; the served
 	// payload describes the SERVER binary, which links the full graph.
-	if decoded.Module.Path != "guide" || decoded.Module.DependencyCount != 19 {
+	if decoded.Module.Path != "guide" || decoded.Module.DependencyCount != 26 {
 		t.Errorf("module drifted: %+v", decoded.Module)
 	}
 	if decoded.Module.Version == "" || !strings.HasPrefix(decoded.Module.GoVersion, "go1.") {

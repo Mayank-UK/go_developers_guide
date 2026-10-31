@@ -408,6 +408,15 @@ func run() error {
 	}, logger))
 	mux.Handle("/internal/", presentation.NewInternalHandler())
 
+	// The VM monitoring rollout's scrape target: client_golang's promhttp
+	// serving the DEFAULT Go runtime and process collectors, on the
+	// operational /api/ namespace health and ready already share. The
+	// /metrics endpoint above stays the topic-33 hand-rolled exposition
+	// its teaching quotes verbatim; this one is the Prometheus-native
+	// scrape (runtime gauges, gc/memory families, process facts) the VM's
+	// monitor polls — a scrape config points metrics_path at /api/metrics.
+	mux.Handle("GET /api/metrics", presentation.NewPrometheusHandler())
+
 	// The slog viewer demo replays the REAL posts handlers over a fresh
 	// in-memory repository — scenario-independent by design, so the
 	// replayed 200 and 404 hold under every mode.
